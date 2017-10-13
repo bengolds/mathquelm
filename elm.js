@@ -9257,6 +9257,175 @@ var _elm_lang$html$Html_Keyed$node = _elm_lang$virtual_dom$VirtualDom$keyedNode;
 var _elm_lang$html$Html_Keyed$ol = _elm_lang$html$Html_Keyed$node('ol');
 var _elm_lang$html$Html_Keyed$ul = _elm_lang$html$Html_Keyed$node('ul');
 
+var _elm_lang$keyboard$Keyboard$onSelfMsg = F3(
+	function (router, _p0, state) {
+		var _p1 = _p0;
+		var _p2 = A2(_elm_lang$core$Dict$get, _p1.category, state);
+		if (_p2.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var send = function (tagger) {
+				return A2(
+					_elm_lang$core$Platform$sendToApp,
+					router,
+					tagger(_p1.keyCode));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p3) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				_elm_lang$core$Task$sequence(
+					A2(_elm_lang$core$List$map, send, _p2._0.taggers)));
+		}
+	});
+var _elm_lang$keyboard$Keyboard_ops = _elm_lang$keyboard$Keyboard_ops || {};
+_elm_lang$keyboard$Keyboard_ops['&>'] = F2(
+	function (task1, task2) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (_p4) {
+				return task2;
+			},
+			task1);
+	});
+var _elm_lang$keyboard$Keyboard$init = _elm_lang$core$Task$succeed(_elm_lang$core$Dict$empty);
+var _elm_lang$keyboard$Keyboard$categorizeHelpHelp = F2(
+	function (value, maybeValues) {
+		var _p5 = maybeValues;
+		if (_p5.ctor === 'Nothing') {
+			return _elm_lang$core$Maybe$Just(
+				{
+					ctor: '::',
+					_0: value,
+					_1: {ctor: '[]'}
+				});
+		} else {
+			return _elm_lang$core$Maybe$Just(
+				{ctor: '::', _0: value, _1: _p5._0});
+		}
+	});
+var _elm_lang$keyboard$Keyboard$categorizeHelp = F2(
+	function (subs, subDict) {
+		categorizeHelp:
+		while (true) {
+			var _p6 = subs;
+			if (_p6.ctor === '[]') {
+				return subDict;
+			} else {
+				var _v4 = _p6._1,
+					_v5 = A3(
+					_elm_lang$core$Dict$update,
+					_p6._0._0,
+					_elm_lang$keyboard$Keyboard$categorizeHelpHelp(_p6._0._1),
+					subDict);
+				subs = _v4;
+				subDict = _v5;
+				continue categorizeHelp;
+			}
+		}
+	});
+var _elm_lang$keyboard$Keyboard$categorize = function (subs) {
+	return A2(_elm_lang$keyboard$Keyboard$categorizeHelp, subs, _elm_lang$core$Dict$empty);
+};
+var _elm_lang$keyboard$Keyboard$keyCode = A2(_elm_lang$core$Json_Decode$field, 'keyCode', _elm_lang$core$Json_Decode$int);
+var _elm_lang$keyboard$Keyboard$subscription = _elm_lang$core$Native_Platform.leaf('Keyboard');
+var _elm_lang$keyboard$Keyboard$Watcher = F2(
+	function (a, b) {
+		return {taggers: a, pid: b};
+	});
+var _elm_lang$keyboard$Keyboard$Msg = F2(
+	function (a, b) {
+		return {category: a, keyCode: b};
+	});
+var _elm_lang$keyboard$Keyboard$onEffects = F3(
+	function (router, newSubs, oldState) {
+		var rightStep = F3(
+			function (category, taggers, task) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (state) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (pid) {
+								return _elm_lang$core$Task$succeed(
+									A3(
+										_elm_lang$core$Dict$insert,
+										category,
+										A2(_elm_lang$keyboard$Keyboard$Watcher, taggers, pid),
+										state));
+							},
+							_elm_lang$core$Process$spawn(
+								A3(
+									_elm_lang$dom$Dom_LowLevel$onDocument,
+									category,
+									_elm_lang$keyboard$Keyboard$keyCode,
+									function (_p7) {
+										return A2(
+											_elm_lang$core$Platform$sendToSelf,
+											router,
+											A2(_elm_lang$keyboard$Keyboard$Msg, category, _p7));
+									})));
+					},
+					task);
+			});
+		var bothStep = F4(
+			function (category, _p8, taggers, task) {
+				var _p9 = _p8;
+				return A2(
+					_elm_lang$core$Task$map,
+					A2(
+						_elm_lang$core$Dict$insert,
+						category,
+						A2(_elm_lang$keyboard$Keyboard$Watcher, taggers, _p9.pid)),
+					task);
+			});
+		var leftStep = F3(
+			function (category, _p10, task) {
+				var _p11 = _p10;
+				return A2(
+					_elm_lang$keyboard$Keyboard_ops['&>'],
+					_elm_lang$core$Process$kill(_p11.pid),
+					task);
+			});
+		return A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			oldState,
+			_elm_lang$keyboard$Keyboard$categorize(newSubs),
+			_elm_lang$core$Task$succeed(_elm_lang$core$Dict$empty));
+	});
+var _elm_lang$keyboard$Keyboard$MySub = F2(
+	function (a, b) {
+		return {ctor: 'MySub', _0: a, _1: b};
+	});
+var _elm_lang$keyboard$Keyboard$presses = function (tagger) {
+	return _elm_lang$keyboard$Keyboard$subscription(
+		A2(_elm_lang$keyboard$Keyboard$MySub, 'keypress', tagger));
+};
+var _elm_lang$keyboard$Keyboard$downs = function (tagger) {
+	return _elm_lang$keyboard$Keyboard$subscription(
+		A2(_elm_lang$keyboard$Keyboard$MySub, 'keydown', tagger));
+};
+var _elm_lang$keyboard$Keyboard$ups = function (tagger) {
+	return _elm_lang$keyboard$Keyboard$subscription(
+		A2(_elm_lang$keyboard$Keyboard$MySub, 'keyup', tagger));
+};
+var _elm_lang$keyboard$Keyboard$subMap = F2(
+	function (func, _p12) {
+		var _p13 = _p12;
+		return A2(
+			_elm_lang$keyboard$Keyboard$MySub,
+			_p13._0,
+			function (_p14) {
+				return func(
+					_p13._1(_p14));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Keyboard'] = {pkg: 'elm-lang/keyboard', init: _elm_lang$keyboard$Keyboard$init, onEffects: _elm_lang$keyboard$Keyboard$onEffects, onSelfMsg: _elm_lang$keyboard$Keyboard$onSelfMsg, tag: 'sub', subMap: _elm_lang$keyboard$Keyboard$subMap};
+
 var _elm_lang$window$Native_Window = function()
 {
 
@@ -19499,8 +19668,148 @@ var _mdgriffith$style_elements$Style_Scale$modular = F3(
 		return A3(_mdgriffith$style_elements$Style_Scale$resize, normal, ratio, fontScale);
 	});
 
-var _user$project$Mathquill$parensScale = 1.2;
-var _user$project$Mathquill$scaleAttr = F2(
+var _user$project$Mathquelm_Config$toggleBoxesDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showBoxes: !config.showBoxes});
+};
+var _user$project$Mathquelm_Config$toggleCenterLineDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showCenterLines: !config.showCenterLines});
+};
+var _user$project$Mathquelm_Config$scaled = F2(
+	function (config, depth) {
+		return A3(_mdgriffith$style_elements$Style_Scale$modular, config.baseFontSize, config.modularScale, depth);
+	});
+var _user$project$Mathquelm_Config$default = {showCenterLines: false, showBoxes: false, maxDepth: 3, baseFontSize: 28.8, modularScale: 0.7};
+var _user$project$Mathquelm_Config$Config = F5(
+	function (a, b, c, d, e) {
+		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e};
+	});
+
+var _user$project$Mathquelm_DisplayNode$Subsuperscript = F2(
+	function (a, b) {
+		return {ctor: 'Subsuperscript', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_DisplayNode$Superscript = function (a) {
+	return {ctor: 'Superscript', _0: a};
+};
+var _user$project$Mathquelm_DisplayNode$Subscript = function (a) {
+	return {ctor: 'Subscript', _0: a};
+};
+var _user$project$Mathquelm_DisplayNode$Fraction = F2(
+	function (a, b) {
+		return {ctor: 'Fraction', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_DisplayNode$Diacritic = F2(
+	function (a, b) {
+		return {ctor: 'Diacritic', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_DisplayNode$Parens = F2(
+	function (a, b) {
+		return {ctor: 'Parens', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_DisplayNode$Block = function (a) {
+	return {ctor: 'Block', _0: a};
+};
+var _user$project$Mathquelm_DisplayNode$Character = function (a) {
+	return {ctor: 'Character', _0: a};
+};
+var _user$project$Mathquelm_DisplayNode$Pipes = {ctor: 'Pipes'};
+var _user$project$Mathquelm_DisplayNode$Curlies = {ctor: 'Curlies'};
+var _user$project$Mathquelm_DisplayNode$Brackets = {ctor: 'Brackets'};
+var _user$project$Mathquelm_DisplayNode$Parentheses = {ctor: 'Parentheses'};
+var _user$project$Mathquelm_DisplayNode$Bar = {ctor: 'Bar'};
+var _user$project$Mathquelm_DisplayNode$Dot = {ctor: 'Dot'};
+var _user$project$Mathquelm_DisplayNode$Hat = {ctor: 'Hat'};
+
+var _user$project$Mathquelm_RenderContext$setNode = F2(
+	function (node, context) {
+		return _elm_lang$core$Native_Utils.update(
+			context,
+			{node: node});
+	});
+var _user$project$Mathquelm_RenderContext$fontSize = function (context) {
+	return A3(_mdgriffith$style_elements$Style_Scale$modular, context.config.baseFontSize, context.config.modularScale, context.depth);
+};
+var _user$project$Mathquelm_RenderContext$fontBox = function (context) {
+	return _user$project$Mathquelm_RenderContext$fontSize(context) * 1.2;
+};
+var _user$project$Mathquelm_RenderContext$depth = function (context) {
+	return context.depth;
+};
+var _user$project$Mathquelm_RenderContext$hardDeepen = function (context) {
+	return _elm_lang$core$Native_Utils.update(
+		context,
+		{
+			depth: A3(_elm_lang$core$Basics$clamp, 2, context.config.maxDepth, context.depth + 1)
+		});
+};
+var _user$project$Mathquelm_RenderContext$deepen = function (context) {
+	return _elm_lang$core$Native_Utils.update(
+		context,
+		{
+			depth: A2(_elm_lang$core$Basics$min, context.config.maxDepth, context.depth + 1)
+		});
+};
+var _user$project$Mathquelm_RenderContext$enter = F2(
+	function (context, nextNode) {
+		return A2(
+			_user$project$Mathquelm_RenderContext$setNode,
+			nextNode,
+			function () {
+				var _p0 = nextNode;
+				switch (_p0.ctor) {
+					case 'Block':
+						return _elm_lang$core$Basics$identity;
+					case 'Character':
+						return _elm_lang$core$Basics$identity;
+					case 'Parens':
+						return _elm_lang$core$Basics$identity;
+					case 'Diacritic':
+						return _elm_lang$core$Basics$identity;
+					case 'Fraction':
+						return _user$project$Mathquelm_RenderContext$deepen;
+					case 'Subscript':
+						return _user$project$Mathquelm_RenderContext$hardDeepen;
+					case 'Superscript':
+						return _user$project$Mathquelm_RenderContext$hardDeepen;
+					default:
+						return _user$project$Mathquelm_RenderContext$hardDeepen;
+				}
+			}()(context));
+	});
+var _user$project$Mathquelm_RenderContext$baseContext = F2(
+	function (config, node) {
+		return {config: config, depth: 0, node: node};
+	});
+var _user$project$Mathquelm_RenderContext$RenderContext = F3(
+	function (a, b, c) {
+		return {config: a, depth: b, node: c};
+	});
+
+var _user$project$Mathquelm$debugColor = function (depth) {
+	var _p0 = A2(_elm_lang$core$Basics_ops['%'], depth, 6);
+	switch (_p0) {
+		case 0:
+			return _elm_lang$core$Color$orange;
+		case 1:
+			return _elm_lang$core$Color$yellow;
+		case 2:
+			return _elm_lang$core$Color$green;
+		case 3:
+			return _elm_lang$core$Color$blue;
+		case 4:
+			return _elm_lang$core$Color$darkBlue;
+		case 5:
+			return _elm_lang$core$Color$purple;
+		default:
+			return _elm_lang$core$Color$brown;
+	}
+};
+var _user$project$Mathquelm$parensScale = 1.2;
+var _user$project$Mathquelm$scaleAttr = F2(
 	function (x, y) {
 		return A2(
 			_mdgriffith$style_elements$Element_Attributes$attribute,
@@ -19519,7 +19828,127 @@ var _user$project$Mathquill$scaleAttr = F2(
 							_elm_lang$core$Basics$toString(y),
 							')')))));
 	});
-var _user$project$Mathquill$loadFont = _mdgriffith$style_elements$Element$html(
+var _user$project$Mathquelm$mapBoth = F2(
+	function (fn, _p1) {
+		var _p2 = _p1;
+		return {
+			ctor: '_Tuple2',
+			_0: fn(_p2._0),
+			_1: fn(_p2._1)
+		};
+	});
+var _user$project$Mathquelm$centerLine = function (context) {
+	var _p3 = context.node;
+	switch (_p3.ctor) {
+		case 'Block':
+			return A2(
+				_elm_lang$core$Maybe$withDefault,
+				0,
+				_elm_lang$core$List$maximum(
+					A2(
+						_elm_lang$core$List$map,
+						function (_p4) {
+							return _user$project$Mathquelm$centerLine(
+								A2(_user$project$Mathquelm_RenderContext$enter, context, _p4));
+						},
+						_p3._0)));
+		case 'Character':
+			return _user$project$Mathquelm$getHeight(context) / 2;
+		case 'Fraction':
+			return _user$project$Mathquelm$getHeight(
+				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+		case 'Parens':
+			var _p6 = _p3._1;
+			var parenOverlap = function () {
+				var _p5 = _p6;
+				if (_p5.ctor === 'Parens') {
+					return 5.0e-2 * _user$project$Mathquelm$getHeight(
+						A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
+				} else {
+					return 0.2 * _user$project$Mathquelm$getHeight(
+						A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
+				}
+			}();
+			return _user$project$Mathquelm$centerLine(
+				A2(_user$project$Mathquelm_RenderContext$enter, context, _p6)) + (parenOverlap / 2);
+		case 'Diacritic':
+			return 0;
+		case 'Subscript':
+			return 0;
+		case 'Superscript':
+			return _user$project$Mathquelm$getHeight(
+				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+		default:
+			return _user$project$Mathquelm$getHeight(
+				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+	}
+};
+var _user$project$Mathquelm$getHeight = function (context) {
+	var height = function () {
+		var _p7 = context.node;
+		switch (_p7.ctor) {
+			case 'Block':
+				return function (_p8) {
+					var _p9 = _p8;
+					return _p9._0 + _p9._1;
+				}(
+					A2(
+						_user$project$Mathquelm$mapBoth,
+						function (_p10) {
+							return A2(
+								_elm_lang$core$Maybe$withDefault,
+								0,
+								_elm_lang$core$List$maximum(_p10));
+						},
+						_elm_lang$core$List$unzip(
+							A2(
+								_elm_lang$core$List$map,
+								function (_p11) {
+									return _user$project$Mathquelm$heightRect(
+										A2(_user$project$Mathquelm_RenderContext$enter, context, _p11));
+								},
+								_p7._0))));
+			case 'Character':
+				return _elm_lang$core$Basics$toFloat(
+					_elm_lang$core$Basics$floor(
+						_user$project$Mathquelm_RenderContext$fontBox(context)));
+			case 'Parens':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._1)) * 1.05;
+			case 'Diacritic':
+				return context.config.baseFontSize + _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._1));
+			case 'Fraction':
+				return (_user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0)) + _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._1))) + 1;
+			case 'Subscript':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0));
+			case 'Superscript':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0));
+			default:
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0)) + _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._1));
+		}
+	}();
+	var _p12 = A2(
+		_elm_lang$core$Debug$log,
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'height of ',
+			_elm_lang$core$Basics$toString(context.node)),
+		height);
+	return height;
+};
+var _user$project$Mathquelm$heightRect = function (context) {
+	var distanceFromTop = _user$project$Mathquelm$centerLine(context);
+	var height = _user$project$Mathquelm$getHeight(context);
+	return {ctor: '_Tuple2', _0: distanceFromTop, _1: height - distanceFromTop};
+};
+var _user$project$Mathquelm$loadFont = _mdgriffith$style_elements$Element$html(
 	A3(
 		_elm_lang$html$Html$node,
 		'style',
@@ -19529,69 +19958,88 @@ var _user$project$Mathquill$loadFont = _mdgriffith$style_elements$Element$html(
 			_0: _elm_lang$html$Html$text('\n@font-face {\n    font-family: \"Symbola\";\n    src: url(\"fonts/Symbola.ttf\") format(\"truetype\");\n}\n                '),
 			_1: {ctor: '[]'}
 		}));
-var _user$project$Mathquill$maxDepth = 6;
-var _user$project$Mathquill$baseFontSize = 28.8;
-var _user$project$Mathquill$scaled = A2(_mdgriffith$style_elements$Style_Scale$modular, _user$project$Mathquill$baseFontSize, 0.9);
-var _user$project$Mathquill$textStyle = function (depth) {
-	return {
+var _user$project$Mathquelm$tree = _user$project$Mathquelm_DisplayNode$Block(
+	{
 		ctor: '::',
-		_0: _mdgriffith$style_elements$Style_Font$size(
-			_user$project$Mathquill$scaled(depth + 1)),
+		_0: _user$project$Mathquelm_DisplayNode$Character(
+			_elm_lang$core$Native_Utils.chr('b')),
 		_1: {
 			ctor: '::',
-			_0: _mdgriffith$style_elements$Style_Font$lineHeight(1),
+			_0: A2(
+				_user$project$Mathquelm_DisplayNode$Subsuperscript,
+				_user$project$Mathquelm_DisplayNode$Character(
+					_elm_lang$core$Native_Utils.chr('1')),
+				_user$project$Mathquelm_DisplayNode$Character(
+					_elm_lang$core$Native_Utils.chr('1'))),
 			_1: {
 				ctor: '::',
-				_0: _mdgriffith$style_elements$Style_Font$typeface(
-					{
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Style_Font$font('Symbola'),
-						_1: {ctor: '[]'}
-					}),
+				_0: A2(
+					_user$project$Mathquelm_DisplayNode$Parens,
+					_user$project$Mathquelm_DisplayNode$Parentheses,
+					A2(
+						_user$project$Mathquelm_DisplayNode$Fraction,
+						_user$project$Mathquelm_DisplayNode$Character(
+							_elm_lang$core$Native_Utils.chr('1')),
+						A2(
+							_user$project$Mathquelm_DisplayNode$Fraction,
+							_user$project$Mathquelm_DisplayNode$Character(
+								_elm_lang$core$Native_Utils.chr('2')),
+							A2(
+								_user$project$Mathquelm_DisplayNode$Fraction,
+								_user$project$Mathquelm_DisplayNode$Character(
+									_elm_lang$core$Native_Utils.chr('3')),
+								A2(
+									_user$project$Mathquelm_DisplayNode$Fraction,
+									_user$project$Mathquelm_DisplayNode$Character(
+										_elm_lang$core$Native_Utils.chr('4')),
+									A2(
+										_user$project$Mathquelm_DisplayNode$Fraction,
+										_user$project$Mathquelm_DisplayNode$Character(
+											_elm_lang$core$Native_Utils.chr('5')),
+										_user$project$Mathquelm_DisplayNode$Character(
+											_elm_lang$core$Native_Utils.chr('3')))))))),
 				_1: {ctor: '[]'}
 			}
 		}
-	};
-};
-var _user$project$Mathquill$getHeight = F2(
-	function (depth, node) {
-		var height = function () {
-			var _p0 = node;
-			switch (_p0.ctor) {
-				case 'Block':
-					return A2(
-						_elm_lang$core$Maybe$withDefault,
-						_user$project$Mathquill$scaled(depth),
-						_elm_lang$core$List$maximum(
-							A2(
-								_elm_lang$core$List$map,
-								_user$project$Mathquill$getHeight(depth),
-								_p0._0)));
-				case 'Character':
-					return _user$project$Mathquill$scaled(depth);
-				case 'Parens':
-					return A2(_user$project$Mathquill$getHeight, depth, _p0._1) * 1.05;
-				case 'Diacritic':
-					return _user$project$Mathquill$baseFontSize + A2(_user$project$Mathquill$getHeight, depth, _p0._1);
-				default:
-					return (A2(_user$project$Mathquill$getHeight, depth + 1, _p0._0) + A2(_user$project$Mathquill$getHeight, depth + 1, _p0._1)) + 1;
-			}
-		}();
-		var _p1 = A2(
-			_elm_lang$core$Debug$log,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'height of ',
-				_elm_lang$core$Basics$toString(node)),
-			height);
-		return height;
 	});
-var _user$project$Mathquill$Italic = {ctor: 'Italic'};
-var _user$project$Mathquill$Debug = {ctor: 'Debug'};
-var _user$project$Mathquill$Divider = {ctor: 'Divider'};
-var _user$project$Mathquill$divider = A3(
+var _user$project$Mathquelm$DebugBox = function (a) {
+	return {ctor: 'DebugBox', _0: a};
+};
+var _user$project$Mathquelm$DebugCenterline = {ctor: 'DebugCenterline'};
+var _user$project$Mathquelm$wrapInDebug = F3(
+	function (context, node, rendered) {
+		var outlineBox = context.config.showBoxes ? A2(
+			_mdgriffith$style_elements$Element$el,
+			_user$project$Mathquelm$DebugBox(context.depth),
+			{ctor: '[]'}) : _elm_lang$core$Basics$identity;
+		var centerLineDiv = context.config.showCenterLines ? _mdgriffith$style_elements$Element$above(
+			{
+				ctor: '::',
+				_0: A3(
+					_mdgriffith$style_elements$Element$el,
+					_user$project$Mathquelm$DebugCenterline,
+					{
+						ctor: '::',
+						_0: _mdgriffith$style_elements$Element_Attributes$moveDown(
+							_user$project$Mathquelm$centerLine(context)),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$style_elements$Element_Attributes$width(
+								_mdgriffith$style_elements$Element_Attributes$px(16)),
+							_1: {ctor: '[]'}
+						}
+					},
+					_mdgriffith$style_elements$Element$empty),
+				_1: {ctor: '[]'}
+			}) : _elm_lang$core$Basics$identity;
+		return centerLineDiv(
+			outlineBox(rendered));
+	});
+var _user$project$Mathquelm$Italic = {ctor: 'Italic'};
+var _user$project$Mathquelm$Divider = {ctor: 'Divider'};
+var _user$project$Mathquelm$divider = A3(
 	_mdgriffith$style_elements$Element$el,
-	_user$project$Mathquill$Divider,
+	_user$project$Mathquelm$Divider,
 	{
 		ctor: '::',
 		_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$fill),
@@ -19603,42 +20051,29 @@ var _user$project$Mathquill$divider = A3(
 		}
 	},
 	_mdgriffith$style_elements$Element$empty);
-var _user$project$Mathquill$ScaledBlock = function (a) {
+var _user$project$Mathquelm$ScaledBlock = function (a) {
 	return {ctor: 'ScaledBlock', _0: a};
 };
-var _user$project$Mathquill$Base = {ctor: 'Base'};
-var _user$project$Mathquill$None = {ctor: 'None'};
-var _user$project$Mathquill$stylesheet = _mdgriffith$style_elements$Style$styleSheet(
-	A2(
-		_elm_lang$core$Basics_ops['++'],
-		{
-			ctor: '::',
-			_0: A2(
-				_mdgriffith$style_elements$Style$style,
-				_user$project$Mathquill$None,
-				{ctor: '[]'}),
-			_1: {
+var _user$project$Mathquelm$Base = {ctor: 'Base'};
+var _user$project$Mathquelm$None = {ctor: 'None'};
+var _user$project$Mathquelm$stylesheet = function (config) {
+	return _mdgriffith$style_elements$Style$styleSheet(
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			{
 				ctor: '::',
 				_0: A2(
 					_mdgriffith$style_elements$Style$style,
-					_user$project$Mathquill$Divider,
-					{
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Style_Border$top(1),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$style_elements$Style_Color$border(_elm_lang$core$Color$black),
-							_1: {ctor: '[]'}
-						}
-					}),
+					_user$project$Mathquelm$None,
+					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_mdgriffith$style_elements$Style$style,
-						_user$project$Mathquill$Debug,
+						_user$project$Mathquelm$Divider,
 						{
 							ctor: '::',
-							_0: _mdgriffith$style_elements$Style_Border$all(1),
+							_0: _mdgriffith$style_elements$Style_Border$top(1),
 							_1: {
 								ctor: '::',
 								_0: _mdgriffith$style_elements$Style_Color$border(_elm_lang$core$Color$black),
@@ -19649,39 +20084,94 @@ var _user$project$Mathquill$stylesheet = _mdgriffith$style_elements$Style$styleS
 						ctor: '::',
 						_0: A2(
 							_mdgriffith$style_elements$Style$style,
-							_user$project$Mathquill$Italic,
+							_user$project$Mathquelm$Italic,
 							{
 								ctor: '::',
 								_0: _mdgriffith$style_elements$Style_Font$italic,
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _mdgriffith$style_elements$Style_Font$typeface(
+										{
+											ctor: '::',
+											_0: _mdgriffith$style_elements$Style_Font$font('Times New Roman'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
 							}),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_mdgriffith$style_elements$Style$style,
+								_user$project$Mathquelm$DebugCenterline,
+								{
+									ctor: '::',
+									_0: _mdgriffith$style_elements$Style_Border$top(1),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$style_elements$Style_Color$border(_elm_lang$core$Color$red),
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
-			}
-		},
-		A2(
-			_elm_lang$core$List$map,
-			function (depth) {
-				return A2(
-					_mdgriffith$style_elements$Style$style,
-					_user$project$Mathquill$ScaledBlock(depth),
-					_user$project$Mathquill$textStyle(depth));
 			},
-			A2(_elm_lang$core$List$range, 0, _user$project$Mathquill$maxDepth))));
-var _user$project$Mathquill$parenNode = F2(
-	function (nodeHeight, parensString) {
-		var _p2 = A2(_elm_lang$core$Debug$log, 'nodeHeight', nodeHeight);
-		var heightFrac = nodeHeight / _user$project$Mathquill$baseFontSize;
-		var xScale = A2(_elm_lang$core$Basics$min, 1 + (0.2 * (heightFrac - 1)), _user$project$Mathquill$parensScale);
-		var yScale = heightFrac * _user$project$Mathquill$parensScale;
+			_elm_lang$core$List$concat(
+				A2(
+					_elm_lang$core$List$map,
+					function (depth) {
+						return {
+							ctor: '::',
+							_0: A2(
+								_mdgriffith$style_elements$Style$style,
+								_user$project$Mathquelm$ScaledBlock(depth),
+								{
+									ctor: '::',
+									_0: _mdgriffith$style_elements$Style_Font$size(
+										A2(_user$project$Mathquelm_Config$scaled, config, depth)),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$style_elements$Style_Font$typeface(
+											{
+												ctor: '::',
+												_0: _mdgriffith$style_elements$Style_Font$font('Symbola'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_mdgriffith$style_elements$Style$style,
+									_user$project$Mathquelm$DebugBox(depth),
+									{
+										ctor: '::',
+										_0: _mdgriffith$style_elements$Style_Color$background(
+											_user$project$Mathquelm$debugColor(depth)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							}
+						};
+					},
+					A2(_elm_lang$core$List$range, 0, config.maxDepth)))));
+};
+var _user$project$Mathquelm$parenNode = F3(
+	function (context, nodeHeight, parensString) {
+		var _p13 = A2(_elm_lang$core$Debug$log, 'nodeHeight', nodeHeight);
+		var heightFrac = nodeHeight / context.config.baseFontSize;
+		var xScale = A2(_elm_lang$core$Basics$min, 1 + (0.2 * (heightFrac - 1)), _user$project$Mathquelm$parensScale);
+		var yScale = heightFrac * _user$project$Mathquelm$parensScale;
 		return A3(
 			_mdgriffith$style_elements$Element$row,
-			_user$project$Mathquill$None,
+			_user$project$Mathquelm$None,
 			{
 				ctor: '::',
 				_0: _mdgriffith$style_elements$Element_Attributes$height(
-					_mdgriffith$style_elements$Element_Attributes$px(nodeHeight * _user$project$Mathquill$parensScale)),
+					_mdgriffith$style_elements$Element_Attributes$px(nodeHeight * _user$project$Mathquelm$parensScale)),
 				_1: {
 					ctor: '::',
 					_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
@@ -19692,24 +20182,25 @@ var _user$project$Mathquill$parenNode = F2(
 				ctor: '::',
 				_0: A3(
 					_mdgriffith$style_elements$Element$el,
-					_user$project$Mathquill$None,
+					_user$project$Mathquelm$None,
 					{
 						ctor: '::',
-						_0: A2(_user$project$Mathquill$scaleAttr, xScale, yScale),
+						_0: A2(_user$project$Mathquelm$scaleAttr, xScale, yScale),
 						_1: {ctor: '[]'}
 					},
 					_mdgriffith$style_elements$Element$text(parensString)),
 				_1: {ctor: '[]'}
 			});
 	});
-var _user$project$Mathquill$leftParen = F2(
-	function (nodeHeight, parenType) {
-		return A2(
-			_user$project$Mathquill$parenNode,
+var _user$project$Mathquelm$leftParen = F3(
+	function (context, nodeHeight, parenType) {
+		return A3(
+			_user$project$Mathquelm$parenNode,
+			context,
 			nodeHeight,
 			function () {
-				var _p3 = parenType;
-				switch (_p3.ctor) {
+				var _p14 = parenType;
+				switch (_p14.ctor) {
 					case 'Parentheses':
 						return '(';
 					case 'Brackets':
@@ -19721,14 +20212,15 @@ var _user$project$Mathquill$leftParen = F2(
 				}
 			}());
 	});
-var _user$project$Mathquill$rightParen = F2(
-	function (nodeHeight, parenType) {
-		return A2(
-			_user$project$Mathquill$parenNode,
+var _user$project$Mathquelm$rightParen = F3(
+	function (context, nodeHeight, parenType) {
+		return A3(
+			_user$project$Mathquelm$parenNode,
+			context,
 			nodeHeight,
 			function () {
-				var _p4 = parenType;
-				switch (_p4.ctor) {
+				var _p15 = parenType;
+				switch (_p15.ctor) {
 					case 'Parentheses':
 						return ')';
 					case 'Brackets':
@@ -19740,52 +20232,65 @@ var _user$project$Mathquill$rightParen = F2(
 				}
 			}());
 	});
-var _user$project$Mathquill$diacritic = function (diacriticType) {
-	var _p5 = diacriticType;
+var _user$project$Mathquelm$diacritic = function (diacriticType) {
+	var _p16 = diacriticType;
 	return A3(
 		_mdgriffith$style_elements$Element$el,
-		_user$project$Mathquill$None,
+		_user$project$Mathquelm$None,
 		{ctor: '[]'},
 		_mdgriffith$style_elements$Element$text('^'));
 };
-var _user$project$Mathquill$render = F2(
-	function (inDepth, node) {
-		var depth = A2(_elm_lang$core$Basics$min, inDepth, _user$project$Mathquill$maxDepth);
-		var _p6 = node;
-		switch (_p6.ctor) {
+var _user$project$Mathquelm$render = function (context) {
+	var rendered = function () {
+		var _p17 = context.node;
+		switch (_p17.ctor) {
 			case 'Block':
+				var blockCenter = _user$project$Mathquelm$centerLine(context);
 				return A3(
 					_mdgriffith$style_elements$Element$row,
-					_user$project$Mathquill$ScaledBlock(depth),
+					_user$project$Mathquelm$None,
 					{
 						ctor: '::',
 						_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$content),
 						_1: {
 							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
+							_0: _mdgriffith$style_elements$Element_Attributes$alignTop,
 							_1: {ctor: '[]'}
 						}
 					},
 					A2(
 						_elm_lang$core$List$map,
-						_user$project$Mathquill$render(depth),
-						_p6._0));
+						function (child) {
+							var childContext = A2(_user$project$Mathquelm_RenderContext$enter, context, child);
+							var rendered = _user$project$Mathquelm$render(childContext);
+							var childCenter = _user$project$Mathquelm$centerLine(childContext);
+							return A3(
+								_mdgriffith$style_elements$Element$el,
+								_user$project$Mathquelm$None,
+								{
+									ctor: '::',
+									_0: _mdgriffith$style_elements$Element_Attributes$paddingTop(blockCenter - childCenter),
+									_1: {ctor: '[]'}
+								},
+								rendered);
+						},
+						_p17._0));
 			case 'Character':
-				var _p7 = _p6._0;
-				var style = _elm_lang$core$Char$isDigit(_p7) ? _user$project$Mathquill$None : _user$project$Mathquill$Italic;
+				var _p18 = _p17._0;
+				var style = _elm_lang$core$Char$isDigit(_p18) ? _user$project$Mathquelm$None : _user$project$Mathquelm$Italic;
 				return A3(
 					_mdgriffith$style_elements$Element$el,
 					style,
 					{ctor: '[]'},
 					_mdgriffith$style_elements$Element$text(
-						_elm_lang$core$String$fromChar(_p7)));
+						_elm_lang$core$String$fromChar(_p18)));
 			case 'Parens':
-				var _p9 = _p6._0;
-				var _p8 = _p6._1;
-				var contentHeight = A2(_user$project$Mathquill$getHeight, depth, _p8);
+				var _p19 = _p17._0;
+				var childContext = A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._1);
+				var contentHeight = _user$project$Mathquelm$getHeight(childContext);
 				return A3(
 					_mdgriffith$style_elements$Element$row,
-					_user$project$Mathquill$ScaledBlock(depth),
+					_user$project$Mathquelm$None,
 					{
 						ctor: '::',
 						_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
@@ -19797,13 +20302,13 @@ var _user$project$Mathquill$render = F2(
 					},
 					{
 						ctor: '::',
-						_0: A2(_user$project$Mathquill$leftParen, contentHeight, _p9),
+						_0: A3(_user$project$Mathquelm$leftParen, context, contentHeight, _p19),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$Mathquill$render, depth, _p8),
+							_0: _user$project$Mathquelm$render(childContext),
 							_1: {
 								ctor: '::',
-								_0: A2(_user$project$Mathquill$rightParen, contentHeight, _p9),
+								_0: A3(_user$project$Mathquelm$rightParen, context, contentHeight, _p19),
 								_1: {ctor: '[]'}
 							}
 						}
@@ -19811,21 +20316,22 @@ var _user$project$Mathquill$render = F2(
 			case 'Diacritic':
 				return A3(
 					_mdgriffith$style_elements$Element$column,
-					_user$project$Mathquill$None,
+					_user$project$Mathquelm$None,
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _user$project$Mathquill$diacritic(_p6._0),
+						_0: _user$project$Mathquelm$diacritic(_p17._0),
 						_1: {
 							ctor: '::',
-							_0: A2(_user$project$Mathquill$render, depth, _p6._1),
+							_0: _user$project$Mathquelm$render(
+								A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._1)),
 							_1: {ctor: '[]'}
 						}
 					});
-			default:
+			case 'Fraction':
 				return A3(
 					_mdgriffith$style_elements$Element$column,
-					_user$project$Mathquill$ScaledBlock(depth),
+					_user$project$Mathquelm$None,
 					{
 						ctor: '::',
 						_0: _mdgriffith$style_elements$Element_Attributes$center,
@@ -19833,94 +20339,124 @@ var _user$project$Mathquill$render = F2(
 					},
 					{
 						ctor: '::',
-						_0: A2(_user$project$Mathquill$render, depth + 1, _p6._0),
+						_0: _user$project$Mathquelm$render(
+							A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0)),
 						_1: {
 							ctor: '::',
-							_0: _user$project$Mathquill$divider,
+							_0: _user$project$Mathquelm$divider,
 							_1: {
 								ctor: '::',
-								_0: A2(_user$project$Mathquill$render, depth + 1, _p6._1),
+								_0: _user$project$Mathquelm$render(
+									A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._1)),
 								_1: {ctor: '[]'}
 							}
 						}
 					});
+			case 'Subscript':
+				return _user$project$Mathquelm$render(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0));
+			case 'Superscript':
+				return _user$project$Mathquelm$render(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0));
+			default:
+				return A3(
+					_mdgriffith$style_elements$Element$column,
+					_user$project$Mathquelm$None,
+					{ctor: '[]'},
+					{
+						ctor: '::',
+						_0: _user$project$Mathquelm$render(
+							A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0)),
+						_1: {
+							ctor: '::',
+							_0: _user$project$Mathquelm$render(
+								A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._1)),
+							_1: {ctor: '[]'}
+						}
+					});
 		}
-	});
-var _user$project$Mathquill$Fraction = F2(
-	function (a, b) {
-		return {ctor: 'Fraction', _0: a, _1: b};
-	});
-var _user$project$Mathquill$Diacritic = F2(
-	function (a, b) {
-		return {ctor: 'Diacritic', _0: a, _1: b};
-	});
-var _user$project$Mathquill$Parens = F2(
-	function (a, b) {
-		return {ctor: 'Parens', _0: a, _1: b};
-	});
-var _user$project$Mathquill$Block = function (a) {
-	return {ctor: 'Block', _0: a};
+	}();
+	return A3(
+		_user$project$Mathquelm$wrapInDebug,
+		context,
+		_mdgriffith$style_elements$Element$node,
+		A3(
+			_mdgriffith$style_elements$Element$el,
+			_user$project$Mathquelm$ScaledBlock(context.depth),
+			{ctor: '[]'},
+			rendered));
 };
-var _user$project$Mathquill$Character = function (a) {
-	return {ctor: 'Character', _0: a};
-};
-var _user$project$Mathquill$Pipes = {ctor: 'Pipes'};
-var _user$project$Mathquill$Curlies = {ctor: 'Curlies'};
-var _user$project$Mathquill$Brackets = {ctor: 'Brackets'};
-var _user$project$Mathquill$Parentheses = {ctor: 'Parentheses'};
-var _user$project$Mathquill$tree = _user$project$Mathquill$Block(
-	{
-		ctor: '::',
-		_0: A2(
-			_user$project$Mathquill$Parens,
-			_user$project$Mathquill$Parentheses,
-			A2(
-				_user$project$Mathquill$Parens,
-				_user$project$Mathquill$Parentheses,
-				A2(
-					_user$project$Mathquill$Fraction,
-					_user$project$Mathquill$Character(
-						_elm_lang$core$Native_Utils.chr('1')),
-					A2(
-						_user$project$Mathquill$Fraction,
-						_user$project$Mathquill$Character(
-							_elm_lang$core$Native_Utils.chr('2')),
-						A2(
-							_user$project$Mathquill$Fraction,
-							_user$project$Mathquill$Character(
-								_elm_lang$core$Native_Utils.chr('3')),
-							_user$project$Mathquill$Character(
-								_elm_lang$core$Native_Utils.chr('b'))))))),
-		_1: {ctor: '[]'}
-	});
-var _user$project$Mathquill$mathquill = A2(
-	_mdgriffith$style_elements$Element$layout,
-	_user$project$Mathquill$stylesheet,
-	A3(
-		_mdgriffith$style_elements$Element$column,
-		_user$project$Mathquill$None,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: _user$project$Mathquill$loadFont,
-			_1: {
+var _user$project$Mathquelm$mathquill = function (config) {
+	return A2(
+		_mdgriffith$style_elements$Element$layout,
+		_user$project$Mathquelm$stylesheet(config),
+		A3(
+			_mdgriffith$style_elements$Element$column,
+			_user$project$Mathquelm$None,
+			{ctor: '[]'},
+			{
 				ctor: '::',
-				_0: A2(_user$project$Mathquill$render, 0, _user$project$Mathquill$tree),
-				_1: {ctor: '[]'}
-			}
-		}));
-var _user$project$Mathquill$Bar = {ctor: 'Bar'};
-var _user$project$Mathquill$Dot = {ctor: 'Dot'};
-var _user$project$Mathquill$Hat = {ctor: 'Hat'};
+				_0: _user$project$Mathquelm$loadFont,
+				_1: {
+					ctor: '::',
+					_0: _user$project$Mathquelm$render(
+						A2(_user$project$Mathquelm_RenderContext$baseContext, config, _user$project$Mathquelm$tree)),
+					_1: {ctor: '[]'}
+				}
+			}));
+};
 
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		return {};
+		return {
+			ctor: '_Tuple2',
+			_0: function () {
+				var _p0 = msg;
+				switch (_p0.ctor) {
+					case 'Noop':
+						return model;
+					case 'ToggleCenterLine':
+						return _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								config: _user$project$Mathquelm_Config$toggleCenterLineDisplay(model.config)
+							});
+					default:
+						return _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								config: _user$project$Mathquelm_Config$toggleBoxesDisplay(model.config)
+							});
+				}
+			}(),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
 	});
-var _user$project$Main$initialModel = {};
-var _user$project$Main$Model = {};
+var _user$project$Main$init = {
+	ctor: '_Tuple2',
+	_0: {config: _user$project$Mathquelm_Config$default},
+	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Main$Model = function (a) {
+	return {config: a};
+};
+var _user$project$Main$ToggleBoxes = {ctor: 'ToggleBoxes'};
+var _user$project$Main$ToggleCenterLine = {ctor: 'ToggleCenterLine'};
 var _user$project$Main$Noop = {ctor: 'Noop'};
+var _user$project$Main$subscriptions = function (model) {
+	return _elm_lang$keyboard$Keyboard$presses(
+		function (code) {
+			var _p1 = _elm_lang$core$Char$fromCode(code);
+			switch (_p1.valueOf()) {
+				case 'c':
+					return _user$project$Main$ToggleCenterLine;
+				case 'b':
+					return _user$project$Main$ToggleBoxes;
+				default:
+					return _user$project$Main$Noop;
+			}
+		});
+};
 var _user$project$Main$None = {ctor: 'None'};
 var _user$project$Main$stylesheet = _mdgriffith$style_elements$Style$styleSheet(
 	{
@@ -19939,10 +20475,11 @@ var _user$project$Main$view = function (model) {
 			_mdgriffith$style_elements$Element$el,
 			_user$project$Main$None,
 			{ctor: '[]'},
-			_mdgriffith$style_elements$Element$html(_user$project$Mathquill$mathquill)));
+			_mdgriffith$style_elements$Element$html(
+				_user$project$Mathquelm$mathquill(model.config))));
 };
-var _user$project$Main$main = _elm_lang$html$Html$beginnerProgram(
-	{model: _user$project$Main$initialModel, view: _user$project$Main$view, update: _user$project$Main$update})();
+var _user$project$Main$main = _elm_lang$html$Html$program(
+	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})();
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

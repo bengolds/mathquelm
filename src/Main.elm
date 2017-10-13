@@ -1,17 +1,21 @@
 module Main exposing (..)
 
+import Char
 import Element exposing (..)
 import Html exposing (Html)
-import Mathquill exposing (mathquill)
+import Keyboard
+import Mathquelm exposing (mathquill)
+import Mathquelm.Config as Config exposing (Config)
 import Style exposing (..)
 
 
 main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { model = initialModel
+    Html.program
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
 
 
@@ -20,12 +24,17 @@ main =
 
 
 type alias Model =
-    {}
+    { config : Config
+    }
 
 
-initialModel : Model
-initialModel =
-    {}
+init : ( Model, Cmd Msg )
+init =
+    ( { config =
+            Config.default
+      }
+    , Cmd.none
+    )
 
 
 
@@ -34,13 +43,23 @@ initialModel =
 
 type Msg
     = Noop
+    | ToggleCenterLine
+    | ToggleBoxes
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    ( case msg of
         Noop ->
-            {}
+            model
+
+        ToggleCenterLine ->
+            { model | config = Config.toggleCenterLineDisplay model.config }
+
+        ToggleBoxes ->
+            { model | config = Config.toggleBoxesDisplay model.config }
+    , Cmd.none
+    )
 
 
 
@@ -54,7 +73,7 @@ type Styles
 view : Model -> Html Msg
 view model =
     layout stylesheet <|
-        el None [] (html mathquill)
+        el None [] (html (mathquill model.config))
 
 
 stylesheet : StyleSheet Styles variations
@@ -63,3 +82,23 @@ stylesheet =
         [ style None
             []
         ]
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Keyboard.presses
+        (\code ->
+            case Char.fromCode code of
+                'c' ->
+                    ToggleCenterLine
+
+                'b' ->
+                    ToggleBoxes
+
+                _ ->
+                    Noop
+        )
