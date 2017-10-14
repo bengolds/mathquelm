@@ -19688,6 +19688,9 @@ var _user$project$Mathquelm_Config$Config = F5(
 		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e};
 	});
 
+var _user$project$Mathquelm_DisplayNode$SquareRoot = function (a) {
+	return {ctor: 'SquareRoot', _0: a};
+};
 var _user$project$Mathquelm_DisplayNode$Subsuperscript = F2(
 	function (a, b) {
 		return {ctor: 'Subsuperscript', _0: a, _1: b};
@@ -19775,8 +19778,10 @@ var _user$project$Mathquelm_RenderContext$enter = F2(
 						return _user$project$Mathquelm_RenderContext$hardDeepen;
 					case 'Superscript':
 						return _user$project$Mathquelm_RenderContext$hardDeepen;
-					default:
+					case 'Subsuperscript':
 						return _user$project$Mathquelm_RenderContext$hardDeepen;
+					default:
+						return _elm_lang$core$Basics$identity;
 				}
 			}()(context));
 	});
@@ -19838,49 +19843,56 @@ var _user$project$Mathquelm$mapBoth = F2(
 		};
 	});
 var _user$project$Mathquelm$centerLine = function (context) {
-	var _p3 = context.node;
-	switch (_p3.ctor) {
-		case 'Block':
-			return A2(
-				_elm_lang$core$Maybe$withDefault,
-				0,
-				_elm_lang$core$List$maximum(
-					A2(
-						_elm_lang$core$List$map,
-						function (_p4) {
-							return _user$project$Mathquelm$centerLine(
-								A2(_user$project$Mathquelm_RenderContext$enter, context, _p4));
-						},
-						_p3._0)));
-		case 'Character':
-			return _user$project$Mathquelm$getHeight(context) / 2;
-		case 'Fraction':
-			return _user$project$Mathquelm$getHeight(
-				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
-		case 'Parens':
-			var _p6 = _p3._1;
-			var parenOverlap = function () {
-				var _p5 = _p6;
-				if (_p5.ctor === 'Parens') {
-					return 5.0e-2 * _user$project$Mathquelm$getHeight(
-						A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
-				} else {
-					return 0.2 * _user$project$Mathquelm$getHeight(
-						A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
-				}
-			}();
-			return _user$project$Mathquelm$centerLine(
-				A2(_user$project$Mathquelm_RenderContext$enter, context, _p6)) + (parenOverlap / 2);
-		case 'Diacritic':
-			return 0;
-		case 'Subscript':
-			return 0;
-		case 'Superscript':
-			return _user$project$Mathquelm$getHeight(
-				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
-		default:
-			return _user$project$Mathquelm$getHeight(
-				A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+	centerLine:
+	while (true) {
+		var _p3 = context.node;
+		switch (_p3.ctor) {
+			case 'Block':
+				return A2(
+					_elm_lang$core$Maybe$withDefault,
+					0,
+					_elm_lang$core$List$maximum(
+						A2(
+							_elm_lang$core$List$map,
+							function (_p4) {
+								return _user$project$Mathquelm$centerLine(
+									A2(_user$project$Mathquelm_RenderContext$enter, context, _p4));
+							},
+							_p3._0)));
+			case 'Character':
+				return _user$project$Mathquelm$getHeight(context) / 2;
+			case 'Fraction':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+			case 'Parens':
+				var _p6 = _p3._1;
+				var parenOverlap = function () {
+					var _p5 = _p6;
+					if (_p5.ctor === 'Parens') {
+						return 5.0e-2 * _user$project$Mathquelm$getHeight(
+							A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
+					} else {
+						return 0.2 * _user$project$Mathquelm$getHeight(
+							A2(_user$project$Mathquelm_RenderContext$enter, context, _p6));
+					}
+				}();
+				return _user$project$Mathquelm$centerLine(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p6)) + (parenOverlap / 2);
+			case 'Diacritic':
+				return 0;
+			case 'Subscript':
+				return 0;
+			case 'Superscript':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+			case 'Subsuperscript':
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
+			default:
+				var _v4 = A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0);
+				context = _v4;
+				continue centerLine;
+		}
 	}
 };
 var _user$project$Mathquelm$getHeight = function (context) {
@@ -19928,10 +19940,13 @@ var _user$project$Mathquelm$getHeight = function (context) {
 			case 'Superscript':
 				return _user$project$Mathquelm$getHeight(
 					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0));
-			default:
+			case 'Subsuperscript':
 				return _user$project$Mathquelm$getHeight(
 					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0)) + _user$project$Mathquelm$getHeight(
 					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._1));
+			default:
+				return _user$project$Mathquelm$getHeight(
+					A2(_user$project$Mathquelm_RenderContext$enter, context, _p7._0));
 		}
 	}();
 	var _p12 = A2(
@@ -19962,13 +19977,17 @@ var _user$project$Mathquelm$tree = _user$project$Mathquelm_DisplayNode$Block(
 	{
 		ctor: '::',
 		_0: _user$project$Mathquelm_DisplayNode$Character(
-			_elm_lang$core$Native_Utils.chr('b')),
+			_elm_lang$core$Native_Utils.chr('α')),
 		_1: {
 			ctor: '::',
 			_0: A2(
 				_user$project$Mathquelm_DisplayNode$Subsuperscript,
-				_user$project$Mathquelm_DisplayNode$Character(
-					_elm_lang$core$Native_Utils.chr('1')),
+				A2(
+					_user$project$Mathquelm_DisplayNode$Fraction,
+					_user$project$Mathquelm_DisplayNode$Character(
+						_elm_lang$core$Native_Utils.chr('z')),
+					_user$project$Mathquelm_DisplayNode$Character(
+						_elm_lang$core$Native_Utils.chr('d'))),
 				_user$project$Mathquelm_DisplayNode$Character(
 					_elm_lang$core$Native_Utils.chr('1'))),
 			_1: {
@@ -19998,7 +20017,17 @@ var _user$project$Mathquelm$tree = _user$project$Mathquelm_DisplayNode$Block(
 											_elm_lang$core$Native_Utils.chr('5')),
 										_user$project$Mathquelm_DisplayNode$Character(
 											_elm_lang$core$Native_Utils.chr('3')))))))),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: _user$project$Mathquelm_DisplayNode$SquareRoot(
+						A2(
+							_user$project$Mathquelm_DisplayNode$Fraction,
+							_user$project$Mathquelm_DisplayNode$Character(
+								_elm_lang$core$Native_Utils.chr('x')),
+							_user$project$Mathquelm_DisplayNode$Character(
+								_elm_lang$core$Native_Utils.chr('y')))),
+					_1: {ctor: '[]'}
+				}
 			}
 		}
 	});
@@ -20159,10 +20188,10 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 					},
 					A2(_elm_lang$core$List$range, 0, config.maxDepth)))));
 };
-var _user$project$Mathquelm$parenNode = F3(
-	function (context, nodeHeight, parensString) {
-		var _p13 = A2(_elm_lang$core$Debug$log, 'nodeHeight', nodeHeight);
-		var heightFrac = nodeHeight / context.config.baseFontSize;
+var _user$project$Mathquelm$scaledDelimiter = F4(
+	function (context, contentHeight, scale, symbol) {
+		var _p13 = A2(_elm_lang$core$Debug$log, 'contentHeight', contentHeight);
+		var heightFrac = contentHeight / context.config.baseFontSize;
 		var xScale = A2(_elm_lang$core$Basics$min, 1 + (0.2 * (heightFrac - 1)), _user$project$Mathquelm$parensScale);
 		var yScale = heightFrac * _user$project$Mathquelm$parensScale;
 		return A3(
@@ -20171,7 +20200,7 @@ var _user$project$Mathquelm$parenNode = F3(
 			{
 				ctor: '::',
 				_0: _mdgriffith$style_elements$Element_Attributes$height(
-					_mdgriffith$style_elements$Element_Attributes$px(nodeHeight * _user$project$Mathquelm$parensScale)),
+					_mdgriffith$style_elements$Element_Attributes$px(contentHeight * _user$project$Mathquelm$parensScale)),
 				_1: {
 					ctor: '::',
 					_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
@@ -20188,16 +20217,17 @@ var _user$project$Mathquelm$parenNode = F3(
 						_0: A2(_user$project$Mathquelm$scaleAttr, xScale, yScale),
 						_1: {ctor: '[]'}
 					},
-					_mdgriffith$style_elements$Element$text(parensString)),
+					_mdgriffith$style_elements$Element$text(symbol)),
 				_1: {ctor: '[]'}
 			});
 	});
 var _user$project$Mathquelm$leftParen = F3(
 	function (context, nodeHeight, parenType) {
-		return A3(
-			_user$project$Mathquelm$parenNode,
+		return A4(
+			_user$project$Mathquelm$scaledDelimiter,
 			context,
 			nodeHeight,
+			_user$project$Mathquelm$parensScale,
 			function () {
 				var _p14 = parenType;
 				switch (_p14.ctor) {
@@ -20214,10 +20244,11 @@ var _user$project$Mathquelm$leftParen = F3(
 	});
 var _user$project$Mathquelm$rightParen = F3(
 	function (context, nodeHeight, parenType) {
-		return A3(
-			_user$project$Mathquelm$parenNode,
+		return A4(
+			_user$project$Mathquelm$scaledDelimiter,
 			context,
 			nodeHeight,
+			_user$project$Mathquelm$parensScale,
 			function () {
 				var _p15 = parenType;
 				switch (_p15.ctor) {
@@ -20358,7 +20389,7 @@ var _user$project$Mathquelm$render = function (context) {
 			case 'Superscript':
 				return _user$project$Mathquelm$render(
 					A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0));
-			default:
+			case 'Subsuperscript':
 				return A3(
 					_mdgriffith$style_elements$Element$column,
 					_user$project$Mathquelm$None,
@@ -20371,6 +20402,46 @@ var _user$project$Mathquelm$render = function (context) {
 							ctor: '::',
 							_0: _user$project$Mathquelm$render(
 								A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._1)),
+							_1: {ctor: '[]'}
+						}
+					});
+			default:
+				var childContext = A2(_user$project$Mathquelm_RenderContext$enter, context, _p17._0);
+				return A3(
+					_mdgriffith$style_elements$Element$row,
+					_user$project$Mathquelm$None,
+					{
+						ctor: '::',
+						_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$style_elements$Element_Attributes$spacing(5),
+							_1: {ctor: '[]'}
+						}
+					},
+					{
+						ctor: '::',
+						_0: A4(
+							_user$project$Mathquelm$scaledDelimiter,
+							context,
+							_user$project$Mathquelm$getHeight(childContext),
+							0.5,
+							'√'),
+						_1: {
+							ctor: '::',
+							_0: A3(
+								_mdgriffith$style_elements$Element$column,
+								_user$project$Mathquelm$None,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _user$project$Mathquelm$divider,
+									_1: {
+										ctor: '::',
+										_0: _user$project$Mathquelm$render(childContext),
+										_1: {ctor: '[]'}
+									}
+								}),
 							_1: {ctor: '[]'}
 						}
 					});

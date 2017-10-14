@@ -19,8 +19,8 @@ import Style.Font as Font
 tree : DisplayNode
 tree =
     Block
-        [ Character 'b'
-        , Subsuperscript (Character '1') (Character '1')
+        [ Character 'α'
+        , Subsuperscript (Fraction (Character 'z') (Character 'd')) (Character '1')
         , Parens Parentheses <|
             Fraction (Character '1') <|
                 Fraction (Character '2') <|
@@ -28,6 +28,7 @@ tree =
                         Fraction (Character '4') <|
                             Fraction (Character '5') <|
                                 Character '3'
+        , SquareRoot (Block [ Fraction (Character 'x') (Character 'y'), Character 'a', Character 'b' ])
         ]
 
 
@@ -189,6 +190,23 @@ render context =
                         [ render (enter context top)
                         , render (enter context bottom)
                         ]
+
+                SquareRoot child ->
+                    let
+                        childContext =
+                            enter context child
+                    in
+                    row None
+                        [ verticalCenter
+                        , spacing 5
+                        ]
+                        [ scaledDelimiter context (getHeight childContext) 1 "√"
+                        , column None
+                            []
+                            [ divider
+                            , render childContext
+                            ]
+                        ]
     in
     wrapInDebug context node <|
         el (ScaledBlock context.depth) [] rendered
@@ -254,6 +272,9 @@ centerLine context =
         Subsuperscript top _ ->
             getHeight (enter context top)
 
+        SquareRoot child ->
+            centerLine (enter context child)
+
 
 heightRect : RenderContext -> ( Float, Float )
 heightRect context =
@@ -304,6 +325,9 @@ getHeight context =
                 Subsuperscript top bottom ->
                     getHeight (enter context top) + getHeight (enter context bottom)
 
+                SquareRoot child ->
+                    getHeight (enter context child)
+
         _ =
             Debug.log ("height of " ++ toString context.node) height
     in
@@ -318,25 +342,25 @@ parensScale =
     1.2
 
 
-parenNode context nodeHeight parensString =
+scaledDelimiter context contentHeight scale symbol =
     let
         heightFrac =
-            nodeHeight / context.config.baseFontSize
+            contentHeight / context.config.baseFontSize
 
         xScale =
-            min (1 + 0.2 * (heightFrac - 1)) parensScale
+            min (1 + 0.2 * (heightFrac - 1)) scale
 
         yScale =
-            heightFrac * parensScale
+            heightFrac * scale
 
         _ =
-            Debug.log "nodeHeight" nodeHeight
+            Debug.log "contentHeight" contentHeight
     in
     row None
-        [ height (px <| nodeHeight * parensScale)
+        [ height (px <| contentHeight * scale)
         , verticalCenter
         ]
-        [ el None [ scaleAttr xScale yScale ] (text parensString) ]
+        [ el None [ scaleAttr xScale yScale ] (text symbol) ]
 
 
 
@@ -344,7 +368,7 @@ parenNode context nodeHeight parensString =
 
 
 leftParen context nodeHeight parenType =
-    parenNode context nodeHeight <|
+    scaledDelimiter context nodeHeight parensScale <|
         case parenType of
             Parentheses ->
                 "("
@@ -360,7 +384,7 @@ leftParen context nodeHeight parenType =
 
 
 rightParen context nodeHeight parenType =
-    parenNode context nodeHeight <|
+    scaledDelimiter context nodeHeight parensScale <|
         case parenType of
             Parentheses ->
                 ")"

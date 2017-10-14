@@ -74,5 +74,8 @@ enter context nextNode =
 
                 Subsuperscript _ _ ->
                     hardDeepen
+
+                SquareRoot _ ->
+                    identity
            )
         |> setNode nextNode

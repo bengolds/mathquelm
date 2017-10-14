@@ -10,6 +10,7 @@ type DisplayNode
     | Subscript DisplayNode
     | Superscript DisplayNode
     | Subsuperscript DisplayNode DisplayNode
+    | SquareRoot DisplayNode
 
 
 type ParensType
