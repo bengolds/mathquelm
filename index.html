@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<head><meta charset="UTF-8"></head>
+<div id="main"></div>
+<link rel="import" href="src/Mathquill/mathquill-import.html">
+<link rel="stylesheet" href="/libs/katex/katex.css">
+<script src="libs/katex/katex.js"></script>
+<script src="elm.js"></script>
+<style> 
+    .katex {font-size : 28.8px;}
+</style>
+<script>
+    var node = document.getElementById('main');
+    var app = Elm.Main.embed(node);
+
+    app.ports.katexOut.subscribe (function (latex) {
+        katex.render(latex, document.getElementById("katex"));
+    });
+</script>

@@ -1,7 +1,5 @@
 module Mathquelm exposing (..)
 
---module Mathquill exposing (mathquill)
-
 import Char
 import Color
 import Element exposing (..)
@@ -19,7 +17,7 @@ import Style.Font as Font
 tree : DisplayNode
 tree =
     Block
-        [ Character 'α'
+        [ Character 'a'
         , Subsuperscript (Fraction (Character 'z') (Character 'd')) (Character '1')
         , Parens Parentheses <|
             Fraction (Character '1') <|
@@ -30,6 +28,11 @@ tree =
                                 Character '3'
         , SquareRoot (Block [ Fraction (Character 'x') (Character 'y'), Character 'a', Character 'b' ])
         ]
+
+
+latex : String
+latex =
+    toLatex tree
 
 
 
@@ -97,7 +100,7 @@ loadFont =
                 """
 @font-face {
     font-family: "Symbola";
-    src: url("fonts/Symbola.ttf") format("truetype");
+    src: url("/fonts/Symbola.ttf") format("truetype");
 }
                 """
             ]
