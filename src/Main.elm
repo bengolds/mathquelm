@@ -2,10 +2,10 @@ port module Main exposing (..)
 
 import Char
 import Element exposing (..)
-import Element.Attributes exposing (id)
+import Element.Attributes exposing (id, padding, spacing)
 import Html exposing (Html)
 import Keyboard
-import Mathquelm exposing (mathquill)
+import Mathquelm exposing (editableQuelm)
 import Mathquelm.Config as Config exposing (Config)
 import Mathquill.StyleElements as Mathquill
 import Style exposing (..)
@@ -27,8 +27,7 @@ main =
 
 
 type alias Model =
-    { config : Config
-    }
+    Mathquelm.Model
 
 
 init : ( Model, Cmd Msg )
@@ -36,11 +35,15 @@ init =
     let
         _ =
             Debug.log "latex" Mathquelm.latex
+
+        mqModel =
+            { config =
+                Config.default
+            , rootBlock = Mathquelm.sampleTree
+            }
     in
-    ( { config =
-            Config.default
-      }
-    , katexOut Mathquelm.latex
+    ( mqModel
+    , katexOut (Mathquelm.latex mqModel)
     )
 
 
@@ -52,6 +55,7 @@ type Msg
     = Noop
     | ToggleCenterLine
     | ToggleBoxes
+    | MathquelmMsg Mathquelm.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,6 +69,9 @@ update msg model =
 
         ToggleBoxes ->
             { model | config = Config.toggleBoxesDisplay model.config }
+
+        MathquelmMsg msg ->
+            Mathquelm.update msg model
     , Cmd.none
     )
 
@@ -82,10 +89,10 @@ view : Model -> Html Msg
 view model =
     layout stylesheet <|
         column None
-            []
-            [ html (mathquill model.config)
+            [ spacing 20, padding 20 ]
+            [ el None [ padding 0 ] <| html (Html.map MathquelmMsg (editableQuelm model))
             , katex
-            , Mathquill.staticMath Mathquill [] Mathquelm.latex
+            , Mathquill.staticMath Mathquill [] (Mathquelm.latex model)
             ]
 
 
@@ -121,15 +128,18 @@ port katexOut : String -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Keyboard.presses
-        (\code ->
-            case Char.fromCode code of
-                'c' ->
-                    ToggleCenterLine
+    Sub.batch
+        [ Keyboard.presses
+            (\code ->
+                case Char.fromCode code of
+                    'c' ->
+                        ToggleCenterLine
 
-                'b' ->
-                    ToggleBoxes
+                    'b' ->
+                        ToggleBoxes
 
-                _ ->
-                    Noop
-        )
+                    _ ->
+                        Noop
+            )
+        , Sub.map MathquelmMsg (Mathquelm.subscriptions model)
+        ]

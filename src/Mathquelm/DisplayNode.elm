@@ -2,15 +2,37 @@ module Mathquelm.DisplayNode exposing (..)
 
 
 type DisplayNode
+    = Cursor
+    | Leaf LeafType
+    | OneBlock OneBlockType Block
+    | TwoBlocks TwoBlocksType Block Block
+
+
+type LeafType
     = Character Char
-    | Block (List DisplayNode)
-    | Parens ParensType DisplayNode
-    | Diacritic DiacriticType DisplayNode
-    | Fraction DisplayNode DisplayNode
-    | Subscript DisplayNode
-    | Superscript DisplayNode
-    | Subsuperscript DisplayNode DisplayNode
-    | SquareRoot DisplayNode
+
+
+type OneBlockType
+    = Parens ParensType
+    | Subscript
+
+
+type TwoBlocksType
+    = Fraction
+
+
+
+{--
+      -| Diacritic DiacriticType Block
+      -| Subscript Block
+      -| Superscript Block
+      -| Subsuperscript Block Block
+      -| SquareRoot Block
+      --}
+
+
+type alias Block =
+    List DisplayNode
 
 
 type ParensType
@@ -26,20 +48,26 @@ type DiacriticType
     | Bar
 
 
-toLatex : DisplayNode -> String
-toLatex node =
+toLatex : Block -> String
+toLatex nodes =
+    List.map toLatexNode nodes
+        |> String.concat
+
+
+toLatexNode : DisplayNode -> String
+toLatexNode node =
     let
         wrapBrackets contents =
             "{" ++ contents ++ "}"
     in
     case node of
-        Character c ->
+        Cursor ->
+            ""
+
+        Leaf (Character c) ->
             String.fromChar c
 
-        Block nodes ->
-            String.concat (List.map toLatex nodes)
-
-        Parens parenType node ->
+        OneBlock (Parens parenType) block ->
             let
                 ( left, right ) =
                     case parenType of
@@ -55,32 +83,35 @@ toLatex node =
                         Pipes ->
                             ( "|", "|" )
             in
-            "\\left" ++ left ++ toLatex node ++ "\\right" ++ right
+            "\\left" ++ left ++ toLatex block ++ "\\right" ++ right
 
-        Diacritic diacriticType node ->
-            ""
+        OneBlock Subscript block ->
+            "_" ++ wrapBrackets (toLatex block)
 
-        Fraction numerator denominator ->
+        TwoBlocks Fraction numerator denominator ->
             "\\frac"
                 ++ wrapBrackets (toLatex numerator)
                 ++ wrapBrackets (toLatex denominator)
 
-        Subscript node ->
-            "_" ++ wrapBrackets (toLatex node)
-
-        Superscript node ->
-            "^" ++ wrapBrackets (toLatex node)
-
-        Subsuperscript sub super ->
-            "^"
-                ++ wrapBrackets (toLatex sub)
-                ++ "_"
-                ++ wrapBrackets (toLatex super)
-
-        SquareRoot node ->
-            "\\sqrt" ++ wrapBrackets (toLatex node)
 
 
-
---| Subsuperscript DisplayNode DisplayNode
---| SquareRoot DisplayNode
+{--
+  -        Diacritic diacriticType block ->
+  -            ""
+  -
+  -        Subscript block ->
+  -            "_" ++ wrapBrackets (toLatex block)
+  -
+  -        Superscript block ->
+  -            "^" ++ wrapBrackets (toLatex block)
+  -
+  -        Subsuperscript sub super ->
+  -            "^"
+  -                ++ wrapBrackets (toLatex super)
+  -                ++ "_"
+  -                ++ wrapBrackets (toLatex sub)
+  -
+  -        SquareRoot block ->
+  -            "\\sqrt" ++ wrapBrackets (toLatex block)
+  -
+  --}

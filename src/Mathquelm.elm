@@ -5,7 +5,9 @@ import Color
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Html exposing (Html)
+import Keyboard
 import Mathquelm.Config as Config exposing (Config)
+import Mathquelm.CursorMovement exposing (MoveDirection(..), moveCursor)
 import Mathquelm.DisplayNode exposing (..)
 import Mathquelm.RenderContext as RenderContext exposing (..)
 import Style exposing (..)
@@ -14,38 +16,71 @@ import Style.Color as Color
 import Style.Font as Font
 
 
-tree : DisplayNode
-tree =
-    Block
-        [ Character 'a'
-        , Subsuperscript (Fraction (Character 'z') (Character 'd')) (Character '1')
-        , Parens Parentheses <|
-            Fraction (Character '1') <|
-                Fraction (Character '2') <|
-                    Fraction (Character '3') <|
-                        Fraction (Character '4') <|
-                            Fraction (Character '5') <|
-                                Character '3'
-        , SquareRoot (Block [ Fraction (Character 'x') (Character 'y'), Character 'a', Character 'b' ])
-        ]
+stringToNodes string =
+    String.toList string
+        |> List.map (Character >> Leaf)
 
 
-latex : String
-latex =
-    toLatex tree
+sampleTree : Block
+sampleTree =
+    stringToNodes "abc"
+        ++ [ OneBlock (Parens Parentheses) (stringToNodes "ac")
+           , TwoBlocks Fraction (stringToNodes "adc") [ TwoBlocks Fraction (stringToNodes "a") [ Leaf <| Character 'a', OneBlock Subscript (stringToNodes "deets") ] ]
+           ]
+        ++ stringToNodes "dce"
+        ++ [ Cursor
+           ]
 
 
+latex : Model -> String
+latex model =
+    toLatex model.rootBlock
 
---mathquill : Html msg
 
-
-mathquill config =
-    layout (stylesheet config) <|
-        column None
+editableQuelm : Model -> Html Msg
+editableQuelm model =
+    layout (stylesheet model.config) <|
+        column Base
             []
             [ loadFont
-            , render (baseContext config tree)
+            , renderBlock (baseContext model.config (Leaf <| Character 'a')) model.rootBlock
             ]
+
+
+type DeleteDirection
+    = DeleteLeft
+    | DeleteRight
+
+
+type Msg
+    = Noop
+    | Move MoveDirection
+    | Select MoveDirection
+    | Delete DeleteDirection
+    | CharacterInserted Char
+    | ExitBlock
+
+
+type alias Model =
+    { rootBlock : Block
+    , config : Config
+    }
+
+
+defaultModel =
+    { rootBlock = []
+    , config = Config.default
+    }
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        Move dir ->
+            { model | rootBlock = moveCursor dir model.rootBlock }
+
+        _ ->
+            model
 
 
 type Styles
@@ -54,6 +89,8 @@ type Styles
     | ScaledBlock Int
     | Divider
     | Italic
+    | EmptySquare
+    | CursorLine
     | DebugCenterline
     | DebugBox Int
 
@@ -71,9 +108,19 @@ stylesheet config =
             [ Font.italic
             , Font.typeface [ Font.font "Times New Roman" ]
             ]
+        , style CursorLine
+            [ Border.left 2
+            , Color.border Color.green
+            ]
+        , style EmptySquare
+            [ Color.background Color.gray
+            ]
         , style DebugCenterline
             [ Border.top 1
             , Color.border Color.red
+            ]
+        , style Base
+            [ Font.typeface [ Font.font "Symbola" ]
             ]
         ]
             ++ (List.range 0 config.maxDepth
@@ -81,7 +128,6 @@ stylesheet config =
                         (\depth ->
                             [ style (ScaledBlock depth)
                                 [ Font.size (Config.scaled config depth)
-                                , Font.typeface [ Font.font "Symbola" ]
                                 ]
                             , style (DebugBox depth)
                                 [ Color.background <| debugColor depth ]
@@ -111,36 +157,62 @@ loadFont =
 --| SuperSubscript DisplayNode DisplayNode
 
 
-render : RenderContext -> Element Styles variation msg
-render context =
+renderBlock : RenderContext -> Block -> Element Styles variation Msg
+renderBlock context block =
+    case block of
+        [] ->
+            el EmptySquare
+                [ width (px <| fontSize context * 0.8)
+                , height (px <| fontSize context)
+                ]
+                empty
+
+        [ x ] ->
+            renderNode (enter context x)
+
+        _ ->
+            let
+                blockCenter =
+                    blockCenterLine context block
+            in
+            row None
+                [ width content, alignTop ]
+                (List.map
+                    (\child ->
+                        let
+                            childContext =
+                                enter context child
+
+                            rendered =
+                                renderNode childContext
+
+                            childCenter =
+                                centerLine childContext
+                        in
+                        el None [ paddingTop (blockCenter - childCenter) ] rendered
+                    )
+                    block
+                )
+
+
+renderNode : RenderContext -> Element Styles variation Msg
+renderNode context =
     let
+        renderChildren =
+            renderBlock context
+
+        getChildrenHeight =
+            getBlockHeight context
+
         rendered =
             case context.node of
-                Block nodes ->
-                    let
-                        blockCenter =
-                            centerLine context
-                    in
-                    row None
-                        [ width content, alignTop ]
-                        (List.map
-                            (\child ->
-                                let
-                                    childContext =
-                                        enter context child
+                Cursor ->
+                    el None [ width <| px 0 ] empty
+                        |> within
+                            [ el CursorLine [ width (px 2), height (px (getHeight context)) ] empty
+                            ]
 
-                                    rendered =
-                                        render childContext
-
-                                    childCenter =
-                                        centerLine childContext
-                                in
-                                el None [ paddingTop (blockCenter - childCenter) ] rendered
-                            )
-                            nodes
-                        )
-
-                Character c ->
+                Leaf (Character c) ->
                     let
                         style =
                             if Char.isDigit c then
@@ -150,66 +222,83 @@ render context =
                     in
                     el style [] <| text (String.fromChar c)
 
-                Parens parenType child ->
+                OneBlock blockType block ->
                     let
-                        childContext =
-                            enter context child
-
                         contentHeight =
-                            getHeight childContext
+                            getChildrenHeight block
+
+                        renderedBlock =
+                            renderChildren block
                     in
-                    row None
-                        [ verticalCenter
-                        , spacing 5
-                        ]
-                        [ leftParen context contentHeight parenType
-                        , render childContext
-                        , rightParen context contentHeight parenType
-                        ]
+                    case blockType of
+                        Subscript ->
+                            renderedBlock
 
-                Diacritic diacriticType child ->
-                    column None [] <|
-                        [ diacritic diacriticType
-                        , render (enter context child)
-                        ]
+                        Parens parenType ->
+                            row None
+                                [ verticalCenter
+                                , spacing 5
+                                ]
+                                [ leftParen context contentHeight parenType
+                                , renderedBlock
+                                , rightParen context contentHeight parenType
+                                ]
 
-                Fraction numerator denominator ->
-                    column None
-                        [ center ]
-                        [ render (enter context numerator)
-                        , divider
-                        , render (enter context denominator)
-                        ]
-
-                Subscript child ->
-                    render (enter context child)
-
-                Superscript child ->
-                    render (enter context child)
-
-                Subsuperscript top bottom ->
-                    column None
-                        []
-                        [ render (enter context top)
-                        , render (enter context bottom)
-                        ]
-
-                SquareRoot child ->
+                TwoBlocks Fraction numerator denominator ->
+                    -- There are two things to pad in a fraction: the insides, so the divider is a bit wider, and the outside, so they
+                    -- stack nicely.
                     let
-                        childContext =
-                            enter context child
+                        innerPadding =
+                            fontSize context / 8
+
+                        outerPadding =
+                            paddingXY 3 0
+
+                        padInsides =
+                            el None [ paddingXY innerPadding 0 ]
                     in
-                    row None
-                        [ verticalCenter
-                        , spacing 5
+                    column None
+                        [ center, outerPadding ]
+                        [ padInsides <| renderChildren numerator
+                        , divider
+                        , padInsides <| renderChildren denominator
                         ]
-                        [ scaledDelimiter context (getHeight childContext) 1 "√"
-                        , column None
-                            []
-                            [ divider
-                            , render childContext
-                            ]
-                        ]
+
+        {--
+  -                Diacritic diacriticType block ->
+  -                    column None [] <|
+  -                        [ diacritic diacriticType
+  -                        , renderChildren block
+  -                        ]
+  -                Subscript block ->
+  -                    renderChildren block
+  -
+  -                Superscript block ->
+  -                    renderChildren block
+  -
+  -                Subsuperscript sub super ->
+  -                    column None
+  -                        []
+  -                        [ renderChildren super
+  -                        , renderChildren sub
+  -                        ]
+  -
+  -                SquareRoot block ->
+  -                    let
+  -                        contentHeight =
+  -                            getChildrenHeight block
+  -                    in
+  -                    row None
+  -                        [ verticalCenter
+  -                        ]
+  -                        [ scaledDelimiter context contentHeight 1 "√"
+  -                        , column None
+  -                            []
+  -                            [ divider
+  -                            , el None [ paddingXY 8 0 ] (renderChildren block)
+  -                            ]
+  -                        ]
+  --}
     in
     wrapInDebug context node <|
         el (ScaledBlock context.depth) [] rendered
@@ -236,47 +325,77 @@ wrapInDebug context node rendered =
         |> centerLineDiv
 
 
-centerLine : RenderContext -> Float
-centerLine context =
-    --centerLine is the distance from the top of the middle of the block
-    case context.node of
-        Block nodes ->
-            List.map (enter context >> centerLine) nodes
+blockCenterLine : RenderContext -> Block -> Float
+blockCenterLine context block =
+    case block of
+        [] ->
+            fontSize context / 2
+
+        [ x ] ->
+            centerLine (enter context x)
+
+        _ ->
+            List.map (enter context >> centerLine) block
                 |> List.maximum
                 |> Maybe.withDefault 0
 
-        Character c ->
+
+centerLine : RenderContext -> Float
+centerLine context =
+    --centerLine is the distance from the top of the middle of the block
+    let
+        getChildrenHeight =
+            getBlockHeight context
+    in
+    case context.node of
+        Cursor ->
             getHeight context / 2
 
-        Fraction numerator denominator ->
-            getHeight (enter context numerator)
+        Leaf (Character _) ->
+            getHeight context / 2
 
-        Parens _ child ->
+        OneBlock nodeType block ->
             let
-                parenOverlap =
-                    case child of
-                        Parens _ _ ->
-                            0.05 * getHeight (enter context child)
-
-                        _ ->
-                            0.2 * getHeight (enter context child)
+                blockHeight =
+                    getBlockHeight context block
             in
-            centerLine (enter context child) + parenOverlap / 2
+            case nodeType of
+                Parens _ ->
+                    let
+                        parenOverlap =
+                            --case  of
+                            --Parens _ _ ->
+                            --0.05 * getChildrenHeight block
+                            --_ ->
+                            0.2 * getChildrenHeight block
+                    in
+                    blockCenterLine context block + parenOverlap / 2
 
-        Diacritic _ _ ->
-            0
+                Subscript ->
+                    0
 
-        Subscript _ ->
-            0
+        TwoBlocks Fraction numerator denominator ->
+            getChildrenHeight numerator
 
-        Superscript child ->
-            getHeight (enter context child)
 
-        Subsuperscript top _ ->
-            getHeight (enter context top)
 
-        SquareRoot child ->
-            centerLine (enter context child)
+{--
+  -        Diacritic _ _ ->
+  -            0
+  -
+  -        Subscript _ ->
+  -            0
+  -
+  -        Superscript block ->
+  -            getChildrenHeight block
+  -
+  -        Subsuperscript _ super ->
+  -            getChildrenHeight super
+  -
+  -        SquareRoot block ->
+  -            blockCenterLine context block
+  -
+  --}
 
 
 heightRect : RenderContext -> ( Float, Float )
@@ -296,45 +415,67 @@ mapBoth fn ( fst, snd ) =
     ( fn fst, fn snd )
 
 
+getBlockHeight : RenderContext -> Block -> Float
+getBlockHeight context block =
+    case block of
+        [] ->
+            fontSize context
+
+        [ x ] ->
+            getHeight (enter context x)
+
+        _ ->
+            List.map (enter context >> heightRect) block
+                |> List.unzip
+                |> mapBoth (List.maximum >> Maybe.withDefault 0)
+                |> (\( distFromTop, distFromBottom ) -> distFromTop + distFromBottom)
+
+
 getHeight : RenderContext -> Float
 getHeight context =
     let
-        height =
-            case context.node of
-                Block nodes ->
-                    List.map (enter context >> heightRect) nodes
-                        |> List.unzip
-                        |> mapBoth (List.maximum >> Maybe.withDefault 0)
-                        |> (\( distFromTop, distFromBottom ) -> distFromTop + distFromBottom)
-
-                Character c ->
-                    floor (RenderContext.fontBox context) |> toFloat
-
-                Parens parenType child ->
-                    getHeight (enter context child) * 1.05
-
-                Diacritic diacriticType child ->
-                    context.config.baseFontSize + getHeight (enter context child)
-
-                Fraction numerator denominator ->
-                    getHeight (enter context numerator) + getHeight (enter context denominator) + 1
-
-                Subscript child ->
-                    getHeight (enter context child)
-
-                Superscript child ->
-                    getHeight (enter context child)
-
-                Subsuperscript top bottom ->
-                    getHeight (enter context top) + getHeight (enter context bottom)
-
-                SquareRoot child ->
-                    getHeight (enter context child)
-
-        _ =
-            Debug.log ("height of " ++ toString context.node) height
+        getChildrenHeight =
+            getBlockHeight context
     in
-    height
+    case context.node of
+        Cursor ->
+            fontSize context
+
+        Leaf (Character c) ->
+            floor (RenderContext.fontBox context) |> toFloat
+
+        OneBlock nodeType block ->
+            let
+                blockHeight =
+                    getChildrenHeight block
+            in
+            case nodeType of
+                Parens _ ->
+                    blockHeight * 1.05
+
+                Subscript ->
+                    blockHeight
+
+        TwoBlocks Fraction numerator denominator ->
+            getChildrenHeight numerator + getChildrenHeight denominator + 1
+
+
+
+{--
+  -        Diacritic diacriticType block ->
+  -            context.config.baseFontSize + getChildrenHeight block
+  -        Subscript block ->
+  -            getChildrenHeight block
+  -
+  -        Superscript block ->
+  -            getChildrenHeight block
+  -
+  -        Subsuperscript sub super ->
+  -            getChildrenHeight super + getChildrenHeight sub
+  -
+  -        SquareRoot block ->
+  -            getChildrenHeight block + 1
+  --}
 
 
 scaleAttr x y =
@@ -342,7 +483,7 @@ scaleAttr x y =
 
 
 parensScale =
-    1.2
+    1.1
 
 
 scaledDelimiter context contentHeight scale symbol =
@@ -351,13 +492,13 @@ scaledDelimiter context contentHeight scale symbol =
             contentHeight / context.config.baseFontSize
 
         xScale =
-            min (1 + 0.2 * (heightFrac - 1)) scale
+            min (1 + 0.1 * (heightFrac - 1)) scale
 
         yScale =
             heightFrac * scale
 
-        _ =
-            Debug.log "contentHeight" contentHeight
+        --_ =
+        --Debug.log "contentHeight" contentHeight
     in
     row None
         [ height (px <| contentHeight * scale)
@@ -434,3 +575,35 @@ debugColor depth =
 
         _ ->
             Color.brown
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Keyboard.downs keyPressed
+
+
+keyPressed : Keyboard.KeyCode -> Msg
+keyPressed keyCode =
+    let
+        _ =
+            Debug.log "keyCode" (toString keyCode)
+    in
+    case keyCode of
+        37 ->
+            Move Left
+
+        38 ->
+            Move Up
+
+        39 ->
+            Move Right
+
+        40 ->
+            Move Down
+
+        _ ->
+            Noop

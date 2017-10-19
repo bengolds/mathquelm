@@ -51,31 +51,21 @@ setNode node context =
 enter context nextNode =
     context
         |> (case nextNode of
-                Block _ ->
-                    identity
-
-                Character _ ->
-                    identity
-
-                Parens _ _ ->
-                    identity
-
-                Diacritic _ _ ->
-                    identity
-
-                Fraction _ _ ->
+                TwoBlocks Fraction _ _ ->
                     deepen
 
-                Subscript _ ->
+                OneBlock Subscript _ ->
                     hardDeepen
 
-                Superscript _ ->
-                    hardDeepen
-
-                Subsuperscript _ _ ->
-                    hardDeepen
-
-                SquareRoot _ ->
+                {--
+  -
+  -                Superscript _ ->
+  -                    hardDeepen
+  -
+  -                Subsuperscript _ _ ->
+  -                    hardDeepen
+  --}
+                _ ->
                     identity
            )
         |> setNode nextNode
