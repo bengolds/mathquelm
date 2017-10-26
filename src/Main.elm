@@ -36,11 +36,11 @@ init =
         _ =
             Debug.log "latex" Mathquelm.latex
 
+        defaultModel =
+            Mathquelm.defaultModel
+
         mqModel =
-            { config =
-                Config.default
-            , rootBlock = Mathquelm.sampleTree
-            }
+            { defaultModel | rootBlock = Mathquelm.sampleTree }
     in
     ( mqModel
     , katexOut (Mathquelm.latex mqModel)

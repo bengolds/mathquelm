@@ -1,21 +1,21 @@
 module Mathquelm.RenderContext exposing (..)
 
 import Mathquelm.Config exposing (..)
-import Mathquelm.DisplayNode exposing (..)
+import Mathquelm.DisplayTree exposing (..)
 import Style.Scale as Scale
 
 
 type alias RenderContext =
     { config : Config
     , depth : Int
-    , node : DisplayNode
+    , target : TreeObject
     }
 
 
-baseContext config node =
+baseContext config target =
     { config = config
     , depth = 0
-    , node = node
+    , target = target
     }
 
 
@@ -43,18 +43,18 @@ fontBox context =
     fontSize context * 1.2
 
 
-setNode : DisplayNode -> RenderContext -> RenderContext
-setNode node context =
-    { context | node = node }
+setTarget : TreeObject -> RenderContext -> RenderContext
+setTarget newTarget context =
+    { context | target = newTarget }
 
 
-enter context nextNode =
+enter context nextTarget =
     context
-        |> (case nextNode of
-                TwoBlocks Fraction _ _ ->
+        |> (case nextTarget of
+                Node (TwoBlocks Fraction _ _) ->
                     deepen
 
-                OneBlock Subscript _ ->
+                Node (OneBlock Subscript _) ->
                     hardDeepen
 
                 {--
@@ -68,4 +68,4 @@ enter context nextNode =
                 _ ->
                     identity
            )
-        |> setNode nextNode
+        |> setTarget nextTarget

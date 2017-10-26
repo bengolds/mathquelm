@@ -3190,6 +3190,88 @@ var _elm_lang$core$Platform$Task = {ctor: 'Task'};
 var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
 var _elm_lang$core$Platform$Router = {ctor: 'Router'};
 
+var _Skinney$murmur3$UTF8$accumulate = F3(
+	function (add, $char, _p0) {
+		var _p1 = _p0;
+		var _p3 = _p1._0;
+		var _p2 = _p1._1;
+		if (_p2.ctor === 'Nothing') {
+			return (_elm_lang$core$Native_Utils.cmp($char, 128) < 0) ? {
+				ctor: '_Tuple2',
+				_0: A2(add, $char, _p3),
+				_1: _elm_lang$core$Maybe$Nothing
+			} : ((_elm_lang$core$Native_Utils.cmp($char, 2048) < 0) ? {
+				ctor: '_Tuple2',
+				_0: A2(
+					add,
+					128 | (63 & $char),
+					A2(add, 192 | ($char >>> 6), _p3)),
+				_1: _elm_lang$core$Maybe$Nothing
+			} : (((_elm_lang$core$Native_Utils.cmp($char, 55296) < 0) || (_elm_lang$core$Native_Utils.cmp($char, 57344) > -1)) ? {
+				ctor: '_Tuple2',
+				_0: A2(
+					add,
+					128 | (63 & $char),
+					A2(
+						add,
+						128 | (63 & ($char >>> 6)),
+						A2(add, 224 | ($char >>> 12), _p3))),
+				_1: _elm_lang$core$Maybe$Nothing
+			} : {
+				ctor: '_Tuple2',
+				_0: _p3,
+				_1: _elm_lang$core$Maybe$Just($char)
+			}));
+		} else {
+			var combined = A2(
+				F2(
+					function (x, y) {
+						return x + y;
+					}),
+				65536,
+				(1023 & $char) | ((1023 & _p2._0) << 10));
+			return {
+				ctor: '_Tuple2',
+				_0: A2(
+					add,
+					128 | (63 & combined),
+					A2(
+						add,
+						128 | (63 & (combined >>> 6)),
+						A2(
+							add,
+							128 | (63 & (combined >>> 12)),
+							A2(add, 240 | (combined >>> 18), _p3)))),
+				_1: _elm_lang$core$Maybe$Nothing
+			};
+		}
+	});
+var _Skinney$murmur3$UTF8$foldl = F3(
+	function (op, acc, input) {
+		return _elm_lang$core$Tuple$first(
+			A3(
+				_elm_lang$core$String$foldl,
+				function (_p4) {
+					return A2(
+						_Skinney$murmur3$UTF8$accumulate,
+						op,
+						_elm_lang$core$Char$toCode(_p4));
+				},
+				{ctor: '_Tuple2', _0: acc, _1: _elm_lang$core$Maybe$Nothing},
+				input));
+	});
+var _Skinney$murmur3$UTF8$length = function (input) {
+	return A3(
+		_Skinney$murmur3$UTF8$foldl,
+		_elm_lang$core$Basics$always(
+			F2(
+				function (x, y) {
+					return x + y;
+				})(1)),
+		0,
+		input);
+};
+
 var _Skinney$murmur3$Murmur3$mur = F2(
 	function (c, h) {
 		return 4294967295 & (((h & 65535) * c) + ((65535 & ((h >>> 16) * c)) << 16));
@@ -3219,7 +3301,7 @@ var _Skinney$murmur3$Murmur3$hashFold = F2(
 		var _p5 = _p4;
 		var _p7 = _p5._0;
 		var _p6 = _p5._1;
-		var res = _p5._2 | ((255 & _elm_lang$core$Char$toCode(c)) << _p7);
+		var res = _p5._2 | (c << _p7);
 		if (_elm_lang$core$Native_Utils.cmp(_p7, 24) > -1) {
 			var newHash = _Skinney$murmur3$Murmur3$step(
 				A2(_Skinney$murmur3$Murmur3$mix, _p6, res));
@@ -3232,9 +3314,9 @@ var _Skinney$murmur3$Murmur3$hashString = F2(
 	function (seed, str) {
 		return A2(
 			_Skinney$murmur3$Murmur3$finalize,
-			_elm_lang$core$String$length(str),
+			_Skinney$murmur3$UTF8$length(str),
 			A3(
-				_elm_lang$core$String$foldl,
+				_Skinney$murmur3$UTF8$foldl,
 				_Skinney$murmur3$Murmur3$hashFold,
 				{ctor: '_Tuple3', _0: 0, _1: seed, _2: 0},
 				str));
@@ -15675,21 +15757,24 @@ var _mdgriffith$style_elements$Element_Internal_Model$Vary = F2(
 	function (a, b) {
 		return {ctor: 'Vary', _0: a, _1: b};
 	});
-var _mdgriffith$style_elements$Element_Internal_Model$mapAttr = F2(
-	function (fn, attr) {
+var _mdgriffith$style_elements$Element_Internal_Model$mapAllAttr = F3(
+	function (fnMsg, fnVar, attr) {
 		var _p42 = attr;
 		switch (_p42.ctor) {
 			case 'Event':
 				return _mdgriffith$style_elements$Element_Internal_Model$Event(
-					A2(_elm_lang$html$Html_Attributes$map, fn, _p42._0));
+					A2(_elm_lang$html$Html_Attributes$map, fnMsg, _p42._0));
 			case 'InputEvent':
 				return _mdgriffith$style_elements$Element_Internal_Model$InputEvent(
-					A2(_elm_lang$html$Html_Attributes$map, fn, _p42._0));
+					A2(_elm_lang$html$Html_Attributes$map, fnMsg, _p42._0));
 			case 'Attr':
 				return _mdgriffith$style_elements$Element_Internal_Model$Attr(
-					A2(_elm_lang$html$Html_Attributes$map, fn, _p42._0));
+					A2(_elm_lang$html$Html_Attributes$map, fnMsg, _p42._0));
 			case 'Vary':
-				return A2(_mdgriffith$style_elements$Element_Internal_Model$Vary, _p42._0, _p42._1);
+				return A2(
+					_mdgriffith$style_elements$Element_Internal_Model$Vary,
+					fnVar(_p42._0),
+					_p42._1);
 			case 'Height':
 				return _mdgriffith$style_elements$Element_Internal_Model$Height(_p42._0);
 			case 'Width':
@@ -15730,8 +15815,8 @@ var _mdgriffith$style_elements$Element_Internal_Model$mapAttr = F2(
 				return _mdgriffith$style_elements$Element_Internal_Model$Overflow(_p42._0);
 		}
 	});
-var _mdgriffith$style_elements$Element_Internal_Model$mapMsg = F2(
-	function (fn, el) {
+var _mdgriffith$style_elements$Element_Internal_Model$mapAll = F4(
+	function (onMsg, onStyle, onVariation, el) {
 		var _p43 = el;
 		switch (_p43.ctor) {
 			case 'Empty':
@@ -15747,14 +15832,15 @@ var _mdgriffith$style_elements$Element_Internal_Model$mapMsg = F2(
 						{
 							attrs: A2(
 								_elm_lang$core$List$map,
-								_mdgriffith$style_elements$Element_Internal_Model$mapAttr(fn),
+								A2(_mdgriffith$style_elements$Element_Internal_Model$mapAllAttr, onMsg, onVariation),
 								_p43._0.attrs),
-							child: A2(_mdgriffith$style_elements$Element_Internal_Model$mapMsg, fn, _p43._0.child),
+							style: A2(_elm_lang$core$Maybe$map, onStyle, _p43._0.style),
+							child: A4(_mdgriffith$style_elements$Element_Internal_Model$mapAll, onMsg, onStyle, onVariation, _p43._0.child),
 							absolutelyPositioned: A2(
 								_elm_lang$core$Maybe$map,
 								_elm_lang$core$List$map(
 									function (child) {
-										return A2(_mdgriffith$style_elements$Element_Internal_Model$mapMsg, fn, child);
+										return A4(_mdgriffith$style_elements$Element_Internal_Model$mapAll, onMsg, onStyle, onVariation, child);
 									}),
 								_p43._0.absolutelyPositioned)
 						}));
@@ -15765,23 +15851,135 @@ var _mdgriffith$style_elements$Element_Internal_Model$mapMsg = F2(
 						{
 							attrs: A2(
 								_elm_lang$core$List$map,
-								_mdgriffith$style_elements$Element_Internal_Model$mapAttr(fn),
+								A2(_mdgriffith$style_elements$Element_Internal_Model$mapAllAttr, onMsg, onVariation),
 								_p43._0.attrs),
+							style: A2(_elm_lang$core$Maybe$map, onStyle, _p43._0.style),
 							children: A2(
 								_mdgriffith$style_elements$Element_Internal_Model$mapChildren,
-								_mdgriffith$style_elements$Element_Internal_Model$mapMsg(fn),
+								function (child) {
+									return A4(_mdgriffith$style_elements$Element_Internal_Model$mapAll, onMsg, onStyle, onVariation, child);
+								},
 								_p43._0.children),
+							absolutelyPositioned: A2(
+								_elm_lang$core$Maybe$map,
+								_elm_lang$core$List$map(
+									function (child) {
+										return A4(_mdgriffith$style_elements$Element_Internal_Model$mapAll, onMsg, onStyle, onVariation, child);
+									}),
+								_p43._0.absolutelyPositioned)
+						}));
+			default:
+				return _mdgriffith$style_elements$Element_Internal_Model$Raw(
+					A2(_elm_lang$html$Html$map, onMsg, _p43._0));
+		}
+	});
+var _mdgriffith$style_elements$Element_Internal_Model$mapAttr = F2(
+	function (fn, attr) {
+		var _p44 = attr;
+		switch (_p44.ctor) {
+			case 'Event':
+				return _mdgriffith$style_elements$Element_Internal_Model$Event(
+					A2(_elm_lang$html$Html_Attributes$map, fn, _p44._0));
+			case 'InputEvent':
+				return _mdgriffith$style_elements$Element_Internal_Model$InputEvent(
+					A2(_elm_lang$html$Html_Attributes$map, fn, _p44._0));
+			case 'Attr':
+				return _mdgriffith$style_elements$Element_Internal_Model$Attr(
+					A2(_elm_lang$html$Html_Attributes$map, fn, _p44._0));
+			case 'Vary':
+				return A2(_mdgriffith$style_elements$Element_Internal_Model$Vary, _p44._0, _p44._1);
+			case 'Height':
+				return _mdgriffith$style_elements$Element_Internal_Model$Height(_p44._0);
+			case 'Width':
+				return _mdgriffith$style_elements$Element_Internal_Model$Width(_p44._0);
+			case 'Inline':
+				return _mdgriffith$style_elements$Element_Internal_Model$Inline;
+			case 'HAlign':
+				return _mdgriffith$style_elements$Element_Internal_Model$HAlign(_p44._0);
+			case 'VAlign':
+				return _mdgriffith$style_elements$Element_Internal_Model$VAlign(_p44._0);
+			case 'Position':
+				return A3(_mdgriffith$style_elements$Element_Internal_Model$Position, _p44._0, _p44._1, _p44._2);
+			case 'PositionFrame':
+				return _mdgriffith$style_elements$Element_Internal_Model$PositionFrame(_p44._0);
+			case 'Hidden':
+				return _mdgriffith$style_elements$Element_Internal_Model$Hidden;
+			case 'Opacity':
+				return _mdgriffith$style_elements$Element_Internal_Model$Opacity(_p44._0);
+			case 'Spacing':
+				return A2(_mdgriffith$style_elements$Element_Internal_Model$Spacing, _p44._0, _p44._1);
+			case 'Margin':
+				return _mdgriffith$style_elements$Element_Internal_Model$Margin(_p44._0);
+			case 'Expand':
+				return _mdgriffith$style_elements$Element_Internal_Model$Expand;
+			case 'Padding':
+				return A4(_mdgriffith$style_elements$Element_Internal_Model$Padding, _p44._0, _p44._1, _p44._2, _p44._3);
+			case 'PhantomPadding':
+				return _mdgriffith$style_elements$Element_Internal_Model$PhantomPadding(_p44._0);
+			case 'GridArea':
+				return _mdgriffith$style_elements$Element_Internal_Model$GridArea(_p44._0);
+			case 'GridCoords':
+				return _mdgriffith$style_elements$Element_Internal_Model$GridCoords(_p44._0);
+			case 'PointerEvents':
+				return _mdgriffith$style_elements$Element_Internal_Model$PointerEvents(_p44._0);
+			case 'Shrink':
+				return _mdgriffith$style_elements$Element_Internal_Model$Shrink(_p44._0);
+			default:
+				return _mdgriffith$style_elements$Element_Internal_Model$Overflow(_p44._0);
+		}
+	});
+var _mdgriffith$style_elements$Element_Internal_Model$mapMsg = F2(
+	function (fn, el) {
+		var _p45 = el;
+		switch (_p45.ctor) {
+			case 'Empty':
+				return _mdgriffith$style_elements$Element_Internal_Model$Empty;
+			case 'Spacer':
+				return _mdgriffith$style_elements$Element_Internal_Model$Spacer(_p45._0);
+			case 'Text':
+				return A2(_mdgriffith$style_elements$Element_Internal_Model$Text, _p45._0, _p45._1);
+			case 'Element':
+				return _mdgriffith$style_elements$Element_Internal_Model$Element(
+					_elm_lang$core$Native_Utils.update(
+						_p45._0,
+						{
+							attrs: A2(
+								_elm_lang$core$List$map,
+								_mdgriffith$style_elements$Element_Internal_Model$mapAttr(fn),
+								_p45._0.attrs),
+							child: A2(_mdgriffith$style_elements$Element_Internal_Model$mapMsg, fn, _p45._0.child),
 							absolutelyPositioned: A2(
 								_elm_lang$core$Maybe$map,
 								_elm_lang$core$List$map(
 									function (child) {
 										return A2(_mdgriffith$style_elements$Element_Internal_Model$mapMsg, fn, child);
 									}),
-								_p43._0.absolutelyPositioned)
+								_p45._0.absolutelyPositioned)
+						}));
+			case 'Layout':
+				return _mdgriffith$style_elements$Element_Internal_Model$Layout(
+					_elm_lang$core$Native_Utils.update(
+						_p45._0,
+						{
+							attrs: A2(
+								_elm_lang$core$List$map,
+								_mdgriffith$style_elements$Element_Internal_Model$mapAttr(fn),
+								_p45._0.attrs),
+							children: A2(
+								_mdgriffith$style_elements$Element_Internal_Model$mapChildren,
+								_mdgriffith$style_elements$Element_Internal_Model$mapMsg(fn),
+								_p45._0.children),
+							absolutelyPositioned: A2(
+								_elm_lang$core$Maybe$map,
+								_elm_lang$core$List$map(
+									function (child) {
+										return A2(_mdgriffith$style_elements$Element_Internal_Model$mapMsg, fn, child);
+									}),
+								_p45._0.absolutelyPositioned)
 						}));
 			default:
 				return _mdgriffith$style_elements$Element_Internal_Model$Raw(
-					A2(_elm_lang$html$Html$map, fn, _p43._0));
+					A2(_elm_lang$html$Html$map, fn, _p45._0));
 		}
 	});
 var _mdgriffith$style_elements$Element_Internal_Model$AllAxis = {ctor: 'AllAxis'};
@@ -17438,7 +17636,17 @@ var _mdgriffith$style_elements$Element_Internal_Adjustments$positionNearby = F2(
 																_1: {
 																	ctor: '::',
 																	_0: _mdgriffith$style_elements$Element_Internal_Model$VAlign(_mdgriffith$style_elements$Element_Internal_Model$Bottom),
-																	_1: {ctor: '[]'}
+																	_1: {
+																		ctor: '::',
+																		_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
+																			_elm_lang$html$Html_Attributes$style(
+																				{
+																					ctor: '::',
+																					_0: {ctor: '_Tuple2', _0: 'z-index', _1: '10'},
+																					_1: {ctor: '[]'}
+																				})),
+																		_1: {ctor: '[]'}
+																	}
 																}
 															}
 														}
@@ -17543,8 +17751,18 @@ var _mdgriffith$style_elements$Element_Internal_Adjustments$positionNearby = F2(
 																_elm_lang$core$Maybe$Just(0)),
 															_1: {
 																ctor: '::',
-																_0: _mdgriffith$style_elements$Element_Internal_Adjustments$tag('nearby-intermediate'),
-																_1: {ctor: '[]'}
+																_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
+																	_elm_lang$html$Html_Attributes$style(
+																		{
+																			ctor: '::',
+																			_0: {ctor: '_Tuple2', _0: 'z-index', _1: '10'},
+																			_1: {ctor: '[]'}
+																		})),
+																_1: {
+																	ctor: '::',
+																	_0: _mdgriffith$style_elements$Element_Internal_Adjustments$tag('nearby-intermediate'),
+																	_1: {ctor: '[]'}
+																}
 															}
 														}
 													}
@@ -19900,7 +20118,7 @@ var _mdgriffith$style_elements$Element_Internal_Render$spacingToMargin = functio
 	};
 	return A2(_elm_lang$core$List$map, spaceToMarg, attrs);
 };
-var _mdgriffith$style_elements$Element_Internal_Render$withFocus = '\n\n.style-elements button.button-focus:focus {\n   outline: none;\n   box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n   border-color: rgba(155,203,255,1.0);\n}\n\n.style-elements textarea:focus, .style-elements input:focus {\n   outline: none;\n   box-shadow: 0 0 2px 2px rgba(155,203,255,1.0);\n   border-color: rgba(155,203,255,1.0);\n}\n.style-elements input[type=\'checkbox\'] {\n    border-radius: 3px;\n}\n.style-elements input[type=\'radio\'] {\n    border-radius: 7px;\n}\n.style-elements input[type=\'radio\']:focus {\n    border-radius: 7px;\n    box-shadow: 0 0 4px 4px rgba(155,203,255,1.0);\n}\n\n.style-elements select.focus-override:focus, .style-elements input.focus-override:focus {\n    outline: none;\n    box-shadow: none;\n    border-color:transparent;\n}\n.style-elements input.focus-override:focus ~ .alt-icon {\n    box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n    border-color: rgba(155,203,255,1.0);\n}\n.style-elements select.focus-override:focus ~ .alt-icon {\n    box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n    border-color: rgba(155,203,255,1.0);\n}\n.style-elements .arrows {\n    display:block;\n    position: relative;\n    height: 10px;\n    width: 10px;\n}\n/*\n.style-elements .arrows::after {\n    content: \" \";\n    position:absolute;\n    top:-2px;\n    left:0;\n    width: 0;\n    height: 0;\n    border-left: 5px solid transparent;\n    border-right: 5px solid transparent;\n    border-bottom: 5px solid black;\n}\n*/\n\n.style-elements .arrows::before {\n    content: \" \";\n    position:absolute;\n    top:2px;\n    left:0;\n    width: 0;\n    height: 0;\n    border-left: 5px solid transparent;\n    border-right: 5px solid transparent;\n    border-top: 5px solid black;\n}\n\n\n';
+var _mdgriffith$style_elements$Element_Internal_Render$withFocus = '\n\n.style-elements em.el {\n    padding: 0;\n    padding-left: 0.2em;\n}\n\n.style-elements button.button-focus:focus {\n   outline: none;\n   box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n   border-color: rgba(155,203,255,1.0);\n}\n\n.style-elements textarea:focus, .style-elements input:focus {\n   outline: none;\n   box-shadow: 0 0 2px 2px rgba(155,203,255,1.0);\n   border-color: rgba(155,203,255,1.0);\n}\n.style-elements input[type=\'checkbox\'] {\n    border-radius: 3px;\n}\n.style-elements input[type=\'radio\'] {\n    border-radius: 7px;\n}\n.style-elements input[type=\'radio\']:focus {\n    border-radius: 7px;\n    box-shadow: 0 0 4px 4px rgba(155,203,255,1.0);\n}\n\n.style-elements select.focus-override:focus, .style-elements input.focus-override:focus {\n    outline: none;\n    box-shadow: none;\n    border-color:transparent;\n}\n.style-elements input.focus-override:focus ~ .alt-icon {\n    box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n    border-color: rgba(155,203,255,1.0);\n}\n.style-elements select.focus-override:focus ~ .alt-icon {\n    box-shadow: 0 0 3px 3px rgba(155,203,255,1.0);\n    border-color: rgba(155,203,255,1.0);\n}\n.style-elements .arrows {\n    display:block;\n    position: relative;\n    height: 10px;\n    width: 10px;\n}\n/*\n.style-elements .arrows::after {\n    content: \" \";\n    position:absolute;\n    top:-2px;\n    left:0;\n    width: 0;\n    height: 0;\n    border-left: 5px solid transparent;\n    border-right: 5px solid transparent;\n    border-bottom: 5px solid black;\n}\n*/\n\n.style-elements .arrows::before {\n    content: \" \";\n    position:absolute;\n    top:2px;\n    left:0;\n    width: 0;\n    height: 0;\n    border-left: 5px solid transparent;\n    border-right: 5px solid transparent;\n    border-top: 5px solid black;\n}\n\n\n';
 var _mdgriffith$style_elements$Element_Internal_Render$miniNormalize = A2(_elm_lang$core$Basics_ops['++'], 'html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;margin:0;padding:0;border:0}body{margin:0}.style-elements{display:block;position:relative;margin:0;padding:0;border:0;font-size:100%;font:inherit;box-sizing:border-box;line-height:1.2}.el{display:block;position:relative;margin:0;padding:0;border:0;border-style:solid;font-size:100%;font:inherit;box-sizing:border-box}em.el{font-style:italic}b.el,strong.el{font-weight:bolder}strike.el{text-decoration:line-through}u.el{text-decoration:underline}a.el{text-decoration:none;color:inherit}img.el{border-style:none}sub.el,sup.el{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub.el{bottom:-0.25em}sup.el{top:-0.5em}', _mdgriffith$style_elements$Element_Internal_Render$withFocus);
 var _mdgriffith$style_elements$Element_Internal_Render$embed = F2(
 	function (full, stylesheet) {
@@ -21268,8 +21486,12 @@ var _mdgriffith$style_elements$Element_Internal_Render$renderElement = F4(
 							_0: {ctor: '_Tuple2', _0: 'text-overflow', _1: 'ellipsis'},
 							_1: {
 								ctor: '::',
-								_0: {ctor: '_Tuple2', _0: 'display', _1: 'block'},
-								_1: {ctor: '[]'}
+								_0: {ctor: '_Tuple2', _0: 'overflow', _1: 'hidden'},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'display', _1: 'block'},
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					});
@@ -23455,51 +23677,6 @@ var _mdgriffith$style_elements$Style$origin = F3(
 								_elm_lang$core$Basics$toString(z),
 								'px'))))));
 	});
-var _mdgriffith$style_elements$Style$paddingBottomHint = function (x) {
-	return A2(
-		_mdgriffith$style_elements$Style_Internal_Model$Exact,
-		'padding-bottom',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(x),
-			'px'));
-};
-var _mdgriffith$style_elements$Style$paddingTopHint = function (x) {
-	return A2(
-		_mdgriffith$style_elements$Style_Internal_Model$Exact,
-		'padding-top',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(x),
-			'px'));
-};
-var _mdgriffith$style_elements$Style$paddingRightHint = function (x) {
-	return A2(
-		_mdgriffith$style_elements$Style_Internal_Model$Exact,
-		'padding-right',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(x),
-			'px'));
-};
-var _mdgriffith$style_elements$Style$paddingLeftHint = function (x) {
-	return A2(
-		_mdgriffith$style_elements$Style_Internal_Model$Exact,
-		'padding-left',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(x),
-			'px'));
-};
-var _mdgriffith$style_elements$Style$paddingHint = function (x) {
-	return A2(
-		_mdgriffith$style_elements$Style_Internal_Model$Exact,
-		'padding',
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_elm_lang$core$Basics$toString(x),
-			'px'));
-};
 var _mdgriffith$style_elements$Style$cursor = function (name) {
 	return A2(_mdgriffith$style_elements$Style_Internal_Model$Exact, 'cursor', name);
 };
@@ -23684,6 +23861,16 @@ var _mdgriffith$style_elements$Element$navigationColumn = F3(
 var _mdgriffith$style_elements$Element$navigation = F3(
 	function (style, attrs, _p2) {
 		var _p3 = _p2;
+		var wrap = function (el) {
+			return _mdgriffith$style_elements$Element_Internal_Model$Element(
+				{
+					node: 'li',
+					style: _elm_lang$core$Maybe$Nothing,
+					attrs: {ctor: '[]'},
+					child: el,
+					absolutelyPositioned: _elm_lang$core$Maybe$Nothing
+				});
+		};
 		return _mdgriffith$style_elements$Element_Internal_Model$Element(
 			{
 				node: 'nav',
@@ -23707,10 +23894,7 @@ var _mdgriffith$style_elements$Element$navigation = F3(
 							{ctor: '[]'}),
 						attrs: attrs,
 						children: _mdgriffith$style_elements$Element_Internal_Model$Normal(
-							A2(
-								_elm_lang$core$List$map,
-								_mdgriffith$style_elements$Element_Internal_Modify$setNode('li'),
-								_p3.options)),
+							A2(_elm_lang$core$List$map, wrap, _p3.options)),
 						absolutelyPositioned: _elm_lang$core$Maybe$Nothing
 					}),
 				absolutelyPositioned: _elm_lang$core$Maybe$Nothing
@@ -23735,6 +23919,7 @@ var _mdgriffith$style_elements$Element$search = F3(
 				absolutelyPositioned: _elm_lang$core$Maybe$Nothing
 			});
 	});
+var _mdgriffith$style_elements$Element$mapAll = _mdgriffith$style_elements$Element_Internal_Model$mapAll;
 var _mdgriffith$style_elements$Element$map = _mdgriffith$style_elements$Element_Internal_Model$mapMsg;
 var _mdgriffith$style_elements$Element$responsive = F3(
 	function (a, _p5, _p4) {
@@ -23917,18 +24102,8 @@ var _mdgriffith$style_elements$Element$downloadAs = F2(
 					_1: {
 						ctor: '::',
 						_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
-							_elm_lang$html$Html_Attributes$rel('noopener noreferrer')),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
-								_elm_lang$html$Html_Attributes$download(true)),
-							_1: {
-								ctor: '::',
-								_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
-									_elm_lang$html$Html_Attributes$downloadAs(_p17.filename)),
-								_1: {ctor: '[]'}
-							}
-						}
+							_elm_lang$html$Html_Attributes$downloadAs(_p17.filename)),
+						_1: {ctor: '[]'}
 					}
 				},
 				child: el,
@@ -23948,13 +24123,8 @@ var _mdgriffith$style_elements$Element$download = F2(
 					_1: {
 						ctor: '::',
 						_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
-							_elm_lang$html$Html_Attributes$rel('noopener noreferrer')),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Internal_Model$Attr(
-								_elm_lang$html$Html_Attributes$download(true)),
-							_1: {ctor: '[]'}
-						}
+							_elm_lang$html$Html_Attributes$download(true)),
+						_1: {ctor: '[]'}
 					}
 				},
 				child: el,
@@ -25274,364 +25444,680 @@ var _user$project$Mathquelm_Config$Config = F5(
 		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e};
 	});
 
-var _user$project$Mathquelm_DisplayNode$toLatex = function (nodes) {
-	return _elm_lang$core$String$concat(
-		A2(_elm_lang$core$List$map, _user$project$Mathquelm_DisplayNode$toLatexNode, nodes));
+var _user$project$Mathquelm_DisplayTree$Block = function (a) {
+	return {ctor: 'Block', _0: a};
 };
-var _user$project$Mathquelm_DisplayNode$toLatexNode = function (node) {
+var _user$project$Mathquelm_DisplayTree$Node = function (a) {
+	return {ctor: 'Node', _0: a};
+};
+var _user$project$Mathquelm_DisplayTree$mapChildren = F2(
+	function (fn, block) {
+		return A2(
+			_elm_lang$core$List$map,
+			function (_p0) {
+				return fn(
+					_user$project$Mathquelm_DisplayTree$Node(_p0));
+			},
+			block);
+	});
+var _user$project$Mathquelm_DisplayTree$toLatex = function (obj) {
 	var wrapBrackets = function (contents) {
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
 			'{',
 			A2(_elm_lang$core$Basics_ops['++'], contents, '}'));
 	};
-	var _p0 = node;
-	switch (_p0.ctor) {
-		case 'Cursor':
-			return '';
-		case 'Leaf':
-			return _elm_lang$core$String$fromChar(_p0._0._0);
-		case 'OneBlock':
-			if (_p0._0.ctor === 'Parens') {
-				var _p1 = function () {
-					var _p2 = _p0._0._0;
-					switch (_p2.ctor) {
-						case 'Parentheses':
-							return {ctor: '_Tuple2', _0: '(', _1: ')'};
-						case 'Brackets':
-							return {ctor: '_Tuple2', _0: '[', _1: ']'};
-						case 'Curlies':
-							return {ctor: '_Tuple2', _0: '{', _1: '}'};
-						default:
-							return {ctor: '_Tuple2', _0: '|', _1: '|'};
-					}
-				}();
-				var left = _p1._0;
-				var right = _p1._1;
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					'\\left',
-					A2(
+	var _p1 = obj;
+	if (_p1.ctor === 'Block') {
+		return _elm_lang$core$String$concat(
+			A2(_user$project$Mathquelm_DisplayTree$mapChildren, _user$project$Mathquelm_DisplayTree$toLatex, _p1._0));
+	} else {
+		var _p2 = _p1._0;
+		switch (_p2.ctor) {
+			case 'Cursor':
+				return '';
+			case 'Leaf':
+				return _elm_lang$core$String$fromChar(_p2._0._0);
+			case 'OneBlock':
+				if (_p2._0.ctor === 'Parens') {
+					var _p3 = function () {
+						var _p4 = _p2._0._0;
+						switch (_p4.ctor) {
+							case 'Parentheses':
+								return {ctor: '_Tuple2', _0: '(', _1: ')'};
+							case 'Brackets':
+								return {ctor: '_Tuple2', _0: '[', _1: ']'};
+							case 'Curlies':
+								return {ctor: '_Tuple2', _0: '{', _1: '}'};
+							default:
+								return {ctor: '_Tuple2', _0: '|', _1: '|'};
+						}
+					}();
+					var left = _p3._0;
+					var right = _p3._1;
+					return A2(
 						_elm_lang$core$Basics_ops['++'],
-						left,
+						'\\left',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_user$project$Mathquelm_DisplayNode$toLatex(_p0._1),
-							A2(_elm_lang$core$Basics_ops['++'], '\\right', right))));
-			} else {
+							left,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_user$project$Mathquelm_DisplayTree$toLatex(
+									_user$project$Mathquelm_DisplayTree$Block(_p2._1)),
+								A2(_elm_lang$core$Basics_ops['++'], '\\right', right))));
+				} else {
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						'_',
+						wrapBrackets(
+							_user$project$Mathquelm_DisplayTree$toLatex(
+								_user$project$Mathquelm_DisplayTree$Block(_p2._1))));
+				}
+			default:
 				return A2(
 					_elm_lang$core$Basics_ops['++'],
-					'_',
-					wrapBrackets(
-						_user$project$Mathquelm_DisplayNode$toLatex(_p0._1)));
-			}
-		default:
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				'\\frac',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					wrapBrackets(
-						_user$project$Mathquelm_DisplayNode$toLatex(_p0._1)),
-					wrapBrackets(
-						_user$project$Mathquelm_DisplayNode$toLatex(_p0._2))));
+					'\\frac',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						wrapBrackets(
+							_user$project$Mathquelm_DisplayTree$toLatex(
+								_user$project$Mathquelm_DisplayTree$Block(_p2._1))),
+						wrapBrackets(
+							_user$project$Mathquelm_DisplayTree$toLatex(
+								_user$project$Mathquelm_DisplayTree$Block(_p2._2)))));
+		}
 	}
 };
-var _user$project$Mathquelm_DisplayNode$TwoBlocks = F3(
+var _user$project$Mathquelm_DisplayTree$TwoBlocks = F3(
 	function (a, b, c) {
 		return {ctor: 'TwoBlocks', _0: a, _1: b, _2: c};
 	});
-var _user$project$Mathquelm_DisplayNode$OneBlock = F2(
+var _user$project$Mathquelm_DisplayTree$OneBlock = F2(
 	function (a, b) {
 		return {ctor: 'OneBlock', _0: a, _1: b};
 	});
-var _user$project$Mathquelm_DisplayNode$Leaf = function (a) {
+var _user$project$Mathquelm_DisplayTree$Leaf = function (a) {
 	return {ctor: 'Leaf', _0: a};
 };
-var _user$project$Mathquelm_DisplayNode$Cursor = {ctor: 'Cursor'};
-var _user$project$Mathquelm_DisplayNode$Character = function (a) {
+var _user$project$Mathquelm_DisplayTree$Cursor = {ctor: 'Cursor'};
+var _user$project$Mathquelm_DisplayTree$Character = function (a) {
 	return {ctor: 'Character', _0: a};
 };
-var _user$project$Mathquelm_DisplayNode$Subscript = {ctor: 'Subscript'};
-var _user$project$Mathquelm_DisplayNode$Parens = function (a) {
+var _user$project$Mathquelm_DisplayTree$Subscript = {ctor: 'Subscript'};
+var _user$project$Mathquelm_DisplayTree$Parens = function (a) {
 	return {ctor: 'Parens', _0: a};
 };
-var _user$project$Mathquelm_DisplayNode$Fraction = {ctor: 'Fraction'};
-var _user$project$Mathquelm_DisplayNode$Pipes = {ctor: 'Pipes'};
-var _user$project$Mathquelm_DisplayNode$Curlies = {ctor: 'Curlies'};
-var _user$project$Mathquelm_DisplayNode$Brackets = {ctor: 'Brackets'};
-var _user$project$Mathquelm_DisplayNode$Parentheses = {ctor: 'Parentheses'};
-var _user$project$Mathquelm_DisplayNode$Bar = {ctor: 'Bar'};
-var _user$project$Mathquelm_DisplayNode$Dot = {ctor: 'Dot'};
-var _user$project$Mathquelm_DisplayNode$Hat = {ctor: 'Hat'};
+var _user$project$Mathquelm_DisplayTree$Fraction = {ctor: 'Fraction'};
+var _user$project$Mathquelm_DisplayTree$Pipes = {ctor: 'Pipes'};
+var _user$project$Mathquelm_DisplayTree$Curlies = {ctor: 'Curlies'};
+var _user$project$Mathquelm_DisplayTree$Brackets = {ctor: 'Brackets'};
+var _user$project$Mathquelm_DisplayTree$Parentheses = {ctor: 'Parentheses'};
+var _user$project$Mathquelm_DisplayTree$Bar = {ctor: 'Bar'};
+var _user$project$Mathquelm_DisplayTree$Dot = {ctor: 'Dot'};
+var _user$project$Mathquelm_DisplayTree$Hat = {ctor: 'Hat'};
 
-var _user$project$Mathquelm_CursorMovement$cleanseBlock = function (block) {
-	return A2(
-		_elm_lang$core$List$filter,
-		function (node) {
-			return !_elm_lang$core$Native_Utils.eq(node, _user$project$Mathquelm_DisplayNode$Cursor);
-		},
-		block);
-};
-var _user$project$Mathquelm_CursorMovement$cleanseOfCursors = function (node) {
-	var _p0 = node;
-	switch (_p0.ctor) {
-		case 'OneBlock':
-			return A2(
-				_user$project$Mathquelm_DisplayNode$OneBlock,
-				_p0._0,
-				_user$project$Mathquelm_CursorMovement$cleanseBlock(_p0._1));
-		case 'TwoBlocks':
-			return A3(
-				_user$project$Mathquelm_DisplayNode$TwoBlocks,
-				_user$project$Mathquelm_DisplayNode$Fraction,
-				_user$project$Mathquelm_CursorMovement$cleanseBlock(_p0._1),
-				_user$project$Mathquelm_CursorMovement$cleanseBlock(_p0._2));
-		default:
-			return node;
+var _user$project$Mathquelm_Cursor$toBlock = function (obj) {
+	var _p0 = obj;
+	if (_p0.ctor === 'Node') {
+		return {
+			ctor: '::',
+			_0: _p0._0,
+			_1: {ctor: '[]'}
+		};
+	} else {
+		return _p0._0;
 	}
 };
-var _user$project$Mathquelm_CursorMovement$atEdge = F3(
-	function (n, dir, block) {
-		var _p1 = dir;
-		if (_p1.ctor === 'L') {
-			return _elm_lang$core$Native_Utils.eq(n, 0);
-		} else {
-			return _elm_lang$core$Native_Utils.eq(
-				n,
-				_elm_lang$core$List$length(block) - 1);
-		}
-	});
-var _user$project$Mathquelm_CursorMovement$appendCursorToBlock = F2(
-	function (dir, block) {
-		var _p2 = dir;
-		if (_p2.ctor === 'L') {
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				block,
-				{
-					ctor: '::',
-					_0: _user$project$Mathquelm_DisplayNode$Cursor,
-					_1: {ctor: '[]'}
-				});
-		} else {
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				{
-					ctor: '::',
-					_0: _user$project$Mathquelm_DisplayNode$Cursor,
-					_1: {ctor: '[]'}
-				},
-				block);
-		}
-	});
-var _user$project$Mathquelm_CursorMovement$enterNodeLR = F2(
-	function (dir, node) {
-		var _p3 = A2(_elm_lang$core$Debug$log, 'Trying to enter', node);
-		var _p4 = node;
-		switch (_p4.ctor) {
-			case 'OneBlock':
-				return _elm_lang$core$Maybe$Just(
-					A2(
-						_user$project$Mathquelm_DisplayNode$OneBlock,
-						_p4._0,
-						A2(_user$project$Mathquelm_CursorMovement$appendCursorToBlock, dir, _p4._1)));
-			case 'TwoBlocks':
-				var _p7 = _p4._1;
-				var _p6 = _p4._2;
-				return _elm_lang$core$Maybe$Just(
-					function () {
-						var _p5 = dir;
-						if (_p5.ctor === 'L') {
-							return A3(
-								_user$project$Mathquelm_DisplayNode$TwoBlocks,
-								_user$project$Mathquelm_DisplayNode$Fraction,
-								_p7,
-								A2(_user$project$Mathquelm_CursorMovement$appendCursorToBlock, dir, _p6));
-						} else {
-							return A3(
-								_user$project$Mathquelm_DisplayNode$TwoBlocks,
-								_user$project$Mathquelm_DisplayNode$Fraction,
-								A2(_user$project$Mathquelm_CursorMovement$appendCursorToBlock, dir, _p7),
-								_p6);
-						}
-					}());
-			default:
-				return _elm_lang$core$Maybe$Nothing;
-		}
-	});
-var _user$project$Mathquelm_CursorMovement$tryEnteringLR = F3(
-	function (index, dir, block) {
+var _user$project$Mathquelm_Cursor$append = F2(
+	function (obj, block) {
 		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_CursorMovement$cleanseBlock,
-			A2(
-				_elm_lang$core$Maybe$andThen,
-				function (entered) {
-					return A3(_elm_community$list_extra$List_Extra$setAt, index, entered, block);
-				},
-				A2(
-					_elm_lang$core$Maybe$andThen,
-					_user$project$Mathquelm_CursorMovement$enterNodeLR(dir),
-					A2(_elm_community$list_extra$List_Extra$getAt, index, block))));
+			_elm_lang$core$Basics_ops['++'],
+			block,
+			_user$project$Mathquelm_Cursor$toBlock(obj));
 	});
-var _user$project$Mathquelm_CursorMovement$Right = {ctor: 'Right'};
-var _user$project$Mathquelm_CursorMovement$Left = {ctor: 'Left'};
-var _user$project$Mathquelm_CursorMovement$Down = {ctor: 'Down'};
-var _user$project$Mathquelm_CursorMovement$Up = {ctor: 'Up'};
-var _user$project$Mathquelm_CursorMovement$NoCmd = {ctor: 'NoCmd'};
-var _user$project$Mathquelm_CursorMovement$Exit = {ctor: 'Exit'};
-var _user$project$Mathquelm_CursorMovement$moveBlockLR = F2(
-	function (dir, block) {
-		var _p8 = A2(_elm_community$list_extra$List_Extra$elemIndex, _user$project$Mathquelm_DisplayNode$Cursor, block);
-		if (_p8.ctor === 'Just') {
-			var _p10 = _p8._0;
-			if (A3(_user$project$Mathquelm_CursorMovement$atEdge, _p10, dir, block)) {
-				return {ctor: '_Tuple2', _0: block, _1: _user$project$Mathquelm_CursorMovement$Exit};
-			} else {
-				var adjacentIndex = function () {
-					var _p9 = dir;
-					if (_p9.ctor === 'L') {
-						return _p10 - 1;
-					} else {
-						return _p10 + 1;
-					}
-				}();
-				return {
-					ctor: '_Tuple2',
-					_0: A2(
-						_elm_lang$core$Maybe$withDefault,
-						A2(
-							_elm_lang$core$Maybe$withDefault,
-							block,
-							A3(_elm_community$list_extra$List_Extra$swapAt, _p10, adjacentIndex, block)),
-						A3(_user$project$Mathquelm_CursorMovement$tryEnteringLR, adjacentIndex, dir, block)),
-					_1: _user$project$Mathquelm_CursorMovement$NoCmd
-				};
-			}
+var _user$project$Mathquelm_Cursor$matches = F2(
+	function (targetCursor, iterator) {
+		var _p1 = iterator;
+		if (_p1.ctor === 'Found') {
+			return false;
 		} else {
-			return {
-				ctor: '_Tuple2',
-				_0: A3(
-					_elm_lang$core$List$foldr,
-					F2(
-						function (_p11, acc) {
-							var _p12 = _p11;
-							var _p15 = _p12._0;
-							var _p13 = _p12._1;
-							if (_p13.ctor === 'Exit') {
-								var _p14 = dir;
-								if (_p14.ctor === 'L') {
-									return {
-										ctor: '::',
-										_0: _user$project$Mathquelm_DisplayNode$Cursor,
-										_1: {
-											ctor: '::',
-											_0: _user$project$Mathquelm_CursorMovement$cleanseOfCursors(_p15),
-											_1: acc
-										}
-									};
-								} else {
-									return {
-										ctor: '::',
-										_0: _user$project$Mathquelm_CursorMovement$cleanseOfCursors(_p15),
-										_1: {ctor: '::', _0: _user$project$Mathquelm_DisplayNode$Cursor, _1: acc}
-									};
-								}
-							} else {
-								return {ctor: '::', _0: _p15, _1: acc};
-							}
-						}),
-					{ctor: '[]'},
-					A2(
-						_elm_lang$core$List$map,
-						_user$project$Mathquelm_CursorMovement$moveNodeLR(dir),
-						block)),
-				_1: _user$project$Mathquelm_CursorMovement$NoCmd
-			};
+			return _elm_lang$core$Native_Utils.eq(_p1._0, targetCursor) ? true : false;
 		}
 	});
-var _user$project$Mathquelm_CursorMovement$moveNodeLR = F2(
-	function (dir, node) {
-		var _p16 = node;
-		switch (_p16.ctor) {
+var _user$project$Mathquelm_Cursor$andThen = F2(
+	function (fn, iterator) {
+		var _p2 = iterator;
+		if (_p2.ctor === 'Found') {
+			return iterator;
+		} else {
+			return fn(_p2._0);
+		}
+	});
+var _user$project$Mathquelm_Cursor$moveUpOrDown = F3(
+	function (dir, rootBlock, address) {
+		var _p3 = dir;
+		if (_p3.ctor === 'U') {
+			return address;
+		} else {
+			return address;
+		}
+	});
+var _user$project$Mathquelm_Cursor$numCursorSpotsNode = function (node) {
+	var _p4 = node;
+	switch (_p4.ctor) {
+		case 'Cursor':
+			return 0;
+		case 'Leaf':
+			return 1;
+		case 'OneBlock':
+			return _user$project$Mathquelm_Cursor$numCursorSpotsInBlock(_p4._1) + 1;
+		default:
+			return (_user$project$Mathquelm_Cursor$numCursorSpotsInBlock(_p4._1) + _user$project$Mathquelm_Cursor$numCursorSpotsInBlock(_p4._2)) + 1;
+	}
+};
+var _user$project$Mathquelm_Cursor$numCursorSpotsInBlock = function (block) {
+	return A2(
+		F2(
+			function (x, y) {
+				return x + y;
+			}),
+		1,
+		_elm_lang$core$List$sum(
+			A2(_elm_lang$core$List$map, _user$project$Mathquelm_Cursor$numCursorSpotsNode, block)));
+};
+var _user$project$Mathquelm_Cursor$addCursorHelperBlock = F3(
+	function (block, startIndex, targetIndex) {
+		return _elm_lang$core$Native_Utils.eq(startIndex, targetIndex) ? {
+			ctor: '_Tuple2',
+			_0: A2(
+				_elm_lang$core$Basics_ops['++'],
+				{
+					ctor: '::',
+					_0: _user$project$Mathquelm_DisplayTree$Cursor,
+					_1: {ctor: '[]'}
+				},
+				block),
+			_1: startIndex + _user$project$Mathquelm_Cursor$numCursorSpotsInBlock(block)
+		} : A2(
+			_elm_lang$core$Tuple$mapSecond,
+			F2(
+				function (x, y) {
+					return x + y;
+				})(1),
+			A3(
+				_elm_lang$core$List$foldl,
+				F2(
+					function (node, _p5) {
+						var _p6 = _p5;
+						var _p8 = _p6._0;
+						var _p7 = A3(_user$project$Mathquelm_Cursor$addCursorHelperNode, node, _p6._1, targetIndex);
+						var processedNode = _p7._0;
+						var indexAfterNode = _p7._1;
+						return {
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Native_Utils.eq(targetIndex, indexAfterNode) ? A2(
+								_elm_lang$core$Basics_ops['++'],
+								_p8,
+								{
+									ctor: '::',
+									_0: processedNode,
+									_1: {
+										ctor: '::',
+										_0: _user$project$Mathquelm_DisplayTree$Cursor,
+										_1: {ctor: '[]'}
+									}
+								}) : A2(
+								_elm_lang$core$Basics_ops['++'],
+								_p8,
+								{
+									ctor: '::',
+									_0: processedNode,
+									_1: {ctor: '[]'}
+								}),
+							_1: indexAfterNode
+						};
+					}),
+				{
+					ctor: '_Tuple2',
+					_0: {ctor: '[]'},
+					_1: startIndex
+				},
+				block));
+	});
+var _user$project$Mathquelm_Cursor$addCursorHelperNode = F3(
+	function (node, startIndex, targetIndex) {
+		var _p9 = node;
+		switch (_p9.ctor) {
+			case 'Leaf':
+				return {ctor: '_Tuple2', _0: node, _1: startIndex + 1};
 			case 'OneBlock':
 				return A2(
 					_elm_lang$core$Tuple$mapFirst,
-					_user$project$Mathquelm_DisplayNode$OneBlock(_p16._0),
-					A2(_user$project$Mathquelm_CursorMovement$moveBlockLR, dir, _p16._1));
+					_user$project$Mathquelm_DisplayTree$OneBlock(_p9._0),
+					A3(_user$project$Mathquelm_Cursor$addCursorHelperBlock, _p9._1, startIndex + 1, targetIndex));
 			case 'TwoBlocks':
-				var _p23 = _p16._1;
-				var _p22 = _p16._2;
-				var reconstruct = F2(
-					function (first, second) {
-						var _p17 = dir;
-						if (_p17.ctor === 'L') {
-							return A3(_user$project$Mathquelm_DisplayNode$TwoBlocks, _user$project$Mathquelm_DisplayNode$Fraction, second, first);
-						} else {
-							return A3(_user$project$Mathquelm_DisplayNode$TwoBlocks, _user$project$Mathquelm_DisplayNode$Fraction, first, second);
-						}
+				var _p10 = A3(_user$project$Mathquelm_Cursor$addCursorHelperBlock, _p9._1, startIndex + 1, targetIndex);
+				var newBlock1 = _p10._0;
+				var n = _p10._1;
+				var _p11 = A3(_user$project$Mathquelm_Cursor$addCursorHelperBlock, _p9._2, n, targetIndex);
+				var newBlock2 = _p11._0;
+				var m = _p11._1;
+				return {
+					ctor: '_Tuple2',
+					_0: A3(_user$project$Mathquelm_DisplayTree$TwoBlocks, _p9._0, newBlock1, newBlock2),
+					_1: m
+				};
+			default:
+				return {ctor: '_Tuple2', _0: node, _1: startIndex};
+		}
+	});
+var _user$project$Mathquelm_Cursor$ResolvedAddress = F2(
+	function (a, b) {
+		return {targetBlock: a, relativeIndex: b};
+	});
+var _user$project$Mathquelm_Cursor$Right = {ctor: 'Right'};
+var _user$project$Mathquelm_Cursor$Left = {ctor: 'Left'};
+var _user$project$Mathquelm_Cursor$Down = {ctor: 'Down'};
+var _user$project$Mathquelm_Cursor$Up = {ctor: 'Up'};
+var _user$project$Mathquelm_Cursor$NoCmd = {ctor: 'NoCmd'};
+var _user$project$Mathquelm_Cursor$Exit = {ctor: 'Exit'};
+var _user$project$Mathquelm_Cursor$R = {ctor: 'R'};
+var _user$project$Mathquelm_Cursor$L = {ctor: 'L'};
+var _user$project$Mathquelm_Cursor$D = {ctor: 'D'};
+var _user$project$Mathquelm_Cursor$U = {ctor: 'U'};
+var _user$project$Mathquelm_Cursor$Bot = {ctor: 'Bot'};
+var _user$project$Mathquelm_Cursor$Unfound = function (a) {
+	return {ctor: 'Unfound', _0: a};
+};
+var _user$project$Mathquelm_Cursor$resetForBlock = function (iterator) {
+	var _p12 = iterator;
+	if (_p12.ctor === 'Unfound') {
+		return _user$project$Mathquelm_Cursor$Unfound(_p12._0);
+	} else {
+		return iterator;
+	}
+};
+var _user$project$Mathquelm_Cursor$incrementIndex = function (iterator) {
+	return A2(
+		_user$project$Mathquelm_Cursor$andThen,
+		function (cursor) {
+			return _user$project$Mathquelm_Cursor$Unfound(cursor + 1);
+		},
+		iterator);
+};
+var _user$project$Mathquelm_Cursor$Found = function (a) {
+	return {ctor: 'Found', _0: a};
+};
+var _user$project$Mathquelm_Cursor$tryMatch = F3(
+	function (targetCursor, ifFound, iterator) {
+		var _p13 = iterator;
+		if (_p13.ctor === 'Found') {
+			return iterator;
+		} else {
+			return _elm_lang$core$Native_Utils.eq(_p13._0, targetCursor) ? _user$project$Mathquelm_Cursor$Found(ifFound) : iterator;
+		}
+	});
+var _user$project$Mathquelm_Cursor$resolveAddress = F2(
+	function (targetCursor, rootBlock) {
+		var progressThroughBlock = F2(
+			function (block, iterator) {
+				var makeMatch = F2(
+					function (relIndex, iterator) {
+						return A3(
+							_user$project$Mathquelm_Cursor$tryMatch,
+							targetCursor,
+							A2(_user$project$Mathquelm_Cursor$ResolvedAddress, block, relIndex),
+							iterator);
 					});
-				var _p18 = function () {
-					var _p19 = dir;
-					if (_p19.ctor === 'L') {
-						return {ctor: '_Tuple2', _0: _p22, _1: _p23};
-					} else {
-						return {ctor: '_Tuple2', _0: _p23, _1: _p22};
+				return _user$project$Mathquelm_Cursor$incrementIndex(
+					A2(
+						makeMatch,
+						_elm_lang$core$List$length(block),
+						A3(
+							_elm_community$list_extra$List_Extra$indexedFoldl,
+							F3(
+								function (relativeIndex, node, accIterator) {
+									return A2(
+										progressThroughNode,
+										node,
+										A2(makeMatch, relativeIndex, accIterator));
+								}),
+							iterator,
+							block)));
+			});
+		var progressThroughNode = F2(
+			function (node, iterator) {
+				return function () {
+					var _p14 = node;
+					switch (_p14.ctor) {
+						case 'Leaf':
+							return _elm_lang$core$Basics$identity;
+						case 'OneBlock':
+							return progressThroughBlock(_p14._1);
+						case 'TwoBlocks':
+							return function (_p15) {
+								return A2(
+									progressThroughBlock,
+									_p14._2,
+									A2(progressThroughBlock, _p14._1, _p15));
+							};
+						default:
+							return _elm_lang$core$Basics$identity;
 					}
-				}();
-				var firstBlock = _p18._0;
-				var secondBlock = _p18._1;
-				var _p20 = A2(_user$project$Mathquelm_CursorMovement$moveBlockLR, dir, firstBlock);
-				if (_p20._1.ctor === 'Exit') {
-					return {
-						ctor: '_Tuple2',
-						_0: A2(
-							reconstruct,
-							_user$project$Mathquelm_CursorMovement$cleanseBlock(_p20._0),
-							A2(_user$project$Mathquelm_CursorMovement$appendCursorToBlock, dir, secondBlock)),
-						_1: _user$project$Mathquelm_CursorMovement$NoCmd
-					};
-				} else {
-					var _p21 = A2(_user$project$Mathquelm_CursorMovement$moveBlockLR, dir, secondBlock);
-					var movedSecondBlock = _p21._0;
-					var cmd = _p21._1;
-					return {
-						ctor: '_Tuple2',
-						_0: A2(reconstruct, _p20._0, movedSecondBlock),
-						_1: cmd
-					};
+				}()(
+					_user$project$Mathquelm_Cursor$incrementIndex(iterator));
+			});
+		var _p16 = A2(
+			progressThroughBlock,
+			rootBlock,
+			_user$project$Mathquelm_Cursor$Unfound(0));
+		if (_p16.ctor === 'Found') {
+			return _elm_lang$core$Maybe$Just(_p16._0);
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _user$project$Mathquelm_Cursor$Return = function (a) {
+	return {ctor: 'Return', _0: a};
+};
+var _user$project$Mathquelm_Cursor$Bubble = {ctor: 'Bubble'};
+var _user$project$Mathquelm_Cursor$NotFound = function (a) {
+	return {ctor: 'NotFound', _0: a};
+};
+var _user$project$Mathquelm_Cursor$YesFound = function (a) {
+	return {ctor: 'YesFound', _0: a};
+};
+var _user$project$Mathquelm_Cursor$JustReturn = F2(
+	function (a, b) {
+		return {ctor: 'JustReturn', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Cursor$NotAnUpdate = F2(
+	function (a, b) {
+		return {ctor: 'NotAnUpdate', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Cursor$PleaseUpdate = F2(
+	function (a, b) {
+		return {ctor: 'PleaseUpdate', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Cursor$spelunk = F3(
+	function (spelunker, targetCursor, rootBlock) {
+		var spelunkBlock = F2(
+			function (block, startIndex) {
+				return function (shouldUpdate) {
+					var _p17 = shouldUpdate;
+					switch (_p17.ctor) {
+						case 'JustReturn':
+							return {
+								ctor: '_Tuple2',
+								_0: _p17._1,
+								_1: _user$project$Mathquelm_Cursor$YesFound(
+									_user$project$Mathquelm_Cursor$Return(_p17._0))
+							};
+						case 'NotAnUpdate':
+							return {
+								ctor: '_Tuple2',
+								_0: _p17._1,
+								_1: _user$project$Mathquelm_Cursor$NotFound(_p17._0 + 1)
+							};
+						default:
+							return A2(
+								_elm_lang$core$Tuple$mapSecond,
+								_user$project$Mathquelm_Cursor$YesFound,
+								A2(
+									_elm_lang$core$Tuple$mapFirst,
+									_user$project$Mathquelm_Cursor$toBlock,
+									A2(
+										spelunker,
+										_user$project$Mathquelm_DisplayTree$Block(_p17._1),
+										_p17._0)));
+					}
+				}(
+					function (shouldUpdate) {
+						var _p18 = shouldUpdate;
+						if (_p18.ctor === 'NotAnUpdate') {
+							return _elm_lang$core$Native_Utils.eq(_p18._0, targetCursor) ? A2(
+								_user$project$Mathquelm_Cursor$PleaseUpdate,
+								_elm_lang$core$List$length(block),
+								_p18._1) : shouldUpdate;
+						} else {
+							return shouldUpdate;
+						}
+					}(
+						A3(
+							_elm_community$list_extra$List_Extra$indexedFoldl,
+							F3(
+								function (relativeIndex, node, shouldUpdate) {
+									var _p19 = shouldUpdate;
+									switch (_p19.ctor) {
+										case 'JustReturn':
+											return A2(
+												_user$project$Mathquelm_Cursor$JustReturn,
+												_p19._0,
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													_p19._1,
+													{
+														ctor: '::',
+														_0: node,
+														_1: {ctor: '[]'}
+													}));
+										case 'NotAnUpdate':
+											var _p23 = _p19._0;
+											var _p22 = _p19._1;
+											var _p20 = A2(spelunkNode, node, _p23);
+											var newTreeObj = _p20._0;
+											var wasFound = _p20._1;
+											if (_elm_lang$core$Native_Utils.eq(_p23, targetCursor)) {
+												return A2(
+													_user$project$Mathquelm_Cursor$PleaseUpdate,
+													relativeIndex,
+													A2(_user$project$Mathquelm_Cursor$append, newTreeObj, _p22));
+											} else {
+												var _p21 = wasFound;
+												if (_p21.ctor === 'YesFound') {
+													if (_p21._0.ctor === 'Bubble') {
+														return A2(
+															_user$project$Mathquelm_Cursor$PleaseUpdate,
+															relativeIndex,
+															A2(_user$project$Mathquelm_Cursor$append, newTreeObj, _p22));
+													} else {
+														return A2(
+															_user$project$Mathquelm_Cursor$JustReturn,
+															_p21._0._0,
+															A2(_user$project$Mathquelm_Cursor$append, newTreeObj, _p22));
+													}
+												} else {
+													return A2(
+														_user$project$Mathquelm_Cursor$NotAnUpdate,
+														_p21._0,
+														A2(_user$project$Mathquelm_Cursor$append, newTreeObj, _p22));
+												}
+											}
+										default:
+											return A2(
+												_user$project$Mathquelm_Cursor$PleaseUpdate,
+												_p19._0,
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													_p19._1,
+													{
+														ctor: '::',
+														_0: node,
+														_1: {ctor: '[]'}
+													}));
+									}
+								}),
+							A2(
+								_user$project$Mathquelm_Cursor$NotAnUpdate,
+								startIndex,
+								{ctor: '[]'}),
+							block)));
+			});
+		var spelunkNode = F2(
+			function (node, startIndex) {
+				var _p24 = node;
+				switch (_p24.ctor) {
+					case 'Leaf':
+						return {
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_DisplayTree$Node(node),
+							_1: _user$project$Mathquelm_Cursor$NotFound(startIndex + 1)
+						};
+					case 'OneBlock':
+						var _p25 = A2(spelunkBlock, _p24._1, startIndex + 1);
+						var afterBlock = _p25._0;
+						var wasFound = _p25._1;
+						var reconstructedNode = _user$project$Mathquelm_DisplayTree$Node(
+							A2(_user$project$Mathquelm_DisplayTree$OneBlock, _p24._0, afterBlock));
+						var _p26 = wasFound;
+						if ((_p26.ctor === 'YesFound') && (_p26._0.ctor === 'Bubble')) {
+							return A2(
+								_elm_lang$core$Tuple$mapSecond,
+								_user$project$Mathquelm_Cursor$YesFound,
+								A2(spelunker, reconstructedNode, 0));
+						} else {
+							return {ctor: '_Tuple2', _0: reconstructedNode, _1: wasFound};
+						}
+					case 'TwoBlocks':
+						var _p32 = _p24._0;
+						var _p31 = _p24._2;
+						var _p27 = A2(spelunkBlock, _p24._1, startIndex + 1);
+						var afterBlock1 = _p27._0;
+						var wasFound1 = _p27._1;
+						var reconstructedNode = _user$project$Mathquelm_DisplayTree$Node(
+							A3(_user$project$Mathquelm_DisplayTree$TwoBlocks, _p32, afterBlock1, _p31));
+						var _p28 = wasFound1;
+						if (_p28.ctor === 'YesFound') {
+							if (_p28._0.ctor === 'Bubble') {
+								return A2(
+									_elm_lang$core$Tuple$mapSecond,
+									_user$project$Mathquelm_Cursor$YesFound,
+									A2(spelunker, reconstructedNode, 0));
+							} else {
+								return {
+									ctor: '_Tuple2',
+									_0: reconstructedNode,
+									_1: _user$project$Mathquelm_Cursor$YesFound(
+										_user$project$Mathquelm_Cursor$Return(_p28._0._0))
+								};
+							}
+						} else {
+							var _p29 = A2(spelunkBlock, _p31, _p28._0);
+							var afterBlock2 = _p29._0;
+							var wasFound2 = _p29._1;
+							var reconstructedNode2 = _user$project$Mathquelm_DisplayTree$Node(
+								A3(_user$project$Mathquelm_DisplayTree$TwoBlocks, _p32, afterBlock1, afterBlock2));
+							var _p30 = wasFound2;
+							if ((_p30.ctor === 'YesFound') && (_p30._0.ctor === 'Bubble')) {
+								return A2(
+									_elm_lang$core$Tuple$mapSecond,
+									_user$project$Mathquelm_Cursor$YesFound,
+									A2(spelunker, reconstructedNode2, 0));
+							} else {
+								return {ctor: '_Tuple2', _0: reconstructedNode2, _1: wasFound2};
+							}
+						}
+					default:
+						return {
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_DisplayTree$Node(node),
+							_1: _user$project$Mathquelm_Cursor$NotFound(startIndex + 1)
+						};
 				}
-			default:
-				return {ctor: '_Tuple2', _0: node, _1: _user$project$Mathquelm_CursorMovement$NoCmd};
-		}
+			});
+		return A2(
+			_elm_lang$core$Tuple$mapSecond,
+			function (wasFound) {
+				var _p33 = wasFound;
+				if ((_p33.ctor === 'YesFound') && (_p33._0.ctor === 'Return')) {
+					return _elm_lang$core$Maybe$Just(_p33._0._0);
+				} else {
+					return _elm_lang$core$Maybe$Nothing;
+				}
+			},
+			A2(spelunkBlock, rootBlock, 0));
 	});
-var _user$project$Mathquelm_CursorMovement$R = {ctor: 'R'};
-var _user$project$Mathquelm_CursorMovement$L = {ctor: 'L'};
-var _user$project$Mathquelm_CursorMovement$moveCursor = F2(
-	function (dir, block) {
-		var _p24 = dir;
-		switch (_p24.ctor) {
+var _user$project$Mathquelm_Cursor$moveCursor = F3(
+	function (dir, rootBlock, address) {
+		var clampCursor = A2(
+			_elm_lang$core$Basics$clamp,
+			0,
+			_user$project$Mathquelm_Cursor$numCursorSpotsInBlock(rootBlock) - 1);
+		var _p34 = dir;
+		switch (_p34.ctor) {
 			case 'Left':
-				return _elm_lang$core$Tuple$first(
-					A2(_user$project$Mathquelm_CursorMovement$moveBlockLR, _user$project$Mathquelm_CursorMovement$L, block));
+				return clampCursor(address - 1);
 			case 'Right':
-				return _elm_lang$core$Tuple$first(
-					A2(_user$project$Mathquelm_CursorMovement$moveBlockLR, _user$project$Mathquelm_CursorMovement$R, block));
+				return clampCursor(address + 1);
 			case 'Up':
-				return block;
+				var _p35 = A2(_elm_lang$core$Debug$log, 'target', address);
+				var _p36 = A3(
+					_user$project$Mathquelm_Cursor$spelunk,
+					F2(
+						function (obj, relIndex) {
+							return {
+								ctor: '_Tuple2',
+								_0: obj,
+								_1: function () {
+									var _p37 = obj;
+									if (_p37.ctor === 'Block') {
+										return _user$project$Mathquelm_Cursor$Return(
+											A2(_user$project$Mathquelm_Cursor$ResolvedAddress, _p37._0, relIndex));
+									} else {
+										return _user$project$Mathquelm_Cursor$Bubble;
+									}
+								}()
+							};
+						}),
+					address,
+					rootBlock);
+				var resolved = _p36._1;
+				var _p38 = A2(_elm_lang$core$Debug$log, 'resolved', resolved);
+				return address;
 			default:
-				return block;
+				return address;
 		}
 	});
-var _user$project$Mathquelm_CursorMovement$D = {ctor: 'D'};
-var _user$project$Mathquelm_CursorMovement$U = {ctor: 'U'};
+var _user$project$Mathquelm_Cursor$addCursor = F2(
+	function (rootBlock, cursor) {
+		return _elm_lang$core$Tuple$first(
+			A3(
+				_user$project$Mathquelm_Cursor$spelunk,
+				F2(
+					function (obj, relIndex) {
+						var _p39 = obj;
+						if (_p39.ctor === 'Block') {
+							var _p40 = _p39._0;
+							return {
+								ctor: '_Tuple2',
+								_0: _user$project$Mathquelm_DisplayTree$Block(
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										A2(_elm_lang$core$List$take, relIndex, _p40),
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											{
+												ctor: '::',
+												_0: _user$project$Mathquelm_DisplayTree$Cursor,
+												_1: {ctor: '[]'}
+											},
+											A2(_elm_lang$core$List$drop, relIndex, _p40)))),
+								_1: _user$project$Mathquelm_Cursor$Return(_user$project$Mathquelm_Cursor$Bot)
+							};
+						} else {
+							return {ctor: '_Tuple2', _0: obj, _1: _user$project$Mathquelm_Cursor$Bubble};
+						}
+					}),
+				cursor,
+				rootBlock));
+	});
 
-var _user$project$Mathquelm_RenderContext$setNode = F2(
-	function (node, context) {
+var _user$project$Mathquelm_RenderContext$setTarget = F2(
+	function (newTarget, context) {
 		return _elm_lang$core$Native_Utils.update(
 			context,
-			{node: node});
+			{target: newTarget});
 	});
 var _user$project$Mathquelm_RenderContext$fontSize = function (context) {
 	return A3(_mdgriffith$style_elements$Style_Scale$modular, context.config.baseFontSize, context.config.modularScale, context.depth);
@@ -25657,40 +26143,44 @@ var _user$project$Mathquelm_RenderContext$deepen = function (context) {
 		});
 };
 var _user$project$Mathquelm_RenderContext$enter = F2(
-	function (context, nextNode) {
+	function (context, nextTarget) {
 		return A2(
-			_user$project$Mathquelm_RenderContext$setNode,
-			nextNode,
+			_user$project$Mathquelm_RenderContext$setTarget,
+			nextTarget,
 			function () {
-				var _p0 = nextNode;
+				var _p0 = nextTarget;
 				_v0_2:
 				do {
-					switch (_p0.ctor) {
-						case 'TwoBlocks':
-							return _user$project$Mathquelm_RenderContext$deepen;
-						case 'OneBlock':
-							if (_p0._0.ctor === 'Subscript') {
-								return _user$project$Mathquelm_RenderContext$hardDeepen;
-							} else {
+					if (_p0.ctor === 'Node') {
+						switch (_p0._0.ctor) {
+							case 'TwoBlocks':
+								return _user$project$Mathquelm_RenderContext$deepen;
+							case 'OneBlock':
+								if (_p0._0._0.ctor === 'Subscript') {
+									return _user$project$Mathquelm_RenderContext$hardDeepen;
+								} else {
+									break _v0_2;
+								}
+							default:
 								break _v0_2;
-							}
-						default:
-							break _v0_2;
+						}
+					} else {
+						break _v0_2;
 					}
 				} while(false);
 				return _elm_lang$core$Basics$identity;
 			}()(context));
 	});
 var _user$project$Mathquelm_RenderContext$baseContext = F2(
-	function (config, node) {
-		return {config: config, depth: 0, node: node};
+	function (config, target) {
+		return {config: config, depth: 0, target: target};
 	});
 var _user$project$Mathquelm_RenderContext$RenderContext = F3(
 	function (a, b, c) {
-		return {config: a, depth: b, node: c};
+		return {config: a, depth: b, target: c};
 	});
 
-var _user$project$Mathquelm$debugColor = function (depth) {
+var _user$project$Mathquelm_Styles$debugColor = function (depth) {
 	var _p0 = A2(_elm_lang$core$Basics_ops['%'], depth, 6);
 	switch (_p0) {
 		case 0:
@@ -25709,142 +26199,7 @@ var _user$project$Mathquelm$debugColor = function (depth) {
 			return _elm_lang$core$Color$brown;
 	}
 };
-var _user$project$Mathquelm$parensScale = 1.1;
-var _user$project$Mathquelm$scaleAttr = F2(
-	function (x, y) {
-		return A2(
-			_mdgriffith$style_elements$Element_Attributes$attribute,
-			'style',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'transform: scale(',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(x),
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						',',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(y),
-							')')))));
-	});
-var _user$project$Mathquelm$mapBoth = F2(
-	function (fn, _p1) {
-		var _p2 = _p1;
-		return {
-			ctor: '_Tuple2',
-			_0: fn(_p2._0),
-			_1: fn(_p2._1)
-		};
-	});
-var _user$project$Mathquelm$blockCenterLine = F2(
-	function (context, block) {
-		var _p3 = block;
-		if (_p3.ctor === '[]') {
-			return _user$project$Mathquelm_RenderContext$fontSize(context) / 2;
-		} else {
-			if (_p3._1.ctor === '[]') {
-				return _user$project$Mathquelm$centerLine(
-					A2(_user$project$Mathquelm_RenderContext$enter, context, _p3._0));
-			} else {
-				return A2(
-					_elm_lang$core$Maybe$withDefault,
-					0,
-					_elm_lang$core$List$maximum(
-						A2(
-							_elm_lang$core$List$map,
-							function (_p4) {
-								return _user$project$Mathquelm$centerLine(
-									A2(_user$project$Mathquelm_RenderContext$enter, context, _p4));
-							},
-							block)));
-			}
-		}
-	});
-var _user$project$Mathquelm$centerLine = function (context) {
-	var getChildrenHeight = _user$project$Mathquelm$getBlockHeight(context);
-	var _p5 = context.node;
-	switch (_p5.ctor) {
-		case 'Cursor':
-			return _user$project$Mathquelm$getHeight(context) / 2;
-		case 'Leaf':
-			return _user$project$Mathquelm$getHeight(context) / 2;
-		case 'OneBlock':
-			var _p7 = _p5._1;
-			var blockHeight = A2(_user$project$Mathquelm$getBlockHeight, context, _p7);
-			var _p6 = _p5._0;
-			if (_p6.ctor === 'Parens') {
-				var parenOverlap = 0.2 * getChildrenHeight(_p7);
-				return A2(_user$project$Mathquelm$blockCenterLine, context, _p7) + (parenOverlap / 2);
-			} else {
-				return 0;
-			}
-		default:
-			return getChildrenHeight(_p5._1);
-	}
-};
-var _user$project$Mathquelm$getBlockHeight = F2(
-	function (context, block) {
-		var _p8 = block;
-		if (_p8.ctor === '[]') {
-			return _user$project$Mathquelm_RenderContext$fontSize(context);
-		} else {
-			if (_p8._1.ctor === '[]') {
-				return _user$project$Mathquelm$getHeight(
-					A2(_user$project$Mathquelm_RenderContext$enter, context, _p8._0));
-			} else {
-				return function (_p9) {
-					var _p10 = _p9;
-					return _p10._0 + _p10._1;
-				}(
-					A2(
-						_user$project$Mathquelm$mapBoth,
-						function (_p11) {
-							return A2(
-								_elm_lang$core$Maybe$withDefault,
-								0,
-								_elm_lang$core$List$maximum(_p11));
-						},
-						_elm_lang$core$List$unzip(
-							A2(
-								_elm_lang$core$List$map,
-								function (_p12) {
-									return _user$project$Mathquelm$heightRect(
-										A2(_user$project$Mathquelm_RenderContext$enter, context, _p12));
-								},
-								block))));
-			}
-		}
-	});
-var _user$project$Mathquelm$getHeight = function (context) {
-	var getChildrenHeight = _user$project$Mathquelm$getBlockHeight(context);
-	var _p13 = context.node;
-	switch (_p13.ctor) {
-		case 'Cursor':
-			return _user$project$Mathquelm_RenderContext$fontSize(context);
-		case 'Leaf':
-			return _elm_lang$core$Basics$toFloat(
-				_elm_lang$core$Basics$floor(
-					_user$project$Mathquelm_RenderContext$fontBox(context)));
-		case 'OneBlock':
-			var blockHeight = getChildrenHeight(_p13._1);
-			var _p14 = _p13._0;
-			if (_p14.ctor === 'Parens') {
-				return blockHeight * 1.05;
-			} else {
-				return blockHeight;
-			}
-		default:
-			return (getChildrenHeight(_p13._1) + getChildrenHeight(_p13._2)) + 1;
-	}
-};
-var _user$project$Mathquelm$heightRect = function (context) {
-	var distanceFromTop = _user$project$Mathquelm$centerLine(context);
-	var height = _user$project$Mathquelm$getHeight(context);
-	return {ctor: '_Tuple2', _0: distanceFromTop, _1: height - distanceFromTop};
-};
-var _user$project$Mathquelm$loadFont = _mdgriffith$style_elements$Element$html(
+var _user$project$Mathquelm_Styles$loadFont = _mdgriffith$style_elements$Element$html(
 	A3(
 		_elm_lang$html$Html$node,
 		'style',
@@ -25854,184 +26209,20 @@ var _user$project$Mathquelm$loadFont = _mdgriffith$style_elements$Element$html(
 			_0: _elm_lang$html$Html$text('\n@font-face {\n    font-family: \"Symbola\";\n    src: url(\"/fonts/Symbola.ttf\") format(\"truetype\");\n}\n                '),
 			_1: {ctor: '[]'}
 		}));
-var _user$project$Mathquelm$update = F2(
-	function (msg, model) {
-		var _p15 = msg;
-		if (_p15.ctor === 'Move') {
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					rootBlock: A2(_user$project$Mathquelm_CursorMovement$moveCursor, _p15._0, model.rootBlock)
-				});
-		} else {
-			return model;
-		}
-	});
-var _user$project$Mathquelm$defaultModel = {
-	rootBlock: {ctor: '[]'},
-	config: _user$project$Mathquelm_Config$default
-};
-var _user$project$Mathquelm$latex = function (model) {
-	return _user$project$Mathquelm_DisplayNode$toLatex(model.rootBlock);
-};
-var _user$project$Mathquelm$stringToNodes = function (string) {
-	return A2(
-		_elm_lang$core$List$map,
-		function (_p16) {
-			return _user$project$Mathquelm_DisplayNode$Leaf(
-				_user$project$Mathquelm_DisplayNode$Character(_p16));
-		},
-		_elm_lang$core$String$toList(string));
-};
-var _user$project$Mathquelm$sampleTree = A2(
-	_elm_lang$core$Basics_ops['++'],
-	_user$project$Mathquelm$stringToNodes('abc'),
-	A2(
-		_elm_lang$core$Basics_ops['++'],
-		{
-			ctor: '::',
-			_0: A2(
-				_user$project$Mathquelm_DisplayNode$OneBlock,
-				_user$project$Mathquelm_DisplayNode$Parens(_user$project$Mathquelm_DisplayNode$Parentheses),
-				_user$project$Mathquelm$stringToNodes('ac')),
-			_1: {
-				ctor: '::',
-				_0: A3(
-					_user$project$Mathquelm_DisplayNode$TwoBlocks,
-					_user$project$Mathquelm_DisplayNode$Fraction,
-					_user$project$Mathquelm$stringToNodes('adc'),
-					{
-						ctor: '::',
-						_0: A3(
-							_user$project$Mathquelm_DisplayNode$TwoBlocks,
-							_user$project$Mathquelm_DisplayNode$Fraction,
-							_user$project$Mathquelm$stringToNodes('a'),
-							{
-								ctor: '::',
-								_0: _user$project$Mathquelm_DisplayNode$Leaf(
-									_user$project$Mathquelm_DisplayNode$Character(
-										_elm_lang$core$Native_Utils.chr('a'))),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_user$project$Mathquelm_DisplayNode$OneBlock,
-										_user$project$Mathquelm_DisplayNode$Subscript,
-										_user$project$Mathquelm$stringToNodes('deets')),
-									_1: {ctor: '[]'}
-								}
-							}),
-						_1: {ctor: '[]'}
-					}),
-				_1: {ctor: '[]'}
-			}
-		},
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			_user$project$Mathquelm$stringToNodes('dce'),
-			{
-				ctor: '::',
-				_0: _user$project$Mathquelm_DisplayNode$Cursor,
-				_1: {ctor: '[]'}
-			})));
-var _user$project$Mathquelm$Model = F2(
-	function (a, b) {
-		return {rootBlock: a, config: b};
-	});
-var _user$project$Mathquelm$DeleteRight = {ctor: 'DeleteRight'};
-var _user$project$Mathquelm$DeleteLeft = {ctor: 'DeleteLeft'};
-var _user$project$Mathquelm$ExitBlock = {ctor: 'ExitBlock'};
-var _user$project$Mathquelm$CharacterInserted = function (a) {
-	return {ctor: 'CharacterInserted', _0: a};
-};
-var _user$project$Mathquelm$Delete = function (a) {
-	return {ctor: 'Delete', _0: a};
-};
-var _user$project$Mathquelm$Select = function (a) {
-	return {ctor: 'Select', _0: a};
-};
-var _user$project$Mathquelm$Move = function (a) {
-	return {ctor: 'Move', _0: a};
-};
-var _user$project$Mathquelm$Noop = {ctor: 'Noop'};
-var _user$project$Mathquelm$keyPressed = function (keyCode) {
-	var _p17 = A2(
-		_elm_lang$core$Debug$log,
-		'keyCode',
-		_elm_lang$core$Basics$toString(keyCode));
-	var _p18 = keyCode;
-	switch (_p18) {
-		case 37:
-			return _user$project$Mathquelm$Move(_user$project$Mathquelm_CursorMovement$Left);
-		case 38:
-			return _user$project$Mathquelm$Move(_user$project$Mathquelm_CursorMovement$Up);
-		case 39:
-			return _user$project$Mathquelm$Move(_user$project$Mathquelm_CursorMovement$Right);
-		case 40:
-			return _user$project$Mathquelm$Move(_user$project$Mathquelm_CursorMovement$Down);
-		default:
-			return _user$project$Mathquelm$Noop;
-	}
-};
-var _user$project$Mathquelm$subscriptions = function (model) {
-	return _elm_lang$keyboard$Keyboard$downs(_user$project$Mathquelm$keyPressed);
-};
-var _user$project$Mathquelm$DebugBox = function (a) {
+var _user$project$Mathquelm_Styles$DebugBox = function (a) {
 	return {ctor: 'DebugBox', _0: a};
 };
-var _user$project$Mathquelm$DebugCenterline = {ctor: 'DebugCenterline'};
-var _user$project$Mathquelm$wrapInDebug = F3(
-	function (context, node, rendered) {
-		var outlineBox = context.config.showBoxes ? A2(
-			_mdgriffith$style_elements$Element$el,
-			_user$project$Mathquelm$DebugBox(context.depth),
-			{ctor: '[]'}) : _elm_lang$core$Basics$identity;
-		var centerLineDiv = context.config.showCenterLines ? _mdgriffith$style_elements$Element$above(
-			{
-				ctor: '::',
-				_0: A3(
-					_mdgriffith$style_elements$Element$el,
-					_user$project$Mathquelm$DebugCenterline,
-					{
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Element_Attributes$moveDown(
-							_user$project$Mathquelm$centerLine(context)),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Attributes$width(
-								_mdgriffith$style_elements$Element_Attributes$px(16)),
-							_1: {ctor: '[]'}
-						}
-					},
-					_mdgriffith$style_elements$Element$empty),
-				_1: {ctor: '[]'}
-			}) : _elm_lang$core$Basics$identity;
-		return centerLineDiv(
-			outlineBox(rendered));
-	});
-var _user$project$Mathquelm$CursorLine = {ctor: 'CursorLine'};
-var _user$project$Mathquelm$EmptySquare = {ctor: 'EmptySquare'};
-var _user$project$Mathquelm$Italic = {ctor: 'Italic'};
-var _user$project$Mathquelm$Divider = {ctor: 'Divider'};
-var _user$project$Mathquelm$divider = A3(
-	_mdgriffith$style_elements$Element$el,
-	_user$project$Mathquelm$Divider,
-	{
-		ctor: '::',
-		_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$fill),
-		_1: {
-			ctor: '::',
-			_0: _mdgriffith$style_elements$Element_Attributes$height(
-				_mdgriffith$style_elements$Element_Attributes$px(0)),
-			_1: {ctor: '[]'}
-		}
-	},
-	_mdgriffith$style_elements$Element$empty);
-var _user$project$Mathquelm$ScaledBlock = function (a) {
+var _user$project$Mathquelm_Styles$DebugCenterline = {ctor: 'DebugCenterline'};
+var _user$project$Mathquelm_Styles$CursorLine = {ctor: 'CursorLine'};
+var _user$project$Mathquelm_Styles$EmptySquare = {ctor: 'EmptySquare'};
+var _user$project$Mathquelm_Styles$Italic = {ctor: 'Italic'};
+var _user$project$Mathquelm_Styles$Divider = {ctor: 'Divider'};
+var _user$project$Mathquelm_Styles$ScaledBlock = function (a) {
 	return {ctor: 'ScaledBlock', _0: a};
 };
-var _user$project$Mathquelm$Base = {ctor: 'Base'};
-var _user$project$Mathquelm$None = {ctor: 'None'};
-var _user$project$Mathquelm$stylesheet = function (config) {
+var _user$project$Mathquelm_Styles$Base = {ctor: 'Base'};
+var _user$project$Mathquelm_Styles$None = {ctor: 'None'};
+var _user$project$Mathquelm_Styles$stylesheet = function (config) {
 	return _mdgriffith$style_elements$Style$styleSheet(
 		A2(
 			_elm_lang$core$Basics_ops['++'],
@@ -26039,13 +26230,13 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 				ctor: '::',
 				_0: A2(
 					_mdgriffith$style_elements$Style$style,
-					_user$project$Mathquelm$None,
+					_user$project$Mathquelm_Styles$None,
 					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_mdgriffith$style_elements$Style$style,
-						_user$project$Mathquelm$Divider,
+						_user$project$Mathquelm_Styles$Divider,
 						{
 							ctor: '::',
 							_0: _mdgriffith$style_elements$Style_Border$top(1),
@@ -26059,7 +26250,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 						ctor: '::',
 						_0: A2(
 							_mdgriffith$style_elements$Style$style,
-							_user$project$Mathquelm$Italic,
+							_user$project$Mathquelm_Styles$Italic,
 							{
 								ctor: '::',
 								_0: _mdgriffith$style_elements$Style_Font$italic,
@@ -26078,7 +26269,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 							ctor: '::',
 							_0: A2(
 								_mdgriffith$style_elements$Style$style,
-								_user$project$Mathquelm$CursorLine,
+								_user$project$Mathquelm_Styles$CursorLine,
 								{
 									ctor: '::',
 									_0: _mdgriffith$style_elements$Style_Border$left(2),
@@ -26092,7 +26283,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 								ctor: '::',
 								_0: A2(
 									_mdgriffith$style_elements$Style$style,
-									_user$project$Mathquelm$EmptySquare,
+									_user$project$Mathquelm_Styles$EmptySquare,
 									{
 										ctor: '::',
 										_0: _mdgriffith$style_elements$Style_Color$background(_elm_lang$core$Color$gray),
@@ -26102,7 +26293,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 									ctor: '::',
 									_0: A2(
 										_mdgriffith$style_elements$Style$style,
-										_user$project$Mathquelm$DebugCenterline,
+										_user$project$Mathquelm_Styles$DebugCenterline,
 										{
 											ctor: '::',
 											_0: _mdgriffith$style_elements$Style_Border$top(1),
@@ -26116,7 +26307,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 										ctor: '::',
 										_0: A2(
 											_mdgriffith$style_elements$Style$style,
-											_user$project$Mathquelm$Base,
+											_user$project$Mathquelm_Styles$Base,
 											{
 												ctor: '::',
 												_0: _mdgriffith$style_elements$Style_Font$typeface(
@@ -26143,7 +26334,7 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 							ctor: '::',
 							_0: A2(
 								_mdgriffith$style_elements$Style$style,
-								_user$project$Mathquelm$ScaledBlock(depth),
+								_user$project$Mathquelm_Styles$ScaledBlock(depth),
 								{
 									ctor: '::',
 									_0: _mdgriffith$style_elements$Style_Font$size(
@@ -26154,11 +26345,11 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 								ctor: '::',
 								_0: A2(
 									_mdgriffith$style_elements$Style$style,
-									_user$project$Mathquelm$DebugBox(depth),
+									_user$project$Mathquelm_Styles$DebugBox(depth),
 									{
 										ctor: '::',
 										_0: _mdgriffith$style_elements$Style_Color$background(
-											_user$project$Mathquelm$debugColor(depth)),
+											_user$project$Mathquelm_Styles$debugColor(depth)),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -26167,14 +26358,57 @@ var _user$project$Mathquelm$stylesheet = function (config) {
 					},
 					A2(_elm_lang$core$List$range, 0, config.maxDepth)))));
 };
-var _user$project$Mathquelm$scaledDelimiter = F4(
+
+var _user$project$Mathquelm_Render$divider = A3(
+	_mdgriffith$style_elements$Element$el,
+	_user$project$Mathquelm_Styles$Divider,
+	{
+		ctor: '::',
+		_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$fill),
+		_1: {
+			ctor: '::',
+			_0: _mdgriffith$style_elements$Element_Attributes$height(
+				_mdgriffith$style_elements$Element_Attributes$px(0)),
+			_1: {ctor: '[]'}
+		}
+	},
+	_mdgriffith$style_elements$Element$empty);
+var _user$project$Mathquelm_Render$diacritic = function (diacriticType) {
+	var _p0 = diacriticType;
+	return A3(
+		_mdgriffith$style_elements$Element$el,
+		_user$project$Mathquelm_Styles$None,
+		{ctor: '[]'},
+		_mdgriffith$style_elements$Element$text('^'));
+};
+var _user$project$Mathquelm_Render$parensScale = 1.1;
+var _user$project$Mathquelm_Render$scaleAttr = F2(
+	function (x, y) {
+		return A2(
+			_mdgriffith$style_elements$Element_Attributes$attribute,
+			'style',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'transform: scale(',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(x),
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						',',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(y),
+							')')))));
+	});
+var _user$project$Mathquelm_Render$scaledDelimiter = F4(
 	function (context, contentHeight, scale, symbol) {
 		var heightFrac = contentHeight / context.config.baseFontSize;
 		var xScale = A2(_elm_lang$core$Basics$min, 1 + (0.1 * (heightFrac - 1)), scale);
 		var yScale = heightFrac * scale;
 		return A3(
 			_mdgriffith$style_elements$Element$row,
-			_user$project$Mathquelm$None,
+			_user$project$Mathquelm_Styles$None,
 			{
 				ctor: '::',
 				_0: _mdgriffith$style_elements$Element_Attributes$height(
@@ -26189,26 +26423,26 @@ var _user$project$Mathquelm$scaledDelimiter = F4(
 				ctor: '::',
 				_0: A3(
 					_mdgriffith$style_elements$Element$el,
-					_user$project$Mathquelm$None,
+					_user$project$Mathquelm_Styles$None,
 					{
 						ctor: '::',
-						_0: A2(_user$project$Mathquelm$scaleAttr, xScale, yScale),
+						_0: A2(_user$project$Mathquelm_Render$scaleAttr, xScale, yScale),
 						_1: {ctor: '[]'}
 					},
 					_mdgriffith$style_elements$Element$text(symbol)),
 				_1: {ctor: '[]'}
 			});
 	});
-var _user$project$Mathquelm$leftParen = F3(
+var _user$project$Mathquelm_Render$leftParen = F3(
 	function (context, nodeHeight, parenType) {
 		return A4(
-			_user$project$Mathquelm$scaledDelimiter,
+			_user$project$Mathquelm_Render$scaledDelimiter,
 			context,
 			nodeHeight,
-			_user$project$Mathquelm$parensScale,
+			_user$project$Mathquelm_Render$parensScale,
 			function () {
-				var _p19 = parenType;
-				switch (_p19.ctor) {
+				var _p1 = parenType;
+				switch (_p1.ctor) {
 					case 'Parentheses':
 						return '(';
 					case 'Brackets':
@@ -26220,16 +26454,16 @@ var _user$project$Mathquelm$leftParen = F3(
 				}
 			}());
 	});
-var _user$project$Mathquelm$rightParen = F3(
+var _user$project$Mathquelm_Render$rightParen = F3(
 	function (context, nodeHeight, parenType) {
 		return A4(
-			_user$project$Mathquelm$scaledDelimiter,
+			_user$project$Mathquelm_Render$scaledDelimiter,
 			context,
 			nodeHeight,
-			_user$project$Mathquelm$parensScale,
+			_user$project$Mathquelm_Render$parensScale,
 			function () {
-				var _p20 = parenType;
-				switch (_p20.ctor) {
+				var _p2 = parenType;
+				switch (_p2.ctor) {
 					case 'Parentheses':
 						return ')';
 					case 'Brackets':
@@ -26241,231 +26475,533 @@ var _user$project$Mathquelm$rightParen = F3(
 				}
 			}());
 	});
-var _user$project$Mathquelm$renderNode = function (context) {
-	var getChildrenHeight = _user$project$Mathquelm$getBlockHeight(context);
-	var renderChildren = _user$project$Mathquelm$renderBlock(context);
-	var rendered = function () {
-		var _p21 = context.node;
-		switch (_p21.ctor) {
-			case 'Cursor':
-				return A2(
-					_mdgriffith$style_elements$Element$within,
+var _user$project$Mathquelm_Render$mapBoth = F2(
+	function (fn, _p3) {
+		var _p4 = _p3;
+		return {
+			ctor: '_Tuple2',
+			_0: fn(_p4._0),
+			_1: fn(_p4._1)
+		};
+	});
+var _user$project$Mathquelm_Render$centerLine = function (context) {
+	centerLine:
+	while (true) {
+		var enterBlock = function (_p5) {
+			return A2(
+				_user$project$Mathquelm_RenderContext$enter,
+				context,
+				_user$project$Mathquelm_DisplayTree$Block(_p5));
+		};
+		var enterNode = function (_p6) {
+			return A2(
+				_user$project$Mathquelm_RenderContext$enter,
+				context,
+				_user$project$Mathquelm_DisplayTree$Node(_p6));
+		};
+		var _p7 = context.target;
+		if (_p7.ctor === 'Block') {
+			var _p10 = _p7._0;
+			var _p8 = _p10;
+			if (_p8.ctor === '[]') {
+				return _user$project$Mathquelm_RenderContext$fontSize(context) / 2;
+			} else {
+				if (_p8._1.ctor === '[]') {
+					var _v6 = enterNode(_p8._0);
+					context = _v6;
+					continue centerLine;
+				} else {
+					return A2(
+						_elm_lang$core$Maybe$withDefault,
+						0,
+						_elm_lang$core$List$maximum(
+							A2(
+								_elm_lang$core$List$map,
+								function (_p9) {
+									return _user$project$Mathquelm_Render$centerLine(
+										enterNode(_p9));
+								},
+								_p10)));
+				}
+			}
+		} else {
+			var _p11 = _p7._0;
+			switch (_p11.ctor) {
+				case 'Cursor':
+					return _user$project$Mathquelm_Render$getHeight(context) / 2;
+				case 'Leaf':
+					return _user$project$Mathquelm_Render$getHeight(context) / 2;
+				case 'OneBlock':
+					var _p13 = _p11._1;
+					var blockHeight = _user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p13));
+					var _p12 = _p11._0;
+					if (_p12.ctor === 'Parens') {
+						var parenOverlap = 0.2 * _user$project$Mathquelm_Render$getHeight(
+							enterBlock(_p13));
+						return _user$project$Mathquelm_Render$centerLine(
+							enterBlock(_p13)) + (parenOverlap / 2);
+					} else {
+						return 0;
+					}
+				default:
+					return _user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p11._1));
+			}
+		}
+	}
+};
+var _user$project$Mathquelm_Render$getHeight = function (context) {
+	getHeight:
+	while (true) {
+		var enterBlock = function (_p14) {
+			return A2(
+				_user$project$Mathquelm_RenderContext$enter,
+				context,
+				_user$project$Mathquelm_DisplayTree$Block(_p14));
+		};
+		var enterNode = function (_p15) {
+			return A2(
+				_user$project$Mathquelm_RenderContext$enter,
+				context,
+				_user$project$Mathquelm_DisplayTree$Node(_p15));
+		};
+		var _p16 = context.target;
+		if (_p16.ctor === 'Block') {
+			var _p22 = _p16._0;
+			var _p17 = _p22;
+			if (_p17.ctor === '[]') {
+				return _user$project$Mathquelm_RenderContext$fontSize(context);
+			} else {
+				if (_p17._1.ctor === '[]') {
+					var _v11 = enterNode(_p17._0);
+					context = _v11;
+					continue getHeight;
+				} else {
+					return function (_p18) {
+						var _p19 = _p18;
+						return _p19._0 + _p19._1;
+					}(
+						A2(
+							_user$project$Mathquelm_Render$mapBoth,
+							function (_p20) {
+								return A2(
+									_elm_lang$core$Maybe$withDefault,
+									0,
+									_elm_lang$core$List$maximum(_p20));
+							},
+							_elm_lang$core$List$unzip(
+								A2(
+									_elm_lang$core$List$map,
+									function (_p21) {
+										return _user$project$Mathquelm_Render$heightRect(
+											enterNode(_p21));
+									},
+									_p22))));
+				}
+			}
+		} else {
+			var _p23 = _p16._0;
+			switch (_p23.ctor) {
+				case 'Cursor':
+					return _user$project$Mathquelm_RenderContext$fontSize(context);
+				case 'Leaf':
+					return _elm_lang$core$Basics$toFloat(
+						_elm_lang$core$Basics$floor(
+							_user$project$Mathquelm_RenderContext$fontBox(context)));
+				case 'OneBlock':
+					var blockHeight = _user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p23._1));
+					var _p24 = _p23._0;
+					if (_p24.ctor === 'Parens') {
+						return blockHeight * 1.05;
+					} else {
+						return blockHeight;
+					}
+				default:
+					return (_user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p23._1)) + _user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p23._2))) + 1;
+			}
+		}
+	}
+};
+var _user$project$Mathquelm_Render$heightRect = function (context) {
+	var distanceFromTop = _user$project$Mathquelm_Render$centerLine(context);
+	var height = _user$project$Mathquelm_Render$getHeight(context);
+	return {ctor: '_Tuple2', _0: distanceFromTop, _1: height - distanceFromTop};
+};
+var _user$project$Mathquelm_Render$wrapInDebug = F3(
+	function (context, node, rendered) {
+		var outlineBox = context.config.showBoxes ? A2(
+			_mdgriffith$style_elements$Element$el,
+			_user$project$Mathquelm_Styles$DebugBox(context.depth),
+			{ctor: '[]'}) : _elm_lang$core$Basics$identity;
+		var centerLineDiv = context.config.showCenterLines ? _mdgriffith$style_elements$Element$above(
+			{
+				ctor: '::',
+				_0: A3(
+					_mdgriffith$style_elements$Element$el,
+					_user$project$Mathquelm_Styles$DebugCenterline,
 					{
 						ctor: '::',
-						_0: A3(
+						_0: _mdgriffith$style_elements$Element_Attributes$moveDown(
+							_user$project$Mathquelm_Render$centerLine(context)),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$style_elements$Element_Attributes$width(
+								_mdgriffith$style_elements$Element_Attributes$px(16)),
+							_1: {ctor: '[]'}
+						}
+					},
+					_mdgriffith$style_elements$Element$empty),
+				_1: {ctor: '[]'}
+			}) : _elm_lang$core$Basics$identity;
+		return outlineBox(rendered);
+	});
+var _user$project$Mathquelm_Render$render = function (context) {
+	var enterBlock = function (_p25) {
+		return A2(
+			_user$project$Mathquelm_RenderContext$enter,
+			context,
+			_user$project$Mathquelm_DisplayTree$Block(_p25));
+	};
+	var enterNode = function (_p26) {
+		return A2(
+			_user$project$Mathquelm_RenderContext$enter,
+			context,
+			_user$project$Mathquelm_DisplayTree$Node(_p26));
+	};
+	var rendered = function () {
+		var _p27 = context.target;
+		if (_p27.ctor === 'Block') {
+			var _p29 = _p27._0;
+			var _p28 = _p29;
+			if (_p28.ctor === '[]') {
+				return A3(
+					_mdgriffith$style_elements$Element$el,
+					_user$project$Mathquelm_Styles$EmptySquare,
+					{
+						ctor: '::',
+						_0: _mdgriffith$style_elements$Element_Attributes$width(
+							_mdgriffith$style_elements$Element_Attributes$px(
+								_user$project$Mathquelm_RenderContext$fontSize(context) * 0.8)),
+						_1: {
+							ctor: '::',
+							_0: _mdgriffith$style_elements$Element_Attributes$height(
+								_mdgriffith$style_elements$Element_Attributes$px(
+									_user$project$Mathquelm_RenderContext$fontSize(context))),
+							_1: {ctor: '[]'}
+						}
+					},
+					_mdgriffith$style_elements$Element$empty);
+			} else {
+				if (_p28._1.ctor === '[]') {
+					return _user$project$Mathquelm_Render$render(
+						enterNode(_p28._0));
+				} else {
+					var blockCenter = _user$project$Mathquelm_Render$centerLine(
+						enterBlock(_p29));
+					return A3(
+						_mdgriffith$style_elements$Element$row,
+						_user$project$Mathquelm_Styles$None,
+						{
+							ctor: '::',
+							_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$content),
+							_1: {
+								ctor: '::',
+								_0: _mdgriffith$style_elements$Element_Attributes$alignTop,
+								_1: {ctor: '[]'}
+							}
+						},
+						A2(
+							_elm_lang$core$List$map,
+							function (childNode) {
+								var childContext = enterNode(childNode);
+								return A3(
+									_mdgriffith$style_elements$Element$el,
+									_user$project$Mathquelm_Styles$None,
+									{
+										ctor: '::',
+										_0: _mdgriffith$style_elements$Element_Attributes$paddingTop(
+											blockCenter - _user$project$Mathquelm_Render$centerLine(childContext)),
+										_1: {ctor: '[]'}
+									},
+									_user$project$Mathquelm_Render$render(childContext));
+							},
+							_p29));
+				}
+			}
+		} else {
+			var _p30 = _p27._0;
+			switch (_p30.ctor) {
+				case 'Cursor':
+					return A2(
+						_mdgriffith$style_elements$Element$within,
+						{
+							ctor: '::',
+							_0: A3(
+								_mdgriffith$style_elements$Element$el,
+								_user$project$Mathquelm_Styles$CursorLine,
+								{
+									ctor: '::',
+									_0: _mdgriffith$style_elements$Element_Attributes$width(
+										_mdgriffith$style_elements$Element_Attributes$px(2)),
+									_1: {
+										ctor: '::',
+										_0: _mdgriffith$style_elements$Element_Attributes$height(
+											_mdgriffith$style_elements$Element_Attributes$px(
+												_user$project$Mathquelm_Render$getHeight(context))),
+										_1: {ctor: '[]'}
+									}
+								},
+								_mdgriffith$style_elements$Element$empty),
+							_1: {ctor: '[]'}
+						},
+						A3(
 							_mdgriffith$style_elements$Element$el,
-							_user$project$Mathquelm$CursorLine,
+							_user$project$Mathquelm_Styles$None,
 							{
 								ctor: '::',
 								_0: _mdgriffith$style_elements$Element_Attributes$width(
-									_mdgriffith$style_elements$Element_Attributes$px(2)),
+									_mdgriffith$style_elements$Element_Attributes$px(0)),
+								_1: {ctor: '[]'}
+							},
+							_mdgriffith$style_elements$Element$empty));
+				case 'Leaf':
+					var _p31 = _p30._0._0;
+					var style = _elm_lang$core$Char$isDigit(_p31) ? _user$project$Mathquelm_Styles$None : _user$project$Mathquelm_Styles$Italic;
+					return A3(
+						_mdgriffith$style_elements$Element$el,
+						style,
+						{ctor: '[]'},
+						_mdgriffith$style_elements$Element$text(
+							_elm_lang$core$String$fromChar(_p31)));
+				case 'OneBlock':
+					var _p34 = _p30._1;
+					var renderedBlock = _user$project$Mathquelm_Render$render(
+						enterBlock(_p34));
+					var contentHeight = _user$project$Mathquelm_Render$getHeight(
+						enterBlock(_p34));
+					var _p32 = _p30._0;
+					if (_p32.ctor === 'Subscript') {
+						return renderedBlock;
+					} else {
+						var _p33 = _p32._0;
+						return A3(
+							_mdgriffith$style_elements$Element$row,
+							_user$project$Mathquelm_Styles$None,
+							{
+								ctor: '::',
+								_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
 								_1: {
 									ctor: '::',
-									_0: _mdgriffith$style_elements$Element_Attributes$height(
-										_mdgriffith$style_elements$Element_Attributes$px(
-											_user$project$Mathquelm$getHeight(context))),
+									_0: _mdgriffith$style_elements$Element_Attributes$spacing(5),
 									_1: {ctor: '[]'}
 								}
 							},
-							_mdgriffith$style_elements$Element$empty),
-						_1: {ctor: '[]'}
-					},
-					A3(
+							{
+								ctor: '::',
+								_0: A3(_user$project$Mathquelm_Render$leftParen, context, contentHeight, _p33),
+								_1: {
+									ctor: '::',
+									_0: renderedBlock,
+									_1: {
+										ctor: '::',
+										_0: A3(_user$project$Mathquelm_Render$rightParen, context, contentHeight, _p33),
+										_1: {ctor: '[]'}
+									}
+								}
+							});
+					}
+				default:
+					var outerPadding = A2(_mdgriffith$style_elements$Element_Attributes$paddingXY, 3, 0);
+					var innerPadding = _user$project$Mathquelm_RenderContext$fontSize(context) / 8;
+					var padInsides = A2(
 						_mdgriffith$style_elements$Element$el,
-						_user$project$Mathquelm$None,
+						_user$project$Mathquelm_Styles$None,
 						{
 							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Attributes$width(
-								_mdgriffith$style_elements$Element_Attributes$px(0)),
+							_0: A2(_mdgriffith$style_elements$Element_Attributes$paddingXY, innerPadding, 0),
 							_1: {ctor: '[]'}
-						},
-						_mdgriffith$style_elements$Element$empty));
-			case 'Leaf':
-				var _p22 = _p21._0._0;
-				var style = _elm_lang$core$Char$isDigit(_p22) ? _user$project$Mathquelm$None : _user$project$Mathquelm$Italic;
-				return A3(
-					_mdgriffith$style_elements$Element$el,
-					style,
-					{ctor: '[]'},
-					_mdgriffith$style_elements$Element$text(
-						_elm_lang$core$String$fromChar(_p22)));
-			case 'OneBlock':
-				var _p25 = _p21._1;
-				var renderedBlock = renderChildren(_p25);
-				var contentHeight = getChildrenHeight(_p25);
-				var _p23 = _p21._0;
-				if (_p23.ctor === 'Subscript') {
-					return renderedBlock;
-				} else {
-					var _p24 = _p23._0;
+						});
 					return A3(
-						_mdgriffith$style_elements$Element$row,
-						_user$project$Mathquelm$None,
+						_mdgriffith$style_elements$Element$column,
+						_user$project$Mathquelm_Styles$None,
 						{
 							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Attributes$verticalCenter,
+							_0: _mdgriffith$style_elements$Element_Attributes$center,
 							_1: {
 								ctor: '::',
-								_0: _mdgriffith$style_elements$Element_Attributes$spacing(5),
+								_0: outerPadding,
 								_1: {ctor: '[]'}
 							}
 						},
 						{
 							ctor: '::',
-							_0: A3(_user$project$Mathquelm$leftParen, context, contentHeight, _p24),
+							_0: padInsides(
+								_user$project$Mathquelm_Render$render(
+									enterBlock(_p30._1))),
 							_1: {
 								ctor: '::',
-								_0: renderedBlock,
+								_0: _user$project$Mathquelm_Render$divider,
 								_1: {
 									ctor: '::',
-									_0: A3(_user$project$Mathquelm$rightParen, context, contentHeight, _p24),
+									_0: padInsides(
+										_user$project$Mathquelm_Render$render(
+											enterBlock(_p30._2))),
 									_1: {ctor: '[]'}
 								}
 							}
 						});
-				}
-			default:
-				var outerPadding = A2(_mdgriffith$style_elements$Element_Attributes$paddingXY, 3, 0);
-				var innerPadding = _user$project$Mathquelm_RenderContext$fontSize(context) / 8;
-				var padInsides = A2(
-					_mdgriffith$style_elements$Element$el,
-					_user$project$Mathquelm$None,
-					{
-						ctor: '::',
-						_0: A2(_mdgriffith$style_elements$Element_Attributes$paddingXY, innerPadding, 0),
-						_1: {ctor: '[]'}
-					});
-				return A3(
-					_mdgriffith$style_elements$Element$column,
-					_user$project$Mathquelm$None,
-					{
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Element_Attributes$center,
-						_1: {
-							ctor: '::',
-							_0: outerPadding,
-							_1: {ctor: '[]'}
-						}
-					},
-					{
-						ctor: '::',
-						_0: padInsides(
-							renderChildren(_p21._1)),
-						_1: {
-							ctor: '::',
-							_0: _user$project$Mathquelm$divider,
-							_1: {
-								ctor: '::',
-								_0: padInsides(
-									renderChildren(_p21._2)),
-								_1: {ctor: '[]'}
-							}
-						}
-					});
+			}
 		}
 	}();
 	return A3(
-		_user$project$Mathquelm$wrapInDebug,
+		_user$project$Mathquelm_Render$wrapInDebug,
 		context,
 		_mdgriffith$style_elements$Element$node,
 		A3(
 			_mdgriffith$style_elements$Element$el,
-			_user$project$Mathquelm$ScaledBlock(context.depth),
+			_user$project$Mathquelm_Styles$ScaledBlock(context.depth),
 			{ctor: '[]'},
 			rendered));
 };
-var _user$project$Mathquelm$renderBlock = F2(
-	function (context, block) {
-		var _p26 = block;
-		if (_p26.ctor === '[]') {
-			return A3(
-				_mdgriffith$style_elements$Element$el,
-				_user$project$Mathquelm$EmptySquare,
+
+var _user$project$Mathquelm$update = F2(
+	function (msg, model) {
+		var _p0 = msg;
+		if (_p0.ctor === 'Move') {
+			return _elm_lang$core$Native_Utils.update(
+				model,
 				{
-					ctor: '::',
-					_0: _mdgriffith$style_elements$Element_Attributes$width(
-						_mdgriffith$style_elements$Element_Attributes$px(
-							_user$project$Mathquelm_RenderContext$fontSize(context) * 0.8)),
-					_1: {
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Element_Attributes$height(
-							_mdgriffith$style_elements$Element_Attributes$px(
-								_user$project$Mathquelm_RenderContext$fontSize(context))),
-						_1: {ctor: '[]'}
-					}
-				},
-				_mdgriffith$style_elements$Element$empty);
+					cursor: A3(_user$project$Mathquelm_Cursor$moveCursor, _p0._0, model.rootBlock, model.cursor)
+				});
 		} else {
-			if (_p26._1.ctor === '[]') {
-				return _user$project$Mathquelm$renderNode(
-					A2(_user$project$Mathquelm_RenderContext$enter, context, _p26._0));
-			} else {
-				var blockCenter = A2(_user$project$Mathquelm$blockCenterLine, context, block);
-				return A3(
-					_mdgriffith$style_elements$Element$row,
-					_user$project$Mathquelm$None,
-					{
-						ctor: '::',
-						_0: _mdgriffith$style_elements$Element_Attributes$width(_mdgriffith$style_elements$Element_Attributes$content),
-						_1: {
-							ctor: '::',
-							_0: _mdgriffith$style_elements$Element_Attributes$alignTop,
-							_1: {ctor: '[]'}
-						}
-					},
-					A2(
-						_elm_lang$core$List$map,
-						function (child) {
-							var childContext = A2(_user$project$Mathquelm_RenderContext$enter, context, child);
-							var rendered = _user$project$Mathquelm$renderNode(childContext);
-							var childCenter = _user$project$Mathquelm$centerLine(childContext);
-							return A3(
-								_mdgriffith$style_elements$Element$el,
-								_user$project$Mathquelm$None,
-								{
-									ctor: '::',
-									_0: _mdgriffith$style_elements$Element_Attributes$paddingTop(blockCenter - childCenter),
-									_1: {ctor: '[]'}
-								},
-								rendered);
-						},
-						block));
-			}
+			return model;
 		}
 	});
+var _user$project$Mathquelm$defaultModel = {
+	rootBlock: {ctor: '[]'},
+	config: _user$project$Mathquelm_Config$default,
+	cursor: 0
+};
 var _user$project$Mathquelm$editableQuelm = function (model) {
 	return A2(
 		_mdgriffith$style_elements$Element$layout,
-		_user$project$Mathquelm$stylesheet(model.config),
+		_user$project$Mathquelm_Styles$stylesheet(model.config),
 		A3(
 			_mdgriffith$style_elements$Element$column,
-			_user$project$Mathquelm$Base,
+			_user$project$Mathquelm_Styles$Base,
 			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _user$project$Mathquelm$loadFont,
+				_0: _user$project$Mathquelm_Styles$loadFont,
 				_1: {
 					ctor: '::',
-					_0: A2(
-						_user$project$Mathquelm$renderBlock,
+					_0: _user$project$Mathquelm_Render$render(
 						A2(
 							_user$project$Mathquelm_RenderContext$baseContext,
 							model.config,
-							_user$project$Mathquelm_DisplayNode$Leaf(
-								_user$project$Mathquelm_DisplayNode$Character(
-									_elm_lang$core$Native_Utils.chr('a')))),
-						model.rootBlock),
+							_user$project$Mathquelm_DisplayTree$Block(
+								A2(_user$project$Mathquelm_Cursor$addCursor, model.rootBlock, model.cursor)))),
 					_1: {ctor: '[]'}
 				}
 			}));
 };
-var _user$project$Mathquelm$diacritic = function (diacriticType) {
-	var _p27 = diacriticType;
-	return A3(
-		_mdgriffith$style_elements$Element$el,
-		_user$project$Mathquelm$None,
-		{ctor: '[]'},
-		_mdgriffith$style_elements$Element$text('^'));
+var _user$project$Mathquelm$latex = function (model) {
+	return _user$project$Mathquelm_DisplayTree$toLatex(
+		_user$project$Mathquelm_DisplayTree$Block(model.rootBlock));
+};
+var _user$project$Mathquelm$sub = _user$project$Mathquelm_DisplayTree$OneBlock(_user$project$Mathquelm_DisplayTree$Subscript);
+var _user$project$Mathquelm$frac = _user$project$Mathquelm_DisplayTree$TwoBlocks(_user$project$Mathquelm_DisplayTree$Fraction);
+var _user$project$Mathquelm$parens = _user$project$Mathquelm_DisplayTree$OneBlock(
+	_user$project$Mathquelm_DisplayTree$Parens(_user$project$Mathquelm_DisplayTree$Parentheses));
+var _user$project$Mathquelm$stringToNodes = function (string) {
+	return A2(
+		_elm_lang$core$List$map,
+		function (_p1) {
+			return _user$project$Mathquelm_DisplayTree$Leaf(
+				_user$project$Mathquelm_DisplayTree$Character(_p1));
+		},
+		_elm_lang$core$String$toList(string));
+};
+var _user$project$Mathquelm$str = _user$project$Mathquelm$stringToNodes;
+var _user$project$Mathquelm$sampleTree = A2(
+	_elm_lang$core$Basics_ops['++'],
+	_user$project$Mathquelm$str('abc'),
+	A2(
+		_elm_lang$core$Basics_ops['++'],
+		{
+			ctor: '::',
+			_0: _user$project$Mathquelm$parens(
+				_user$project$Mathquelm$str('de')),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_user$project$Mathquelm$frac,
+					_user$project$Mathquelm$str('fgh'),
+					{
+						ctor: '::',
+						_0: A2(
+							_user$project$Mathquelm$frac,
+							_user$project$Mathquelm$str('i'),
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_user$project$Mathquelm$str('j'),
+								{
+									ctor: '::',
+									_0: _user$project$Mathquelm$sub(
+										_user$project$Mathquelm$str('klmno')),
+									_1: {ctor: '[]'}
+								})),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
+		},
+		_user$project$Mathquelm$stringToNodes('pqrs')));
+var _user$project$Mathquelm$Model = F3(
+	function (a, b, c) {
+		return {rootBlock: a, config: b, cursor: c};
+	});
+var _user$project$Mathquelm$DeleteRight = {ctor: 'DeleteRight'};
+var _user$project$Mathquelm$DeleteLeft = {ctor: 'DeleteLeft'};
+var _user$project$Mathquelm$ExitBlock = {ctor: 'ExitBlock'};
+var _user$project$Mathquelm$CharacterInserted = function (a) {
+	return {ctor: 'CharacterInserted', _0: a};
+};
+var _user$project$Mathquelm$Delete = function (a) {
+	return {ctor: 'Delete', _0: a};
+};
+var _user$project$Mathquelm$Select = function (a) {
+	return {ctor: 'Select', _0: a};
+};
+var _user$project$Mathquelm$Move = function (a) {
+	return {ctor: 'Move', _0: a};
+};
+var _user$project$Mathquelm$Noop = {ctor: 'Noop'};
+var _user$project$Mathquelm$keyPressed = function (keyCode) {
+	var _p2 = A2(
+		_elm_lang$core$Debug$log,
+		'keyCode',
+		_elm_lang$core$Basics$toString(keyCode));
+	var _p3 = keyCode;
+	switch (_p3) {
+		case 37:
+			return _user$project$Mathquelm$Move(_user$project$Mathquelm_Cursor$Left);
+		case 38:
+			return _user$project$Mathquelm$Move(_user$project$Mathquelm_Cursor$Up);
+		case 39:
+			return _user$project$Mathquelm$Move(_user$project$Mathquelm_Cursor$Right);
+		case 40:
+			return _user$project$Mathquelm$Move(_user$project$Mathquelm_Cursor$Down);
+		default:
+			return _user$project$Mathquelm$Noop;
+	}
+};
+var _user$project$Mathquelm$subscriptions = function (model) {
+	return _elm_lang$keyboard$Keyboard$downs(_user$project$Mathquelm$keyPressed);
 };
 
 var _user$project$Mathquill_Common$Left = {ctor: 'Left'};
@@ -26635,7 +27171,10 @@ var _user$project$Main$katexOut = _elm_lang$core$Native_Platform.outgoingPort(
 		return v;
 	});
 var _user$project$Main$init = function () {
-	var mqModel = {config: _user$project$Mathquelm_Config$default, rootBlock: _user$project$Mathquelm$sampleTree};
+	var defaultModel = _user$project$Mathquelm$defaultModel;
+	var mqModel = _elm_lang$core$Native_Utils.update(
+		defaultModel,
+		{rootBlock: _user$project$Mathquelm$sampleTree});
 	var _p1 = A2(_elm_lang$core$Debug$log, 'latex', _user$project$Mathquelm$latex);
 	return {
 		ctor: '_Tuple2',
@@ -26763,7 +27302,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Main.Msg":{"args":[],"tags":{"MathquelmMsg":["Mathquelm.Msg"],"ToggleCenterLine":[],"Noop":[],"ToggleBoxes":[]}},"Mathquelm.Msg":{"args":[],"tags":{"CharacterInserted":["Char"],"ExitBlock":[],"Select":["Mathquelm.CursorMovement.MoveDirection"],"Noop":[],"Delete":["Mathquelm.DeleteDirection"],"Move":["Mathquelm.CursorMovement.MoveDirection"]}},"Mathquelm.DeleteDirection":{"args":[],"tags":{"DeleteLeft":[],"DeleteRight":[]}},"Mathquelm.CursorMovement.MoveDirection":{"args":[],"tags":{"Down":[],"Up":[],"Left":[],"Right":[]}}},"aliases":{},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Main.Msg":{"args":[],"tags":{"MathquelmMsg":["Mathquelm.Msg"],"ToggleCenterLine":[],"Noop":[],"ToggleBoxes":[]}},"Mathquelm.Msg":{"args":[],"tags":{"CharacterInserted":["Char"],"ExitBlock":[],"Select":["Mathquelm.Cursor.MoveDirection"],"Noop":[],"Delete":["Mathquelm.DeleteDirection"],"Move":["Mathquelm.Cursor.MoveDirection"]}},"Mathquelm.DeleteDirection":{"args":[],"tags":{"DeleteLeft":[],"DeleteRight":[]}},"Mathquelm.Cursor.MoveDirection":{"args":[],"tags":{"Down":[],"Up":[],"Left":[],"Right":[]}}},"aliases":{},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])
