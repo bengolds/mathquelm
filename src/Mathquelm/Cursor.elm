@@ -182,7 +182,7 @@ type alias Iterator a =
     }
 
 
-updateBlockOrReturnValueOrProgressCursor spelunker shouldUpdate =
+updateBlockOrReturnValueOrProgressCursor updateFn shouldUpdate =
     case shouldUpdate of
         JustReturn val changedBlock ->
             ( changedBlock, YesFound (Return val) )
@@ -191,7 +191,7 @@ updateBlockOrReturnValueOrProgressCursor spelunker shouldUpdate =
             ( changedBlock, NotFound (cursor + 1) )
 
         PleaseUpdate relIndex changedBlock ->
-            spelunker (Block changedBlock) relIndex
+            updateFn (Block changedBlock) relIndex
                 |> Tuple.mapFirst toBlock
                 |> Tuple.mapSecond YesFound
 
@@ -236,14 +236,14 @@ addNode node relativeIndex spelunkNode crawler =
 
 
 spelunk : (TreeObject -> BlockAddress -> ( TreeObject, ShouldBubble a )) -> Cursor -> DisplayBlock -> ( DisplayBlock, Maybe a )
-spelunk spelunker targetCursor rootBlock =
+spelunk updateFn targetCursor rootBlock =
     -- THE tree primitive! Go down the tree to find where your cursor is at. Bring back an "a", bubble up a level, and modify the tree on your way up.
     -- But there's gotta be a way to clean this up. I mean this is a hot fucking mess.
     let
         spelunkBlock : Cursor -> DisplayBlock -> ( DisplayBlock, WasFound a )
         spelunkBlock startIndex block =
             List.indexedFoldl
-                -- Consider adding the spelunkNode and spelunker functions to the crawler
+                -- Consider adding the spelunkNode and updateFn functions to the crawler
                 (\relativeIndex node crawler ->
                     tryMatchCrawler targetCursor relativeIndex crawler
                         |> addNode node relativeIndex spelunkNode
@@ -251,27 +251,12 @@ spelunk spelunker targetCursor rootBlock =
                 (DontUpdate startIndex [])
                 block
                 |> tryMatchCrawler targetCursor (List.length block)
-                |> updateBlockOrReturnValueOrProgressCursor spelunker
+                |> updateBlockOrReturnValueOrProgressCursor updateFn
 
         spelunkNode : DisplayNode -> Cursor -> ( TreeObject, WasFound a )
         spelunkNode node startIndex =
+            -- Key insight: the ONLY way to update a node is by bubbling up to it.
             let
-                finalizeNode ( node, foundYet ) =
-                    ( Node node, foundYet )
-
-                updateNodeOrReturnValueOrProgressCursor ( spelunkedNode, foundYet ) =
-                    case foundYet of
-                        YesFound Bubble ->
-                            -- NEED TO RENAME SPELUNKER
-                            spelunker spelunkedNode 0
-                                |> Tuple.mapSecond YesFound
-
-                        NotFound cursor ->
-                            ( spelunkedNode, NotFound cursor )
-
-                        YesFound (Return returnVal) ->
-                            ( spelunkedNode, YesFound (Return returnVal) )
-
                 spelunkNextBlock block ( builder, foundYet ) =
                     case foundYet of
                         NotFound cursor ->
@@ -281,20 +266,27 @@ spelunk spelunker targetCursor rootBlock =
                         _ ->
                             -- Should I make this more explicit or not?
                             ( builder block, foundYet )
+
+                maybeUpdateNodeOrElseWrap ( spelunkedNode, foundYet ) =
+                    case foundYet of
+                        YesFound Bubble ->
+                            updateFn (Node spelunkedNode) 0
+                                |> Tuple.mapSecond YesFound
+
+                        _ ->
+                            ( Node spelunkedNode, foundYet )
             in
             case node of
                 OneBlock nodeType block ->
                     ( OneBlock nodeType, NotFound (startIndex + 1) )
                         |> spelunkNextBlock block
-                        |> finalizeNode
-                        |> updateNodeOrReturnValueOrProgressCursor
+                        |> maybeUpdateNodeOrElseWrap
 
                 TwoBlocks nodeType block1 block2 ->
                     ( TwoBlocks nodeType, NotFound (startIndex + 1) )
                         |> spelunkNextBlock block1
                         |> spelunkNextBlock block2
-                        |> finalizeNode
-                        |> updateNodeOrReturnValueOrProgressCursor
+                        |> maybeUpdateNodeOrElseWrap
 
                 _ ->
                     ( Node node, NotFound <| startIndex + 1 )
