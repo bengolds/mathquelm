@@ -30,10 +30,39 @@ type alias Cursor =
     Int
 
 
-type alias ResolvedAddress =
-    { targetBlock : DisplayBlock
-    , relativeIndex : Int
-    }
+type alias BlockAddress =
+    Int
+
+
+type ShouldBubble a
+    = Bubble
+    | Return a
+
+
+type WasFound a
+    = YesFound (ShouldBubble a)
+    | NotFound Cursor
+
+
+type ShouldUpdate a
+    = PleaseUpdate BlockAddress DisplayBlock
+    | NotAnUpdate Cursor DisplayBlock
+    | JustReturn a DisplayBlock
+
+
+append : TreeObject -> DisplayBlock -> DisplayBlock
+append obj block =
+    block ++ toBlock obj
+
+
+toBlock : TreeObject -> DisplayBlock
+toBlock obj =
+    case obj of
+        Node node ->
+            [ node ]
+
+        Block block ->
+            block
 
 
 moveCursor : MoveDirection -> DisplayBlock -> Cursor -> Cursor
@@ -57,7 +86,7 @@ moveCursor dir rootBlock address =
                             ( obj
                             , case obj of
                                 Block block ->
-                                    Return <| ResolvedAddress block relIndex
+                                    Return <| ( block, relIndex )
 
                                 _ ->
                                     Bubble
@@ -79,81 +108,20 @@ moveCursor dir rootBlock address =
             address
 
 
-type Bot
-    = Bot
+type Empty
+    = Empty
 
 
 addCursor : DisplayBlock -> Cursor -> DisplayBlock
 addCursor rootBlock cursor =
-    spelunk
-        (\obj relIndex ->
-            case obj of
-                Block block ->
-                    ( Block <|
-                        List.take relIndex block
-                            ++ [ Cursor ]
-                            ++ List.drop relIndex block
-                    , Return Bot
-                    )
-
-                Node node ->
-                    ( obj, Bubble )
+    updateBlockAt
+        (\block relIndex ->
+            List.take relIndex block
+                ++ [ Cursor ]
+                ++ List.drop relIndex block
         )
         cursor
         rootBlock
-        |> Tuple.first
-
-
-
---addCursorHelperBlock rootBlock 0 cursor
---|> Tuple.first
-
-
-addCursorHelperBlock : DisplayBlock -> Int -> Cursor -> ( DisplayBlock, Int )
-addCursorHelperBlock block startIndex targetIndex =
-    if startIndex == targetIndex then
-        ( [ Cursor ] ++ block, startIndex + numCursorSpotsInBlock block )
-    else
-        List.foldl
-            (\node ( acc, currIndex ) ->
-                let
-                    ( processedNode, indexAfterNode ) =
-                        addCursorHelperNode node currIndex targetIndex
-                in
-                ( if targetIndex == indexAfterNode then
-                    acc ++ [ processedNode, Cursor ]
-                  else
-                    acc ++ [ processedNode ]
-                , indexAfterNode
-                )
-            )
-            ( [], startIndex )
-            block
-            |> Tuple.mapSecond ((+) 1)
-
-
-addCursorHelperNode : DisplayNode -> Int -> Cursor -> ( DisplayNode, Int )
-addCursorHelperNode node startIndex targetIndex =
-    case node of
-        Leaf _ ->
-            ( node, startIndex + 1 )
-
-        OneBlock nodeType block ->
-            addCursorHelperBlock block (startIndex + 1) targetIndex
-                |> Tuple.mapFirst (OneBlock nodeType)
-
-        TwoBlocks nodeType block1 block2 ->
-            let
-                ( newBlock1, n ) =
-                    addCursorHelperBlock block1 (startIndex + 1) targetIndex
-
-                ( newBlock2, m ) =
-                    addCursorHelperBlock block2 n targetIndex
-            in
-            ( TwoBlocks nodeType newBlock1 newBlock2, m )
-
-        _ ->
-            ( node, startIndex )
 
 
 numCursorSpotsNode : DisplayNode -> Int
@@ -192,148 +160,32 @@ moveUpOrDown dir rootBlock address =
             address
 
 
-type alias BlockAddress =
-    Int
+updateBlockAt : (DisplayBlock -> BlockAddress -> DisplayBlock) -> Cursor -> DisplayBlock -> DisplayBlock
+updateBlockAt fn address rootBlock =
+    spelunk
+        (\obj relIndex ->
+            case obj of
+                Block block ->
+                    ( Block <| fn block relIndex, Return Empty )
 
-
-type Iterator a
-    = Found a
-    | Unfound Cursor
-
-
-andThen : (Cursor -> Iterator a) -> Iterator a -> Iterator a
-andThen fn iterator =
-    case iterator of
-        Found _ ->
-            iterator
-
-        Unfound currCursor ->
-            fn currCursor
-
-
-resetForBlock : Iterator a -> Iterator a
-resetForBlock iterator =
-    case iterator of
-        Unfound cursor ->
-            Unfound cursor
-
-        _ ->
-            iterator
-
-
-incrementIndex : Iterator a -> Iterator a
-incrementIndex iterator =
-    andThen
-        (\cursor ->
-            Unfound (cursor + 1)
+                Node node ->
+                    ( obj, Bubble )
         )
-        iterator
+        address
+        rootBlock
+        |> Tuple.first
 
 
-matches : Cursor -> Iterator a -> Bool
-matches targetCursor iterator =
-    case iterator of
-        Found _ ->
-            False
-
-        Unfound currCursor ->
-            if currCursor == targetCursor then
-                True
-            else
-                False
+type alias Iterator a =
+    { obj : TreeObject
+    , wasFound : WasFound a
+    }
 
 
-tryMatch : Cursor -> a -> Iterator a -> Iterator a
-tryMatch targetCursor ifFound iterator =
-    case iterator of
-        Found _ ->
-            iterator
-
-        Unfound currCursor ->
-            if currCursor == targetCursor then
-                Found <| ifFound
-            else
-                iterator
-
-
-resolveAddress : Cursor -> DisplayBlock -> Maybe ResolvedAddress
-resolveAddress targetCursor rootBlock =
-    let
-        progressThroughBlock : DisplayBlock -> Iterator ResolvedAddress -> Iterator ResolvedAddress
-        progressThroughBlock block iterator =
-            let
-                makeMatch relIndex iterator =
-                    tryMatch targetCursor (ResolvedAddress block relIndex) iterator
-            in
-            List.indexedFoldl
-                (\relativeIndex node accIterator ->
-                    makeMatch relativeIndex accIterator
-                        |> progressThroughNode node
-                )
-                iterator
-                block
-                |> makeMatch (List.length block)
-                |> incrementIndex
-
-        progressThroughNode : DisplayNode -> Iterator ResolvedAddress -> Iterator ResolvedAddress
-        progressThroughNode node iterator =
-            incrementIndex iterator
-                |> (case node of
-                        Leaf _ ->
-                            identity
-
-                        OneBlock nodeType block ->
-                            progressThroughBlock block
-
-                        TwoBlocks nodeType block1 block2 ->
-                            progressThroughBlock block1
-                                >> progressThroughBlock block2
-
-                        Cursor ->
-                            identity
-                   )
-    in
-    case progressThroughBlock rootBlock (Unfound 0) of
-        Found resolved ->
-            Just resolved
-
-        Unfound _ ->
-            Nothing
-
-
-type ShouldBubble a
-    = Bubble
-    | Return a
-
-
-type WasFound a
-    = YesFound (ShouldBubble a)
-    | NotFound Cursor
-
-
-type ShouldUpdate a
-    = PleaseUpdate BlockAddress DisplayBlock
-    | NotAnUpdate Cursor DisplayBlock
-    | JustReturn a DisplayBlock
-
-
-append : TreeObject -> DisplayBlock -> DisplayBlock
-append obj block =
-    block ++ toBlock obj
-
-
-toBlock : TreeObject -> DisplayBlock
-toBlock obj =
-    case obj of
-        Node node ->
-            [ node ]
-
-        Block block ->
-            block
-
-
-spelunk : (TreeObject -> Int -> ( TreeObject, ShouldBubble a )) -> Int -> DisplayBlock -> ( DisplayBlock, Maybe a )
+spelunk : (TreeObject -> BlockAddress -> ( TreeObject, ShouldBubble a )) -> Cursor -> DisplayBlock -> ( DisplayBlock, Maybe a )
 spelunk spelunker targetCursor rootBlock =
+    -- THE tree primitive! Go down the tree to find where your cursor is at. Bring back an "a", bubble up a level, and modify the tree on your way up.
+    -- But there's gotta be a way to clean this up. I mean this is a hot fucking mess.
     let
         spelunkBlock : DisplayBlock -> Cursor -> ( DisplayBlock, WasFound a )
         spelunkBlock block startIndex =
@@ -347,19 +199,22 @@ spelunk spelunker targetCursor rootBlock =
                             let
                                 ( newTreeObj, wasFound ) =
                                     spelunkNode node cursor
+
+                                newBlock =
+                                    append newTreeObj accBlock
                             in
                             if cursor == targetCursor then
-                                PleaseUpdate relativeIndex (append newTreeObj accBlock)
+                                PleaseUpdate relativeIndex newBlock
                             else
                                 case wasFound of
                                     YesFound Bubble ->
-                                        PleaseUpdate relativeIndex (append newTreeObj accBlock)
+                                        PleaseUpdate relativeIndex newBlock
 
                                     YesFound (Return val) ->
-                                        JustReturn val (append newTreeObj accBlock)
+                                        JustReturn val newBlock
 
                                     NotFound progressedCursor ->
-                                        NotAnUpdate progressedCursor (append newTreeObj accBlock)
+                                        NotAnUpdate progressedCursor newBlock
 
                         PleaseUpdate relIndex accBlock ->
                             PleaseUpdate relIndex (accBlock ++ [ node ])
