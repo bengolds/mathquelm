@@ -44,10 +44,10 @@ type WasFound a
     | NotFound Cursor
 
 
-type ShouldUpdate a
-    = PleaseUpdate BlockAddress DisplayBlock
-    | DontUpdate Cursor DisplayBlock
-    | JustReturn a DisplayBlock
+type Crawler returnType objType
+    = PleaseUpdate BlockAddress objType
+    | DontUpdate Cursor objType
+    | JustReturn returnType objType
 
 
 append : TreeObject -> DisplayBlock -> DisplayBlock
@@ -182,6 +182,59 @@ type alias Iterator a =
     }
 
 
+updateBlockOrReturnValueOrProgressCursor spelunker shouldUpdate =
+    case shouldUpdate of
+        JustReturn val changedBlock ->
+            ( changedBlock, YesFound (Return val) )
+
+        DontUpdate cursor changedBlock ->
+            ( changedBlock, NotFound (cursor + 1) )
+
+        PleaseUpdate relIndex changedBlock ->
+            spelunker (Block changedBlock) relIndex
+                |> Tuple.mapFirst toBlock
+                |> Tuple.mapSecond YesFound
+
+
+tryMatchCrawler targetCursor relativeIndex crawler =
+    case crawler of
+        DontUpdate cursor changedBlock ->
+            if cursor == targetCursor then
+                PleaseUpdate relativeIndex changedBlock
+            else
+                crawler
+
+        _ ->
+            crawler
+
+
+addNode node relativeIndex spelunkNode crawler =
+    case crawler of
+        JustReturn val accBlock ->
+            JustReturn val (accBlock ++ [ node ])
+
+        DontUpdate cursor accBlock ->
+            let
+                ( newTreeObj, wasFound ) =
+                    spelunkNode node cursor
+
+                newBlock =
+                    append newTreeObj accBlock
+            in
+            case wasFound of
+                YesFound Bubble ->
+                    PleaseUpdate relativeIndex newBlock
+
+                YesFound (Return val) ->
+                    JustReturn val newBlock
+
+                NotFound progressedCursor ->
+                    DontUpdate progressedCursor newBlock
+
+        PleaseUpdate relIndex accBlock ->
+            PleaseUpdate relIndex (accBlock ++ [ node ])
+
+
 spelunk : (TreeObject -> BlockAddress -> ( TreeObject, ShouldBubble a )) -> Cursor -> DisplayBlock -> ( DisplayBlock, Maybe a )
 spelunk spelunker targetCursor rootBlock =
     -- THE tree primitive! Go down the tree to find where your cursor is at. Bring back an "a", bubble up a level, and modify the tree on your way up.
@@ -190,83 +243,45 @@ spelunk spelunker targetCursor rootBlock =
         spelunkBlock : DisplayBlock -> Cursor -> ( DisplayBlock, WasFound a )
         spelunkBlock block startIndex =
             List.indexedFoldl
-                (\relativeIndex node shouldUpdate ->
-                    case shouldUpdate of
-                        JustReturn val accBlock ->
-                            JustReturn val (accBlock ++ [ node ])
-
-                        DontUpdate cursor accBlock ->
-                            let
-                                ( newTreeObj, wasFound ) =
-                                    spelunkNode node cursor
-
-                                newBlock =
-                                    append newTreeObj accBlock
-                            in
-                            if cursor == targetCursor then
-                                PleaseUpdate relativeIndex newBlock
-                            else
-                                case wasFound of
-                                    YesFound Bubble ->
-                                        PleaseUpdate relativeIndex newBlock
-
-                                    YesFound (Return val) ->
-                                        JustReturn val newBlock
-
-                                    NotFound progressedCursor ->
-                                        DontUpdate progressedCursor newBlock
-
-                        PleaseUpdate relIndex accBlock ->
-                            PleaseUpdate relIndex (accBlock ++ [ node ])
+                -- Consider adding the spelunkNode and spelunker functions to the crawler
+                (\relativeIndex node crawler ->
+                    tryMatchCrawler targetCursor relativeIndex crawler
+                        |> addNode node relativeIndex spelunkNode
                 )
                 (DontUpdate startIndex [])
                 block
-                |> (\shouldUpdate ->
-                        case shouldUpdate of
-                            DontUpdate cursor changedBlock ->
-                                if cursor == targetCursor then
-                                    PleaseUpdate (List.length block) changedBlock
-                                else
-                                    shouldUpdate
-
-                            _ ->
-                                shouldUpdate
-                   )
-                |> (\shouldUpdate ->
-                        case shouldUpdate of
-                            JustReturn val changedBlock ->
-                                ( changedBlock, YesFound (Return val) )
-
-                            DontUpdate cursor changedBlock ->
-                                ( changedBlock, NotFound (cursor + 1) )
-
-                            PleaseUpdate relIndex changedBlock ->
-                                spelunker (Block changedBlock) relIndex
-                                    |> Tuple.mapFirst toBlock
-                                    |> Tuple.mapSecond YesFound
-                   )
+                |> tryMatchCrawler targetCursor (List.length block)
+                |> updateBlockOrReturnValueOrProgressCursor spelunker
 
         spelunkNode : DisplayNode -> Cursor -> ( TreeObject, WasFound a )
         spelunkNode node startIndex =
-            case node of
-                Leaf _ ->
-                    ( Node node, NotFound <| startIndex + 1 )
+            let
+                buildNode builder ( block, wasFound ) =
+                    ( builder block, wasFound )
 
-                OneBlock nodeType block ->
-                    let
-                        ( afterBlock, wasFound ) =
-                            spelunkBlock block (startIndex + 1)
+                finalizeNode ( node, wasFound ) =
+                    ( Node node, wasFound )
 
-                        reconstructedNode =
-                            Node <| OneBlock nodeType afterBlock
-                    in
+                updateNodeOrReturnValueOrProgressCursor ( spelunkedNode, wasFound ) =
                     case wasFound of
                         YesFound Bubble ->
-                            spelunker reconstructedNode 0
+                            spelunker spelunkedNode 0
                                 |> Tuple.mapSecond YesFound
 
-                        _ ->
-                            ( reconstructedNode, wasFound )
+                        YesFound (Return val) ->
+                            ( spelunkedNode, wasFound )
+
+                        NotFound cursor ->
+                            ( spelunkedNode, wasFound )
+
+                -- Do I need a node crawler here? Or what? I'm confused
+            in
+            case node of
+                OneBlock nodeType block ->
+                    spelunkBlock block (startIndex + 1)
+                        |> buildNode (OneBlock nodeType)
+                        |> finalizeNode
+                        |> updateNodeOrReturnValueOrProgressCursor
 
                 TwoBlocks nodeType block1 block2 ->
                     let
@@ -300,7 +315,7 @@ spelunk spelunker targetCursor rootBlock =
                                 _ ->
                                     ( reconstructedNode2, wasFound2 )
 
-                Cursor ->
+                _ ->
                     ( Node node, NotFound <| startIndex + 1 )
     in
     spelunkBlock rootBlock 0

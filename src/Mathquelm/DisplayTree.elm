@@ -104,6 +104,27 @@ mapChildren fn block =
     List.map (Node >> fn) block
 
 
+mapFirstBlock fn node =
+    case node of
+        OneBlock nodeType block ->
+            OneBlock nodeType (fn block)
+
+        TwoBlocks nodeType block1 block2 ->
+            TwoBlocks nodeType (fn block1) block2
+
+        _ ->
+            node
+
+
+mapSecondBlock fn node =
+    case node of
+        TwoBlocks nodeType block1 block2 ->
+            TwoBlocks nodeType block1 (fn block2)
+
+        _ ->
+            node
+
+
 
 {--
   -        Diacritic diacriticType block ->
