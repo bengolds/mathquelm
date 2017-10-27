@@ -46,7 +46,7 @@ type WasFound a
 
 type ShouldUpdate a
     = PleaseUpdate BlockAddress DisplayBlock
-    | NotAnUpdate Cursor DisplayBlock
+    | DontUpdate Cursor DisplayBlock
     | JustReturn a DisplayBlock
 
 
@@ -195,7 +195,7 @@ spelunk spelunker targetCursor rootBlock =
                         JustReturn val accBlock ->
                             JustReturn val (accBlock ++ [ node ])
 
-                        NotAnUpdate cursor accBlock ->
+                        DontUpdate cursor accBlock ->
                             let
                                 ( newTreeObj, wasFound ) =
                                     spelunkNode node cursor
@@ -214,16 +214,16 @@ spelunk spelunker targetCursor rootBlock =
                                         JustReturn val newBlock
 
                                     NotFound progressedCursor ->
-                                        NotAnUpdate progressedCursor newBlock
+                                        DontUpdate progressedCursor newBlock
 
                         PleaseUpdate relIndex accBlock ->
                             PleaseUpdate relIndex (accBlock ++ [ node ])
                 )
-                (NotAnUpdate startIndex [])
+                (DontUpdate startIndex [])
                 block
                 |> (\shouldUpdate ->
                         case shouldUpdate of
-                            NotAnUpdate cursor changedBlock ->
+                            DontUpdate cursor changedBlock ->
                                 if cursor == targetCursor then
                                     PleaseUpdate (List.length block) changedBlock
                                 else
@@ -237,7 +237,7 @@ spelunk spelunker targetCursor rootBlock =
                             JustReturn val changedBlock ->
                                 ( changedBlock, YesFound (Return val) )
 
-                            NotAnUpdate cursor changedBlock ->
+                            DontUpdate cursor changedBlock ->
                                 ( changedBlock, NotFound (cursor + 1) )
 
                             PleaseUpdate relIndex changedBlock ->
