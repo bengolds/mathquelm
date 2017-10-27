@@ -44,10 +44,10 @@ type WasFound a
     | NotFound Cursor
 
 
-type Crawler returnType objType
-    = PleaseUpdate BlockAddress objType
-    | DontUpdate Cursor objType
-    | JustReturn returnType objType
+type BlockCrawler returnType
+    = PleaseUpdate BlockAddress DisplayBlock
+    | DontUpdate Cursor DisplayBlock
+    | JustReturn returnType DisplayBlock
 
 
 append : TreeObject -> DisplayBlock -> DisplayBlock
@@ -240,8 +240,8 @@ spelunk spelunker targetCursor rootBlock =
     -- THE tree primitive! Go down the tree to find where your cursor is at. Bring back an "a", bubble up a level, and modify the tree on your way up.
     -- But there's gotta be a way to clean this up. I mean this is a hot fucking mess.
     let
-        spelunkBlock : DisplayBlock -> Cursor -> ( DisplayBlock, WasFound a )
-        spelunkBlock block startIndex =
+        spelunkBlock : Cursor -> DisplayBlock -> ( DisplayBlock, WasFound a )
+        spelunkBlock startIndex block =
             List.indexedFoldl
                 -- Consider adding the spelunkNode and spelunker functions to the crawler
                 (\relativeIndex node crawler ->
@@ -256,69 +256,50 @@ spelunk spelunker targetCursor rootBlock =
         spelunkNode : DisplayNode -> Cursor -> ( TreeObject, WasFound a )
         spelunkNode node startIndex =
             let
-                buildNode builder ( block, wasFound ) =
-                    ( builder block, wasFound )
+                finalizeNode ( node, foundYet ) =
+                    ( Node node, foundYet )
 
-                finalizeNode ( node, wasFound ) =
-                    ( Node node, wasFound )
-
-                updateNodeOrReturnValueOrProgressCursor ( spelunkedNode, wasFound ) =
-                    case wasFound of
+                updateNodeOrReturnValueOrProgressCursor ( spelunkedNode, foundYet ) =
+                    case foundYet of
                         YesFound Bubble ->
+                            -- NEED TO RENAME SPELUNKER
                             spelunker spelunkedNode 0
                                 |> Tuple.mapSecond YesFound
 
-                        YesFound (Return val) ->
-                            ( spelunkedNode, wasFound )
-
                         NotFound cursor ->
-                            ( spelunkedNode, wasFound )
+                            ( spelunkedNode, NotFound cursor )
 
-                -- Do I need a node crawler here? Or what? I'm confused
+                        YesFound (Return returnVal) ->
+                            ( spelunkedNode, YesFound (Return returnVal) )
+
+                spelunkNextBlock block ( builder, foundYet ) =
+                    case foundYet of
+                        NotFound cursor ->
+                            spelunkBlock cursor block
+                                |> Tuple.mapFirst builder
+
+                        _ ->
+                            -- Should I make this more explicit or not?
+                            ( builder block, foundYet )
             in
             case node of
                 OneBlock nodeType block ->
-                    spelunkBlock block (startIndex + 1)
-                        |> buildNode (OneBlock nodeType)
+                    ( OneBlock nodeType, NotFound (startIndex + 1) )
+                        |> spelunkNextBlock block
                         |> finalizeNode
                         |> updateNodeOrReturnValueOrProgressCursor
 
                 TwoBlocks nodeType block1 block2 ->
-                    let
-                        ( afterBlock1, wasFound1 ) =
-                            spelunkBlock block1 (startIndex + 1)
-
-                        reconstructedNode =
-                            Node <| TwoBlocks nodeType afterBlock1 block2
-                    in
-                    case wasFound1 of
-                        YesFound Bubble ->
-                            spelunker reconstructedNode 0
-                                |> Tuple.mapSecond YesFound
-
-                        YesFound (Return val) ->
-                            ( reconstructedNode, YesFound (Return val) )
-
-                        NotFound progressedCursor ->
-                            let
-                                ( afterBlock2, wasFound2 ) =
-                                    spelunkBlock block2 progressedCursor
-
-                                reconstructedNode2 =
-                                    Node <| TwoBlocks nodeType afterBlock1 afterBlock2
-                            in
-                            case wasFound2 of
-                                YesFound Bubble ->
-                                    spelunker reconstructedNode2 0
-                                        |> Tuple.mapSecond YesFound
-
-                                _ ->
-                                    ( reconstructedNode2, wasFound2 )
+                    ( TwoBlocks nodeType, NotFound (startIndex + 1) )
+                        |> spelunkNextBlock block1
+                        |> spelunkNextBlock block2
+                        |> finalizeNode
+                        |> updateNodeOrReturnValueOrProgressCursor
 
                 _ ->
                     ( Node node, NotFound <| startIndex + 1 )
     in
-    spelunkBlock rootBlock 0
+    spelunkBlock 0 rootBlock
         |> Tuple.mapSecond
             (\wasFound ->
                 case wasFound of
