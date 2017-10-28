@@ -45,7 +45,7 @@ type WasFound a
 
 
 type BlockCrawler returnType
-    = PleaseUpdate BlockAddress DisplayBlock
+    = PleaseUpdate BlockAddress Cursor DisplayBlock
     | DontUpdate Cursor DisplayBlock
     | JustReturn returnType DisplayBlock
 
@@ -82,15 +82,13 @@ moveCursor dir rootBlock address =
             let
                 ( _, resolved ) =
                     spelunk
-                        (\obj relIndex ->
-                            ( obj
-                            , case obj of
-                                Block block ->
-                                    Return <| ( block, relIndex )
+                        (\params ->
+                            case params of
+                                BlockParams { block, relativeIndex } ->
+                                    ( Block block, Return <| ( block, relativeIndex ) )
 
-                                _ ->
-                                    Bubble
-                            )
+                                NodeParams { node } ->
+                                    ( Node node, Bubble )
                         )
                         address
                         rootBlock
@@ -163,13 +161,13 @@ moveUpOrDown dir rootBlock address =
 updateBlockAt : (DisplayBlock -> BlockAddress -> DisplayBlock) -> Cursor -> DisplayBlock -> DisplayBlock
 updateBlockAt fn address rootBlock =
     spelunk
-        (\obj relIndex ->
-            case obj of
-                Block block ->
-                    ( Block <| fn block relIndex, Return Empty )
+        (\params ->
+            case params of
+                BlockParams { block, address, relativeIndex } ->
+                    ( Block <| fn block relativeIndex, Return Empty )
 
-                Node node ->
-                    ( obj, Bubble )
+                NodeParams { node, address } ->
+                    ( Node <| node, Bubble )
         )
         address
         rootBlock
@@ -190,8 +188,9 @@ updateBlockOrReturnValueOrProgressCursor updateFn shouldUpdate =
         DontUpdate cursor changedBlock ->
             ( changedBlock, NotFound (cursor + 1) )
 
-        PleaseUpdate relIndex changedBlock ->
-            updateFn (Block changedBlock) relIndex
+        PleaseUpdate relIndex cursor changedBlock ->
+            BlockParams { block = changedBlock, address = cursor, relativeIndex = relIndex }
+                |> updateFn
                 |> Tuple.mapFirst toBlock
                 |> Tuple.mapSecond YesFound
 
@@ -200,7 +199,7 @@ tryMatchCrawler targetCursor relativeIndex crawler =
     case crawler of
         DontUpdate cursor changedBlock ->
             if cursor == targetCursor then
-                PleaseUpdate relativeIndex changedBlock
+                PleaseUpdate relativeIndex cursor changedBlock
             else
                 crawler
 
@@ -223,7 +222,7 @@ addNode node relativeIndex spelunkNode crawler =
             in
             case wasFound of
                 YesFound Bubble ->
-                    PleaseUpdate relativeIndex newBlock
+                    PleaseUpdate relativeIndex cursor newBlock
 
                 YesFound (Return val) ->
                     JustReturn val newBlock
@@ -231,11 +230,20 @@ addNode node relativeIndex spelunkNode crawler =
                 NotFound progressedCursor ->
                     DontUpdate progressedCursor newBlock
 
-        PleaseUpdate relIndex accBlock ->
-            PleaseUpdate relIndex (accBlock ++ [ node ])
+        PleaseUpdate relIndex cursor accBlock ->
+            PleaseUpdate relIndex cursor (accBlock ++ [ node ])
 
 
-spelunk : (TreeObject -> BlockAddress -> ( TreeObject, ShouldBubble a )) -> Cursor -> DisplayBlock -> ( DisplayBlock, Maybe a )
+
+-- Maybe the function should take a sort of parameter object with relative indices, absolute indices, and the relevant block/node
+
+
+type SpelunkInfo
+    = BlockParams { block : DisplayBlock, address : Cursor, relativeIndex : BlockAddress }
+    | NodeParams { node : DisplayNode, address : Cursor }
+
+
+spelunk : (SpelunkInfo -> ( TreeObject, ShouldBubble a )) -> Cursor -> DisplayBlock -> ( DisplayBlock, Maybe a )
 spelunk updateFn targetCursor rootBlock =
     -- THE tree primitive! Go down the tree to find where your cursor is at. Bring back an "a", bubble up a level, and modify the tree on your way up.
     -- But there's gotta be a way to clean this up. I mean this is a hot fucking mess.
@@ -270,7 +278,7 @@ spelunk updateFn targetCursor rootBlock =
                 maybeUpdateNodeOrElseWrap ( spelunkedNode, foundYet ) =
                     case foundYet of
                         YesFound Bubble ->
-                            updateFn (Node spelunkedNode) 0
+                            updateFn (NodeParams <| { node = spelunkedNode, address = startIndex })
                                 |> Tuple.mapSecond YesFound
 
                         _ ->
