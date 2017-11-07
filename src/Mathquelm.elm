@@ -4,20 +4,19 @@ import Element exposing (..)
 import Html exposing (Html)
 import Keyboard
 import Mathquelm.Config as Config exposing (Config)
-import Mathquelm.Cursor exposing (..)
-import Mathquelm.DisplayTree exposing (..)
 import Mathquelm.Render exposing (..)
 import Mathquelm.RenderContext as RenderContext exposing (..)
 import Mathquelm.Styles exposing (..)
+import Mathquelm.ZipperTree exposing (..)
 
 
 stringToNodes string =
     String.toList string
-        |> List.map (Character >> Leaf)
+        |> List.map Character
 
 
 parens =
-    OneBlock (Parens Parentheses)
+    OneBlock (BalancedDelimiters Parentheses)
 
 
 frac =
@@ -32,7 +31,7 @@ str =
     stringToNodes
 
 
-sampleTree : DisplayBlock
+sampleTree : Block
 sampleTree =
     str "abc"
         ++ [ parens (str "de")
@@ -57,13 +56,20 @@ editableQuelm model =
         column Base
             []
             [ loadFont
-            , render <| baseContext model.config (Block (addCursor model.rootBlock model.cursor))
+            , render <| baseContext model.config (Node (top model.tree))
             ]
 
 
 type DeleteDirection
     = DeleteLeft
     | DeleteRight
+
+
+type MoveDirection
+    = Left
+    | Right
+    | Up
+    | Down
 
 
 type Msg
@@ -76,9 +82,8 @@ type Msg
 
 
 type alias Model =
-    { rootBlock : DisplayBlock
+    { tree : DisplayZipper
     , config : Config
-    , cursor : Cursor
     }
 
 
@@ -94,8 +99,9 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Move dir ->
-            { model | cursor = moveCursor dir model.rootBlock model.cursor }
+            model
 
+        --{ model | cursor = moveCursor dir model.rootBlock model.cursor }
         _ ->
             model
 
@@ -133,17 +139,18 @@ keyPressed keyCode =
             Debug.log "keyCode" (toString keyCode)
     in
     case keyCode of
-        37 ->
-            Move Left
-
-        38 ->
-            Move Up
-
-        39 ->
-            Move Right
-
-        40 ->
-            Move Down
-
+        {--
+  -        37 ->
+  -            Move Left
+  -
+  -        38 ->
+  -            Move Up
+  -
+  -        39 ->
+  -            Move Right
+  -
+  -        40 ->
+  -            Move Down
+  --}
         _ ->
             Noop

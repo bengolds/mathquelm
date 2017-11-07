@@ -3,9 +3,9 @@ module Mathquelm.Render exposing (render)
 import Char
 import Element exposing (..)
 import Element.Attributes exposing (..)
-import Mathquelm.DisplayTree exposing (..)
 import Mathquelm.RenderContext as RenderContext exposing (..)
 import Mathquelm.Styles exposing (..)
+import Mathquelm.ZipperTree exposing (..)
 
 
 render : RenderContext -> Element Styles variation msg
@@ -51,13 +51,14 @@ render context =
 
                 Node node ->
                     case node of
-                        Cursor ->
-                            el None [ width <| px 0 ] empty
-                                |> within
-                                    [ el CursorLine [ width (px 2), height (px (getHeight context)) ] empty
-                                    ]
-
-                        Leaf (Character c) ->
+                        {--
+                          -Cursor ->
+                          -    el None [ width <| px 0 ] empty
+                          -        |> within
+                          -            [ el CursorLine [ width (px 2), height (px (getHeight context)) ] empty
+                          -            ]
+                          --}
+                        Character c ->
                             let
                                 style =
                                     if Char.isDigit c then
@@ -79,7 +80,7 @@ render context =
                                 Subscript ->
                                     renderedBlock
 
-                                Parens parenType ->
+                                BalancedDelimiters parenType ->
                                     row None
                                         [ verticalCenter
                                         , spacing 5
@@ -195,10 +196,11 @@ centerLine context =
 
         Node node ->
             case node of
-                Cursor ->
-                    getHeight context / 2
-
-                Leaf (Character _) ->
+                {--
+                  -Cursor ->
+                  -    getHeight context / 2
+                  --}
+                Character _ ->
                     getHeight context / 2
 
                 OneBlock nodeType block ->
@@ -207,7 +209,7 @@ centerLine context =
                             getHeight (enterBlock block)
                     in
                     case nodeType of
-                        Parens _ ->
+                        BalancedDelimiters _ ->
                             let
                                 parenOverlap =
                                     --case  of
@@ -268,10 +270,11 @@ getHeight context =
 
         Node node ->
             case node of
-                Cursor ->
-                    fontSize context
-
-                Leaf (Character c) ->
+                {--
+                  -Cursor ->
+                  -    fontSize context
+                  --}
+                Character c ->
                     floor (RenderContext.fontBox context) |> toFloat
 
                 OneBlock nodeType block ->
@@ -280,7 +283,7 @@ getHeight context =
                             getHeight (enterBlock block)
                     in
                     case nodeType of
-                        Parens _ ->
+                        BalancedDelimiters _ ->
                             blockHeight * 1.05
 
                         Subscript ->

@@ -1,8 +1,13 @@
 module Mathquelm.RenderContext exposing (..)
 
 import Mathquelm.Config exposing (..)
-import Mathquelm.DisplayTree exposing (..)
+import Mathquelm.ZipperTree exposing (OneBlockType(..), TwoBlocksType(..))
 import Style.Scale as Scale
+
+
+type TreeObject
+    = Block Mathquelm.ZipperTree.Block
+    | Node Mathquelm.ZipperTree.DisplayItem
 
 
 type alias RenderContext =
@@ -51,10 +56,10 @@ setTarget newTarget context =
 enter context nextTarget =
     context
         |> (case nextTarget of
-                Node (TwoBlocks Fraction _ _) ->
+                Node (Mathquelm.ZipperTree.TwoBlocks Fraction _ _) ->
                     deepen
 
-                Node (OneBlock Subscript _) ->
+                Node (Mathquelm.ZipperTree.OneBlock Subscript _) ->
                     hardDeepen
 
                 {--
