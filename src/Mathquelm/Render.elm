@@ -3,9 +3,12 @@ module Mathquelm.Render exposing (render)
 import Char
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Mathquelm.NodeTypes exposing (..)
 import Mathquelm.RenderContext as RenderContext exposing (..)
 import Mathquelm.Styles exposing (..)
-import Mathquelm.ZipperTree exposing (..)
+
+
+--| Selection Block
 
 
 render : RenderContext -> Element Styles variation msg

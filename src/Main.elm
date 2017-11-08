@@ -40,7 +40,7 @@ init =
             Mathquelm.defaultModel
 
         mqModel =
-            { defaultModel | rootBlock = Mathquelm.sampleTree }
+            { defaultModel | tree = Mathquelm.sampleTree }
     in
     ( mqModel
     , katexOut (Mathquelm.latex mqModel)

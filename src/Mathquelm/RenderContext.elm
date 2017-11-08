@@ -1,20 +1,29 @@
 module Mathquelm.RenderContext exposing (..)
 
-import Mathquelm.Config exposing (..)
-import Mathquelm.ZipperTree exposing (OneBlockType(..), TwoBlocksType(..))
+import Mathquelm.Config as Config exposing (Config)
+import Mathquelm.CursorTree as CursorTree
+import Mathquelm.NodeTypes exposing (..)
 import Style.Scale as Scale
 
 
-type TreeObject
-    = Block Mathquelm.ZipperTree.Block
-    | Node Mathquelm.ZipperTree.DisplayItem
+type RenderItem
+    = Character Char
+    | Cursor
+    | OneBlock OneBlockType Block
+    | TwoBlocks TwoBlocksType Block Block
 
 
-type alias RenderContext =
-    { config : Config
-    , depth : Int
-    , target : TreeObject
+type alias Block =
+    List RenderTarget
+
+
+type alias RenderTarget =
+    { depth : Int
+    , item : RenderItem
     }
+
+
+fromZipperTree : DisplayItem -> RenderItem
 
 
 baseContext config target =

@@ -31,23 +31,29 @@ str =
     stringToNodes
 
 
-sampleTree : Block
+sampleTree : DisplayZipper
 sampleTree =
-    str "abc"
-        ++ [ parens (str "de")
-           , frac
-                (str "fgh")
-                [ frac
-                    (str "i")
-                    (str "j" ++ [ sub (str "klmno") ])
-                ]
-           ]
-        ++ stringToNodes "pqrs"
+    ( OneBlockCrumb Subscript <|
+        { left = []
+        , right =
+            str "abc"
+                ++ [ parens (str "de")
+                   , frac
+                        (str "fgh")
+                        [ frac
+                            (str "i")
+                            (str "j" ++ [ sub (str "klmno") ])
+                        ]
+                   ]
+                ++ stringToNodes "pqrs"
+        }
+    , []
+    )
 
 
 latex : Model -> String
 latex model =
-    toLatex (Block model.rootBlock)
+    toLatex (top model.tree)
 
 
 editableQuelm : Model -> Html Msg
@@ -89,9 +95,8 @@ type alias Model =
 
 defaultModel : Model
 defaultModel =
-    { rootBlock = []
+    { tree = ( OneBlockCrumb Subscript { left = [], right = [] }, [] )
     , config = Config.default
-    , cursor = 0
     }
 
 
