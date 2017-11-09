@@ -3,57 +3,44 @@ module Mathquelm exposing (..)
 import Element exposing (..)
 import Html exposing (Html)
 import Keyboard
+import List.Extra as List
 import Mathquelm.Config as Config exposing (Config)
-import Mathquelm.Render exposing (..)
-import Mathquelm.RenderContext as RenderContext exposing (..)
+import Mathquelm.Cursor exposing (..)
+import Mathquelm.RawTree exposing (..)
+import Mathquelm.Render as Render
 import Mathquelm.Styles exposing (..)
-import Mathquelm.ZipperTree exposing (..)
 
 
-stringToNodes string =
-    String.toList string
-        |> List.map Character
+str : String -> Math
+str val =
+    String.toList val
+        |> List.map (String.fromChar >> Var)
+        |> List.foldl1 Mul
+        |> Maybe.withDefault (Var "")
 
 
-parens =
-    OneBlock (BalancedDelimiters Parentheses)
-
-
-frac =
-    TwoBlocks Fraction
-
-
-sub =
-    OneBlock Subscript
-
-
-str =
-    stringToNodes
-
-
-sampleTree : DisplayZipper
+sampleTree : EditableMath
 sampleTree =
-    ( OneBlockCrumb Subscript <|
-        { left = []
-        , right =
-            str "abc"
-                ++ [ parens (str "de")
-                   , frac
-                        (str "fgh")
-                        [ frac
-                            (str "i")
-                            (str "j" ++ [ sub (str "klmno") ])
-                        ]
-                   ]
-                ++ stringToNodes "pqrs"
-        }
-    , []
-    )
+    LMul
+        Hole
+        (Mul
+            (str "abc")
+            (Mul
+                (str "de")
+                (Div
+                    (str "fgh")
+                    (Div
+                        (str "zxy")
+                        (Mul (str "j") (str "klmno"))
+                    )
+                )
+            )
+        )
 
 
 latex : Model -> String
 latex model =
-    toLatex (top model.tree)
+    toLatex model.tree
 
 
 editableQuelm : Model -> Html Msg
@@ -62,7 +49,7 @@ editableQuelm model =
         column Base
             []
             [ loadFont
-            , render <| baseContext model.config (Node (top model.tree))
+            , Render.render model.config (Render.fromEditable model.tree)
             ]
 
 
@@ -88,14 +75,14 @@ type Msg
 
 
 type alias Model =
-    { tree : DisplayZipper
+    { tree : EditableMath
     , config : Config
     }
 
 
 defaultModel : Model
 defaultModel =
-    { tree = ( OneBlockCrumb Subscript { left = [], right = [] }, [] )
+    { tree = Hole
     , config = Config.default
     }
 
@@ -103,8 +90,8 @@ defaultModel =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Move dir ->
-            model
+        Move Right ->
+            { model | tree = goRight model.tree }
 
         --{ model | cursor = moveCursor dir model.rootBlock model.cursor }
         _ ->
@@ -144,6 +131,9 @@ keyPressed keyCode =
             Debug.log "keyCode" (toString keyCode)
     in
     case keyCode of
+        39 ->
+            Move Right
+
         {--
   -        37 ->
   -            Move Left

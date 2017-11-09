@@ -2,7 +2,6 @@ module Mathquelm.RenderContext exposing (..)
 
 import Mathquelm.Config as Config exposing (Config)
 import Mathquelm.CursorTree as CursorTree
-import Mathquelm.NodeTypes exposing (..)
 import Style.Scale as Scale
 
 
@@ -23,7 +22,8 @@ type alias RenderTarget =
     }
 
 
-fromZipperTree : DisplayItem -> RenderItem
+
+--fromZipperTree : DisplayItem -> RenderItem
 
 
 baseContext config target =
