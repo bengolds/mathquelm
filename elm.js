@@ -27130,24 +27130,19 @@ var _user$project$Main$update = F2(
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
-var _user$project$Main$katexOut = _elm_lang$core$Native_Platform.outgoingPort(
-	'katexOut',
-	function (v) {
-		return v;
-	});
 var _user$project$Main$init = function () {
 	var defaultModel = _user$project$Mathquelm$defaultModel;
 	var mqModel = _elm_lang$core$Native_Utils.update(
 		defaultModel,
 		{tree: _user$project$Mathquelm$sampleTree});
 	var _p1 = A2(_elm_lang$core$Debug$log, 'latex', _user$project$Mathquelm$latex);
-	return {
-		ctor: '_Tuple2',
-		_0: mqModel,
-		_1: _user$project$Main$katexOut(
-			_user$project$Mathquelm$latex(mqModel))
-	};
+	return {ctor: '_Tuple2', _0: mqModel, _1: _elm_lang$core$Platform_Cmd$none};
 }();
+var _user$project$Main$katexOut = _elm_lang$core$Native_Platform.outgoingPort(
+	'katexOut',
+	function (v) {
+		return v;
+	});
 var _user$project$Main$MathquelmMsg = function (a) {
 	return {ctor: 'MathquelmMsg', _0: a};
 };
@@ -27206,15 +27201,6 @@ var _user$project$Main$stylesheet = function () {
 			}
 		});
 }();
-var _user$project$Main$katex = A3(
-	_mdgriffith$style_elements$Element$el,
-	_user$project$Main$None,
-	{
-		ctor: '::',
-		_0: _mdgriffith$style_elements$Element_Attributes$id('katex'),
-		_1: {ctor: '[]'}
-	},
-	_mdgriffith$style_elements$Element$empty);
 var _user$project$Main$view = function (model) {
 	return A2(
 		_mdgriffith$style_elements$Element$layout,
@@ -27246,23 +27232,20 @@ var _user$project$Main$view = function (model) {
 							_elm_lang$html$Html$map,
 							_user$project$Main$MathquelmMsg,
 							_user$project$Mathquelm$editableQuelm(model)))),
-				_1: {
-					ctor: '::',
-					_0: _user$project$Main$katex,
-					_1: {
-						ctor: '::',
-						_0: A3(
-							_user$project$Mathquill_StyleElements$staticMath,
-							_user$project$Main$Mathquill,
-							{ctor: '[]'},
-							_user$project$Mathquelm$latex(model)),
-						_1: {ctor: '[]'}
-					}
-				}
+				_1: {ctor: '[]'}
 			}));
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
 	{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})();
+var _user$project$Main$katex = A3(
+	_mdgriffith$style_elements$Element$el,
+	_user$project$Main$None,
+	{
+		ctor: '::',
+		_0: _mdgriffith$style_elements$Element_Attributes$id('katex'),
+		_1: {ctor: '[]'}
+	},
+	_mdgriffith$style_elements$Element$empty);
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

@@ -43,7 +43,8 @@ init =
             { defaultModel | tree = Mathquelm.sampleTree }
     in
     ( mqModel
-    , katexOut (Mathquelm.latex mqModel)
+    , Cmd.none
+      --, katexOut (Mathquelm.latex mqModel)
     )
 
 
@@ -91,8 +92,9 @@ view model =
         column None
             [ spacing 20, padding 20 ]
             [ el None [ padding 0 ] <| html (Html.map MathquelmMsg (editableQuelm model))
-            , katex
-            , Mathquill.staticMath Mathquill [] (Mathquelm.latex model)
+
+            --, katex
+            --, Mathquill.staticMath Mathquill [] (Mathquelm.latex model)
             ]
 
 
