@@ -3,77 +3,124 @@ module Mathquelm.Render exposing (..)
 import Element exposing (..)
 import Element.Attributes exposing (..)
 import Mathquelm.Config exposing (Config)
-import Mathquelm.RawTree as Raw
+import Mathquelm.Digit as Digit
+import Mathquelm.EditableMath as EMath
 import Mathquelm.Styles exposing (..)
 
 
-type Side
-    = Left
-    | Right
-
-
-type RMath
+type RCommand
     = Var String
-    | Mul RMath RMath
-    | Div RMath RMath
-    | Cos RMath
-    | Cursor
-    | Selection RMath
+    | Num Int
+    | Plus
+    | Div RBlock RBlock
+    | Cos RBlock
+    | Selection RBlock
     | Empty
+    | Cursor
 
 
-fromEditable : Raw.EditableMath -> RMath
-fromEditable node =
-    case node of
-        Raw.LMul eLeft right ->
-            Mul (fromEditable eLeft) (fromMath right)
-
-        Raw.RMul left eRight ->
-            Mul (fromMath left) (fromEditable eRight)
-
-        Raw.TDiv eTop bottom ->
-            Div (fromEditable eTop) (fromMath bottom)
-
-        Raw.BDiv top eBottom ->
-            Div (fromMath top) (fromEditable eBottom)
-
-        Raw.ECos eOperand ->
-            Cos (fromEditable eOperand)
-
-        Raw.Hole ->
-            Cursor
-
-        Raw.RSel selected ->
-            fromMath selected
-
-        Raw.LSel selected ->
-            fromMath selected
+type alias RBlock =
+    List RCommand
 
 
-fromMath : Raw.Math -> RMath
-fromMath node =
-    case node of
-        Raw.Var name ->
-            Var name
+fromEditable : EMath.EditableMath -> RBlock
+fromEditable ( editingBlock, crumbs ) =
+    let
+        firstBlock =
+            case editingBlock of
+                EMath.Cursor left right ->
+                    toRBlock (List.reverse left) ++ Cursor :: toRBlock right
 
-        Raw.Mul left right ->
-            Mul (fromMath left) (fromMath right)
+                EMath.LSel left selected right ->
+                    toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
 
-        Raw.Div top bottom ->
-            Div (fromMath top) (fromMath bottom)
+                EMath.RSel left selected right ->
+                    toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
 
-        Raw.Cos operand ->
-            Cos (fromMath operand)
+        rebuild block cmd =
+            case cmd of
+                EMath.CosCr ->
+                    Cos block
 
-        Raw.Empty ->
-            Empty
+                EMath.TDivCr bot ->
+                    Div block (toRBlock bot)
+
+                EMath.BDivCr top ->
+                    Div (toRBlock top) block
+    in
+    List.foldl
+        (\{ left, command, right } childBlock ->
+            toRBlock (List.reverse left) ++ rebuild childBlock command :: toRBlock right
+        )
+        firstBlock
+        crumbs
 
 
-render : Config -> RMath -> Element Styles variation msg
-render config node =
-    case node of
+toRBlock : EMath.Block -> RBlock
+toRBlock block =
+    List.foldl
+        (\cmd rblock ->
+            case cmd of
+                EMath.Digit digit ->
+                    Num (Digit.parse digit) :: rblock
+
+                EMath.Var name ->
+                    Var name :: rblock
+
+                EMath.Div top bot ->
+                    Div (toRBlock top) (toRBlock bot) :: rblock
+
+                EMath.Cos x ->
+                    Cos (toRBlock x) :: rblock
+
+                EMath.Plus ->
+                    case rblock of
+                        Plus :: rest ->
+                            Plus :: Empty :: rblock
+
+                        _ ->
+                            Plus :: rblock
+        )
+        []
+        block
+        |> List.reverse
+
+
+
+{--
+  -fromMath : Math.Math -> Renderable
+  -fromMath node =
+  -    case node of
+  -        Math.Var name ->
+  -            Var name
+  -
+  -        Math.Mul left right ->
+  -            Mul (fromMath left) (fromMath right)
+  -
+  -        Math.Div top bottom ->
+  -            Div (fromMath top) (fromMath bottom)
+  -
+  -        Math.Cos operand ->
+  -            Cos (fromMath operand)
+  -
+  -        Math.Empty ->
+  -            Empty
+  --}
+
+
+render : Config -> RBlock -> Element Styles variation msg
+render config block =
+    row None [] (List.map (renderCommand config) block)
+
+
+renderCommand : Config -> RCommand -> Element Styles variation msg
+renderCommand config command =
+    case command of
         Var name ->
             el Italic [] <| text name
+
+        Num num ->
+            el None [] <| text (toString num)
 
         Cursor ->
             el None [ width <| px 0 ] empty
@@ -83,9 +130,8 @@ render config node =
                     --[ el CursorLine [ width (px 2), height (px (getHeight child)) ] empty
                     ]
 
-        Mul left right ->
-            -- Align centerlines eventually
-            row None [] <| List.map (render config) [ left, right ]
+        Plus ->
+            text "+"
 
         Div top bottom ->
             let
@@ -107,7 +153,7 @@ render config node =
                 ]
 
         Cos operand ->
-            row None [] [ text "cos", render config operand ]
+            row None [] [ text "cos(", render config operand, text ")" ]
 
         Selection contents ->
             el (DebugBox 1) [] (render config contents)

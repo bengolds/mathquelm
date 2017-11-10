@@ -5,42 +5,41 @@ import Html exposing (Html)
 import Keyboard
 import List.Extra as List
 import Mathquelm.Config as Config exposing (Config)
-import Mathquelm.Cursor exposing (..)
-import Mathquelm.RawTree exposing (..)
+import Mathquelm.Digit as Digit
+import Mathquelm.EditableMath exposing (..)
+import Mathquelm.Math as Math
 import Mathquelm.Render as Render
 import Mathquelm.Styles exposing (..)
 
 
-str : String -> Math
+str : String -> Block
 str val =
     String.toList val
-        |> List.map (String.fromChar >> Var)
-        |> List.foldl1 Mul
-        |> Maybe.withDefault (Var "")
+        |> List.map
+            (\char ->
+                if char == '+' then
+                    Plus
+                else
+                    Digit.fromChar char
+                        |> Maybe.map Digit
+                        |> Maybe.withDefault (Var (String.fromChar char))
+            )
 
 
 sampleTree : EditableMath
 sampleTree =
-    LMul
-        Hole
-        (Mul
-            (str "abc")
-            (Mul
-                (str "de")
-                (Div
-                    (str "fgh")
-                    (Div
-                        (str "zxy")
-                        (Mul (str "j") (str "klmno"))
-                    )
-                )
-            )
-        )
+    startEditing <|
+        str "abc+"
+            ++ [ Cos (str "xy+z")
+               , Div [ Cos (str "hi"), Digit Digit.Nine ]
+                    (str "lo")
+               ]
+            ++ str "de++"
 
 
 latex : Model -> String
 latex model =
-    toLatex model.tree
+    Math.toLatex (toMath model.tree)
 
 
 editableQuelm : Model -> Html Msg
@@ -82,7 +81,7 @@ type alias Model =
 
 defaultModel : Model
 defaultModel =
-    { tree = Hole
+    { tree = startEditing []
     , config = Config.default
     }
 
@@ -91,7 +90,32 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Move Right ->
-            { model | tree = goRight model.tree }
+            { model
+                | tree =
+                    goRight model.tree
+                        |> Maybe.withDefault model.tree
+            }
+
+        Move Left ->
+            { model
+                | tree =
+                    goLeft model.tree
+                        |> Maybe.withDefault model.tree
+            }
+
+        Move Up ->
+            { model
+                | tree =
+                    goUp model.tree
+                        |> Maybe.withDefault model.tree
+            }
+
+        Move Down ->
+            { model
+                | tree =
+                    goDown model.tree
+                        |> Maybe.withDefault model.tree
+            }
 
         --{ model | cursor = moveCursor dir model.rootBlock model.cursor }
         _ ->
@@ -131,21 +155,17 @@ keyPressed keyCode =
             Debug.log "keyCode" (toString keyCode)
     in
     case keyCode of
+        37 ->
+            Move Left
+
+        38 ->
+            Move Up
+
         39 ->
             Move Right
 
-        {--
-  -        37 ->
-  -            Move Left
-  -
-  -        38 ->
-  -            Move Up
-  -
-  -        39 ->
-  -            Move Right
-  -
-  -        40 ->
-  -            Move Down
-  --}
+        40 ->
+            Move Down
+
         _ ->
             Noop
