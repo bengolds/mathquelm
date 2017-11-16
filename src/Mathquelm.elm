@@ -26,7 +26,7 @@ str val =
             )
 
 
-sampleTree : EditableMath
+sampleTree : MathBeingEdited
 sampleTree =
     startEditing <|
         str "abc+"
@@ -74,7 +74,7 @@ type Msg
 
 
 type alias Model =
-    { tree : EditableMath
+    { tree : MathBeingEdited
     , config : Config
     }
 

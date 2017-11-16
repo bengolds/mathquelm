@@ -23,34 +23,31 @@ type alias RBlock =
     List RCommand
 
 
-fromEditable : EMath.EditableMath -> RBlock
+fromEditable : EMath.MathBeingEdited -> RBlock
 fromEditable ( editingBlock, crumbs ) =
     let
         firstBlock =
             case editingBlock of
-                EMath.Cursor left right ->
+                EMath.BlockWithCursor { left, right } ->
                     toRBlock (List.reverse left) ++ Cursor :: toRBlock right
 
-                EMath.LSel left selected right ->
-                    toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
-
-                EMath.RSel left selected right ->
+                EMath.BlockWithSelection { left, selected, right } ->
                     toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
 
         rebuild block cmd =
             case cmd of
-                EMath.CosCr ->
+                EMath.CosWithHole ->
                     Cos block
 
-                EMath.TDivCr bot ->
+                EMath.DivWithTopHole bot ->
                     Div block (toRBlock bot)
 
-                EMath.BDivCr top ->
+                EMath.DivWithBotHole top ->
                     Div (toRBlock top) block
     in
     List.foldl
-        (\{ left, command, right } childBlock ->
-            toRBlock (List.reverse left) ++ rebuild childBlock command :: toRBlock right
+        (\{ left, commandWithBlockHole, right } childBlock ->
+            toRBlock (List.reverse left) ++ rebuild childBlock commandWithBlockHole :: toRBlock right
         )
         firstBlock
         crumbs
