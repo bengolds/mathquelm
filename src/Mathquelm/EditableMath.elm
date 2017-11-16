@@ -5,13 +5,66 @@ import Mathquelm.Digit as Digit exposing (Digit)
 import Mathquelm.Math as Math exposing (Math)
 
 
-toMath : EditableMath -> Math.Math
-toMath editable =
+type Command
+    = Var String
+    | Digit Digit
+    | Div Block Block
+    | Cos Block
+    | Plus
+
+
+type alias Block =
+    List Command
+
+
+type alias MathBeingEdited =
+    ( BlockBeingEdited, RestOfTree )
+
+
+type alias RestOfTree =
+    List BlockWithBlockHole
+
+
+type alias BlockWithBlockHole =
+    { left : Block
+    , commandWithBlockHole : CommandWithBlockHole
+    , right : Block
+    }
+
+
+type BlockBeingEdited
+    = BlockWithCursor CursorInfo
+    | BlockWithSelection SelectionInfo
+
+
+type alias CursorInfo =
+    { left : Block
+    , right : Block
+    }
+
+
+type alias SelectionInfo =
+    { left : Block
+    , selection : Block
+    , right : Block
+    , direction : LeftRight
+    }
+
+
+type LeftRight
+    = Left
+    | Right
+
+
+type CommandWithBlockHole
+    = CosWithHole
+    | DivWithTopHole Block
+    | DivWithBotHole Block
+
+
+stopEditing : MathBeingEdited -> Math.Math
+stopEditing editable =
     blockToMath (top editable)
-
-
-
---toRenderable : EditableMath -> Render.Renderable
 
 
 orElse : Maybe a -> Maybe a -> Maybe a
@@ -24,53 +77,162 @@ orElse second first =
             first
 
 
-goLeft : EditableMath -> Maybe EditableMath
-goLeft ( editable, crumbs ) =
-    case editable of
-        Cursor (x :: left) right ->
-            enterLeft ( editable, crumbs )
-                |> orElse (swapLeft ( editable, crumbs ))
+getBlockBeingEdited ( blockBeingEdited, _ ) =
+    blockBeingEdited
 
-        Cursor [] right ->
-            exitLeft ( editable, crumbs )
+
+getRestOfTree ( _, restOfTree ) =
+    restOfTree
+
+
+goLeft : MathBeingEdited -> Maybe MathBeingEdited
+goLeft math =
+    case getBlockBeingEdited math of
+        BlockWithCursor cursorBlock ->
+            let
+                restOfTree =
+                    getRestOfTree math
+            in
+            enterCommandToLeft cursorBlock restOfTree
+                |> orElse jumpCommandToLeft cursorBlock restOfTree
+                |> orElse exitCurrentBlockLeftward cursorBlock restOfTree
 
         _ ->
             Nothing
 
 
-enterLeft : EditableMath -> Maybe EditableMath
-enterLeft ( editable, crumbs ) =
-    case editable of
-        Cursor (cmd :: left) right ->
-            let
-                enter newBlock newCrumb =
-                    Just
-                        ( Cursor (List.reverse newBlock) []
-                        , { left = left, command = newCrumb, right = right } :: crumbs
-                        )
-            in
-            case cmd of
-                Cos x ->
-                    enter x CosCr
+enterCommandToLeft cursorBlock restOfTree =
+    case cursorBlock.left of
+        (Cos blockToEnter) :: restOfLeft ->
+            Just
+                ( placeCursorOnRight blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        restOfLeft
+                        CosWithHole
+                        cursorBlock.right
+                    )
+                    restOfTree
+                )
 
-                Div top bot ->
-                    enter bot (BDivCr top)
+        (Div top blockToEnter) :: restOfLeft ->
+            Just
+                ( placeCursorOnRight blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        (DivWithBotHole top)
+                        restOfLeft
+                        cursorBlock.right
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+jumpCommandToLeft cursorBlock restOfTree =
+    case cursorBlock.left of
+        commandToLeft :: restOfLeft ->
+            Just
+                ( BlockWithCursor
+                    { left = restOfLeft
+                    , right = commandToLeft :: cursorBlock.right
+                    }
+                , restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+removeCursor cursorBlock =
+    List.reverse cursorBlock.left ++ cursorBlock.right
+
+
+placeCursorAtHole blockWithBlockHole =
+    BlockWithCursor
+        { left = blockWithBlockHole.left
+        , right = blockWithBlockHole.right
+        }
+
+
+reassembleCommand commandWithBlockHole block =
+    case commandWithBlockHole of
+        CosWithHole ->
+            Cos block
+
+
+insertRightOfCursor command cursorBlock =
+    { left = cursorBlock.left
+    , right = command :: cursorBlock.right
+    }
+
+
+getCommandBeingEdited restOfTree =
+    case restOfTree of
+        [] ->
+            Nothing
+
+        parentBlockWithHole :: _ ->
+            Just parentBlockWithHole.command
+
+
+exitCurrentBlockLeftward cursorBlock restOfTree =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            case parentBlockWithHole.commandWithHole of
+                DivWithBotHole top ->
+                    Just <|
+                        moveToTopOfFraction
+                            top
+                            cursorBlock
+                            parentBlockWithHole
+                            grandparents
 
                 _ ->
-                    Nothing
+                    Just <|
+                        exitCurrentCommandLeftward
+                            cursorBlock
+                            parentBlockWithHole
+                            grandparents
 
-        _ ->
+        [] ->
             Nothing
 
 
-swapLeft : EditableMath -> Maybe EditableMath
-swapLeft ( editable, crumbs ) =
-    case editable of
-        Cursor (x :: left) right ->
-            Just ( Cursor left (x :: right), crumbs )
+moveToTopOfFraction top cursorBlock parentBlockWithHole grandparents =
+    ( placeCursorOnRight top
+    , push
+        (changeCommand
+            (DivWithTopHole (removeCursor cursorBlock))
+            parentBlockWithHole
+        )
+        grandparents
+    )
 
-        _ ->
-            Nothing
+
+exitCurrentCommandLeftward cursorBlock parentBlockWithHole grandparents =
+    ( placeCursorAtHole parentBlockWithHole
+        |> insertRightOfCursor
+            (reassembleCommand
+                parentBlockWithHole.commandWithHole
+                (removeCursor cursorBlock)
+            )
+    , grandparents
+    )
+
+
+changeCommand newCommand blockWithHole =
+    { blockWithHole | commandWithBlockHole = newCommand }
+
+
+placeCursorOnRight block =
+    BlockWithCursor { left = List.reverse block, right = [] }
+
+
+push blockWithBlockHole restOfTree =
+    blockWithBlockHole :: restOfTree
 
 
 exitLeft : EditableMath -> Maybe EditableMath
@@ -98,18 +260,6 @@ exitLeft ( editable, crumbs ) =
 goRight : EditableMath -> Maybe EditableMath
 goRight ( editable, crumbs ) =
     case editable of
-        Cursor _ _ ->
-            enterRight ( editable, crumbs )
-                |> orElse (swapRight ( editable, crumbs ))
-                |> orElse (exitRight ( editable, crumbs ))
-
-        _ ->
-            Nothing
-
-
-enterRight : EditableMath -> Maybe EditableMath
-enterRight ( editable, crumbs ) =
-    case editable of
         Cursor left (cmd :: right) ->
             let
                 enter newBlock newCrumb =
@@ -126,17 +276,10 @@ enterRight ( editable, crumbs ) =
                     enter top (TDivCr bot)
 
                 _ ->
-                    Nothing
+                    Just ( Cursor (cmd :: left) right, crumbs )
 
-        _ ->
-            Nothing
-
-
-swapRight : EditableMath -> Maybe EditableMath
-swapRight ( editable, crumbs ) =
-    case editable of
-        Cursor left (x :: right) ->
-            Just ( Cursor (x :: left) right, crumbs )
+        Cursor left [] ->
+            exitRight ( editable, crumbs )
 
         _ ->
             Nothing
@@ -301,7 +444,7 @@ exitDown ( editable, crumbs ) =
 
                         _ ->
                             exitDown
-                                ( Cursor [] (left ++ rebuildCommand (rebuildBlock editable) command :: right)
+                                ( Cursor left (rebuildCommand (rebuildBlock editable) command :: right)
                                 , xs
                                 )
 
@@ -316,18 +459,6 @@ exitDown ( editable, crumbs ) =
 --insert : Command -> EditableMath -> EditableMath
 --deleteLeft : EditableMath -> Maybe EditableMath
 --deleteRight : EditableMath -> Maybe EditableMath
-
-
-type Command
-    = Var String
-    | Digit Digit
-    | Div Block Block
-    | Cos Block
-    | Plus
-
-
-type alias Block =
-    List Command
 
 
 blockToMath : Block -> Math
@@ -465,26 +596,3 @@ rebuildCommand block commandWithHole =
 
         BDivCr top ->
             Div top block
-
-
-type alias EditableMath =
-    ( EditingBlock, List SplitBlock )
-
-
-type alias SplitBlock =
-    { left : Block
-    , command : CommandCrumb
-    , right : Block
-    }
-
-
-type EditingBlock
-    = Cursor Block Block
-    | LSel Block Block Block
-    | RSel Block Block Block
-
-
-type CommandCrumb
-    = CosCr
-    | TDivCr Block
-    | BDivCr Block

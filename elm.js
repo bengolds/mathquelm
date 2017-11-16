@@ -25786,40 +25786,6 @@ var _user$project$Mathquelm_EditableMath$Cursor = F2(
 	function (a, b) {
 		return {ctor: 'Cursor', _0: a, _1: b};
 	});
-var _user$project$Mathquelm_EditableMath$swapLeft = function (_p12) {
-	var _p13 = _p12;
-	var _p14 = _p13._0;
-	if ((_p14.ctor === 'Cursor') && (_p14._0.ctor === '::')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: A2(
-					_user$project$Mathquelm_EditableMath$Cursor,
-					_p14._0._1,
-					{ctor: '::', _0: _p14._0._0, _1: _p14._1}),
-				_1: _p13._1
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$swapRight = function (_p15) {
-	var _p16 = _p15;
-	var _p17 = _p16._0;
-	if ((_p17.ctor === 'Cursor') && (_p17._1.ctor === '::')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: A2(
-					_user$project$Mathquelm_EditableMath$Cursor,
-					{ctor: '::', _0: _p17._1._0, _1: _p17._0},
-					_p17._1._1),
-				_1: _p16._1
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
 var _user$project$Mathquelm_EditableMath$startEditing = function (block) {
 	return {
 		ctor: '_Tuple2',
@@ -25833,33 +25799,33 @@ var _user$project$Mathquelm_EditableMath$startEditing = function (block) {
 var _user$project$Mathquelm_EditableMath$BDivCr = function (a) {
 	return {ctor: 'BDivCr', _0: a};
 };
-var _user$project$Mathquelm_EditableMath$exitRight = function (_p18) {
-	var _p19 = _p18;
-	var _p26 = _p19._0;
-	var _p20 = {ctor: '_Tuple2', _0: _p26, _1: _p19._1};
-	if ((((_p20.ctor === '_Tuple2') && (_p20._0.ctor === 'Cursor')) && (_p20._0._1.ctor === '[]')) && (_p20._1.ctor === '::')) {
-		var _p25 = _p20._1._1;
-		var _p24 = _p20._1._0.right;
-		var _p23 = _p20._1._0.left;
-		var _p22 = _p20._1._0.command;
-		var _p21 = _p22;
-		if (_p21.ctor === 'TDivCr') {
+var _user$project$Mathquelm_EditableMath$exitRight = function (_p12) {
+	var _p13 = _p12;
+	var _p20 = _p13._0;
+	var _p14 = {ctor: '_Tuple2', _0: _p20, _1: _p13._1};
+	if ((((_p14.ctor === '_Tuple2') && (_p14._0.ctor === 'Cursor')) && (_p14._0._1.ctor === '[]')) && (_p14._1.ctor === '::')) {
+		var _p19 = _p14._1._1;
+		var _p18 = _p14._1._0.right;
+		var _p17 = _p14._1._0.left;
+		var _p16 = _p14._1._0.command;
+		var _p15 = _p16;
+		if (_p15.ctor === 'TDivCr') {
 			return _elm_lang$core$Maybe$Just(
 				{
 					ctor: '_Tuple2',
 					_0: A2(
 						_user$project$Mathquelm_EditableMath$Cursor,
 						{ctor: '[]'},
-						_p21._0),
+						_p15._0),
 					_1: {
 						ctor: '::',
 						_0: {
-							left: _p23,
+							left: _p17,
 							command: _user$project$Mathquelm_EditableMath$BDivCr(
-								_user$project$Mathquelm_EditableMath$rebuildBlock(_p26)),
-							right: _p24
+								_user$project$Mathquelm_EditableMath$rebuildBlock(_p20)),
+							right: _p18
 						},
-						_1: _p25
+						_1: _p19
 					}
 				});
 		} else {
@@ -25872,121 +25838,121 @@ var _user$project$Mathquelm_EditableMath$exitRight = function (_p18) {
 							ctor: '::',
 							_0: A2(
 								_user$project$Mathquelm_EditableMath$rebuildCommand,
-								_user$project$Mathquelm_EditableMath$rebuildBlock(_p26),
-								_p22),
-							_1: _p23
+								_user$project$Mathquelm_EditableMath$rebuildBlock(_p20),
+								_p16),
+							_1: _p17
 						},
-						_p24),
-					_1: _p25
+						_p18),
+					_1: _p19
 				});
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$goLeftDown = function (_p27) {
-	var _p28 = _p27;
-	var _p29 = _p28._0;
-	if (((_p29.ctor === 'Cursor') && (_p29._0.ctor === '::')) && (_p29._0._0.ctor === 'Div')) {
+var _user$project$Mathquelm_EditableMath$goLeftDown = function (_p21) {
+	var _p22 = _p21;
+	var _p23 = _p22._0;
+	if (((_p23.ctor === 'Cursor') && (_p23._0.ctor === '::')) && (_p23._0._0.ctor === 'Div')) {
 		return _elm_lang$core$Maybe$Just(
 			{
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Mathquelm_EditableMath$Cursor,
-					_elm_lang$core$List$reverse(_p29._0._0._1),
+					_elm_lang$core$List$reverse(_p23._0._0._1),
 					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
 					_0: {
-						left: _p29._0._1,
-						command: _user$project$Mathquelm_EditableMath$BDivCr(_p29._0._0._0),
-						right: _p29._1
+						left: _p23._0._1,
+						command: _user$project$Mathquelm_EditableMath$BDivCr(_p23._0._0._0),
+						right: _p23._1
 					},
-					_1: _p28._1
+					_1: _p22._1
 				}
 			});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$goRightDown = function (_p30) {
-	var _p31 = _p30;
-	var _p32 = _p31._0;
-	if (((_p32.ctor === 'Cursor') && (_p32._1.ctor === '::')) && (_p32._1._0.ctor === 'Div')) {
+var _user$project$Mathquelm_EditableMath$goRightDown = function (_p24) {
+	var _p25 = _p24;
+	var _p26 = _p25._0;
+	if (((_p26.ctor === 'Cursor') && (_p26._1.ctor === '::')) && (_p26._1._0.ctor === 'Div')) {
 		return _elm_lang$core$Maybe$Just(
 			{
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Mathquelm_EditableMath$Cursor,
 					{ctor: '[]'},
-					_p32._1._0._1),
+					_p26._1._0._1),
 				_1: {
 					ctor: '::',
 					_0: {
-						left: _p32._0,
-						command: _user$project$Mathquelm_EditableMath$BDivCr(_p32._1._0._0),
-						right: _p32._1._1
+						left: _p26._0,
+						command: _user$project$Mathquelm_EditableMath$BDivCr(_p26._1._0._0),
+						right: _p26._1._1
 					},
-					_1: _p31._1
+					_1: _p25._1
 				}
 			});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$exitDown = function (_p33) {
+var _user$project$Mathquelm_EditableMath$exitDown = function (_p27) {
 	exitDown:
 	while (true) {
-		var _p34 = _p33;
-		var _p42 = _p34._0;
-		var _p35 = _p42;
-		if (_p35.ctor === 'Cursor') {
-			var _p36 = _p34._1;
-			if (_p36.ctor === '::') {
-				var _p41 = _p36._1;
-				var _p40 = _p36._0.right;
-				var _p39 = _p36._0.left;
-				var _p38 = _p36._0.command;
-				var _p37 = _p38;
-				if (_p37.ctor === 'TDivCr') {
+		var _p28 = _p27;
+		var _p36 = _p28._0;
+		var _p29 = _p36;
+		if (_p29.ctor === 'Cursor') {
+			var _p30 = _p28._1;
+			if (_p30.ctor === '::') {
+				var _p35 = _p30._1;
+				var _p34 = _p30._0.right;
+				var _p33 = _p30._0.left;
+				var _p32 = _p30._0.command;
+				var _p31 = _p32;
+				if (_p31.ctor === 'TDivCr') {
 					return _elm_lang$core$Maybe$Just(
 						{
 							ctor: '_Tuple2',
 							_0: A2(
 								_user$project$Mathquelm_EditableMath$Cursor,
 								{ctor: '[]'},
-								_p37._0),
+								_p31._0),
 							_1: {
 								ctor: '::',
 								_0: {
-									left: _p39,
+									left: _p33,
 									command: _user$project$Mathquelm_EditableMath$BDivCr(
-										_user$project$Mathquelm_EditableMath$rebuildBlock(_p42)),
-									right: _p40
+										_user$project$Mathquelm_EditableMath$rebuildBlock(_p36)),
+									right: _p34
 								},
-								_1: _p41
+								_1: _p35
 							}
 						});
 				} else {
-					var _v25 = {
+					var _v21 = {
 						ctor: '_Tuple2',
 						_0: A2(
 							_user$project$Mathquelm_EditableMath$Cursor,
 							{ctor: '[]'},
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								_p39,
+								_p33,
 								{
 									ctor: '::',
 									_0: A2(
 										_user$project$Mathquelm_EditableMath$rebuildCommand,
-										_user$project$Mathquelm_EditableMath$rebuildBlock(_p42),
-										_p38),
-									_1: _p40
+										_user$project$Mathquelm_EditableMath$rebuildBlock(_p36),
+										_p32),
+									_1: _p34
 								})),
-						_1: _p41
+						_1: _p35
 					};
-					_p33 = _v25;
+					_p27 = _v21;
 					continue exitDown;
 				}
 			} else {
@@ -25997,22 +25963,22 @@ var _user$project$Mathquelm_EditableMath$exitDown = function (_p33) {
 		}
 	}
 };
-var _user$project$Mathquelm_EditableMath$goDown = function (_p43) {
-	var _p44 = _p43;
-	var _p47 = _p44._0;
-	var _p46 = _p44._1;
-	var _p45 = _p47;
-	if (_p45.ctor === 'Cursor') {
+var _user$project$Mathquelm_EditableMath$goDown = function (_p37) {
+	var _p38 = _p37;
+	var _p41 = _p38._0;
+	var _p40 = _p38._1;
+	var _p39 = _p41;
+	if (_p39.ctor === 'Cursor') {
 		return A2(
 			_user$project$Mathquelm_EditableMath$orElse,
 			_user$project$Mathquelm_EditableMath$exitDown(
-				{ctor: '_Tuple2', _0: _p47, _1: _p46}),
+				{ctor: '_Tuple2', _0: _p41, _1: _p40}),
 			A2(
 				_user$project$Mathquelm_EditableMath$orElse,
 				_user$project$Mathquelm_EditableMath$goRightDown(
-					{ctor: '_Tuple2', _0: _p47, _1: _p46}),
+					{ctor: '_Tuple2', _0: _p41, _1: _p40}),
 				_user$project$Mathquelm_EditableMath$goLeftDown(
-					{ctor: '_Tuple2', _0: _p47, _1: _p46})));
+					{ctor: '_Tuple2', _0: _p41, _1: _p40})));
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
@@ -26020,33 +25986,33 @@ var _user$project$Mathquelm_EditableMath$goDown = function (_p43) {
 var _user$project$Mathquelm_EditableMath$TDivCr = function (a) {
 	return {ctor: 'TDivCr', _0: a};
 };
-var _user$project$Mathquelm_EditableMath$exitLeft = function (_p48) {
-	var _p49 = _p48;
-	var _p56 = _p49._0;
-	var _p50 = {ctor: '_Tuple2', _0: _p56, _1: _p49._1};
-	if ((((_p50.ctor === '_Tuple2') && (_p50._0.ctor === 'Cursor')) && (_p50._0._0.ctor === '[]')) && (_p50._1.ctor === '::')) {
-		var _p55 = _p50._1._1;
-		var _p54 = _p50._1._0.right;
-		var _p53 = _p50._1._0.left;
-		var _p52 = _p50._1._0.command;
-		var _p51 = _p52;
-		if (_p51.ctor === 'BDivCr') {
+var _user$project$Mathquelm_EditableMath$exitLeft = function (_p42) {
+	var _p43 = _p42;
+	var _p50 = _p43._0;
+	var _p44 = {ctor: '_Tuple2', _0: _p50, _1: _p43._1};
+	if ((((_p44.ctor === '_Tuple2') && (_p44._0.ctor === 'Cursor')) && (_p44._0._0.ctor === '[]')) && (_p44._1.ctor === '::')) {
+		var _p49 = _p44._1._1;
+		var _p48 = _p44._1._0.right;
+		var _p47 = _p44._1._0.left;
+		var _p46 = _p44._1._0.command;
+		var _p45 = _p46;
+		if (_p45.ctor === 'BDivCr') {
 			return _elm_lang$core$Maybe$Just(
 				{
 					ctor: '_Tuple2',
 					_0: A2(
 						_user$project$Mathquelm_EditableMath$Cursor,
-						_elm_lang$core$List$reverse(_p51._0),
+						_elm_lang$core$List$reverse(_p45._0),
 						{ctor: '[]'}),
 					_1: {
 						ctor: '::',
 						_0: {
-							left: _p53,
+							left: _p47,
 							command: _user$project$Mathquelm_EditableMath$TDivCr(
-								_user$project$Mathquelm_EditableMath$rebuildBlock(_p56)),
-							right: _p54
+								_user$project$Mathquelm_EditableMath$rebuildBlock(_p50)),
+							right: _p48
 						},
-						_1: _p55
+						_1: _p49
 					}
 				});
 		} else {
@@ -26055,125 +26021,125 @@ var _user$project$Mathquelm_EditableMath$exitLeft = function (_p48) {
 					ctor: '_Tuple2',
 					_0: A2(
 						_user$project$Mathquelm_EditableMath$Cursor,
-						_p53,
+						_p47,
 						{
 							ctor: '::',
 							_0: A2(
 								_user$project$Mathquelm_EditableMath$rebuildCommand,
-								_user$project$Mathquelm_EditableMath$rebuildBlock(_p56),
-								_p52),
-							_1: _p54
+								_user$project$Mathquelm_EditableMath$rebuildBlock(_p50),
+								_p46),
+							_1: _p48
 						}),
-					_1: _p55
+					_1: _p49
 				});
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$goLeftUp = function (_p57) {
-	var _p58 = _p57;
-	var _p59 = _p58._0;
-	if (((_p59.ctor === 'Cursor') && (_p59._0.ctor === '::')) && (_p59._0._0.ctor === 'Div')) {
+var _user$project$Mathquelm_EditableMath$goLeftUp = function (_p51) {
+	var _p52 = _p51;
+	var _p53 = _p52._0;
+	if (((_p53.ctor === 'Cursor') && (_p53._0.ctor === '::')) && (_p53._0._0.ctor === 'Div')) {
 		return _elm_lang$core$Maybe$Just(
 			{
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Mathquelm_EditableMath$Cursor,
-					_elm_lang$core$List$reverse(_p59._0._0._0),
+					_elm_lang$core$List$reverse(_p53._0._0._0),
 					{ctor: '[]'}),
 				_1: {
 					ctor: '::',
 					_0: {
-						left: _p59._0._1,
-						command: _user$project$Mathquelm_EditableMath$TDivCr(_p59._0._0._1),
-						right: _p59._1
+						left: _p53._0._1,
+						command: _user$project$Mathquelm_EditableMath$TDivCr(_p53._0._0._1),
+						right: _p53._1
 					},
-					_1: _p58._1
+					_1: _p52._1
 				}
 			});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$goRightUp = function (_p60) {
-	var _p61 = _p60;
-	var _p62 = _p61._0;
-	if (((_p62.ctor === 'Cursor') && (_p62._1.ctor === '::')) && (_p62._1._0.ctor === 'Div')) {
+var _user$project$Mathquelm_EditableMath$goRightUp = function (_p54) {
+	var _p55 = _p54;
+	var _p56 = _p55._0;
+	if (((_p56.ctor === 'Cursor') && (_p56._1.ctor === '::')) && (_p56._1._0.ctor === 'Div')) {
 		return _elm_lang$core$Maybe$Just(
 			{
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Mathquelm_EditableMath$Cursor,
 					{ctor: '[]'},
-					_p62._1._0._0),
+					_p56._1._0._0),
 				_1: {
 					ctor: '::',
 					_0: {
-						left: _p62._0,
-						command: _user$project$Mathquelm_EditableMath$TDivCr(_p62._1._0._1),
-						right: _p62._1._1
+						left: _p56._0,
+						command: _user$project$Mathquelm_EditableMath$TDivCr(_p56._1._0._1),
+						right: _p56._1._1
 					},
-					_1: _p61._1
+					_1: _p55._1
 				}
 			});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$exitUp = function (_p63) {
+var _user$project$Mathquelm_EditableMath$exitUp = function (_p57) {
 	exitUp:
 	while (true) {
-		var _p64 = _p63;
-		var _p72 = _p64._0;
-		var _p65 = _p72;
-		if (_p65.ctor === 'Cursor') {
-			var _p66 = _p64._1;
-			if (_p66.ctor === '::') {
-				var _p71 = _p66._1;
-				var _p70 = _p66._0.right;
-				var _p69 = _p66._0.left;
-				var _p68 = _p66._0.command;
-				var _p67 = _p68;
-				if (_p67.ctor === 'BDivCr') {
+		var _p58 = _p57;
+		var _p66 = _p58._0;
+		var _p59 = _p66;
+		if (_p59.ctor === 'Cursor') {
+			var _p60 = _p58._1;
+			if (_p60.ctor === '::') {
+				var _p65 = _p60._1;
+				var _p64 = _p60._0.right;
+				var _p63 = _p60._0.left;
+				var _p62 = _p60._0.command;
+				var _p61 = _p62;
+				if (_p61.ctor === 'BDivCr') {
 					return _elm_lang$core$Maybe$Just(
 						{
 							ctor: '_Tuple2',
 							_0: A2(
 								_user$project$Mathquelm_EditableMath$Cursor,
 								{ctor: '[]'},
-								_p67._0),
+								_p61._0),
 							_1: {
 								ctor: '::',
 								_0: {
-									left: _p69,
+									left: _p63,
 									command: _user$project$Mathquelm_EditableMath$TDivCr(
-										_user$project$Mathquelm_EditableMath$rebuildBlock(_p72)),
-									right: _p70
+										_user$project$Mathquelm_EditableMath$rebuildBlock(_p66)),
+									right: _p64
 								},
-								_1: _p71
+								_1: _p65
 							}
 						});
 				} else {
-					var _v39 = {
+					var _v35 = {
 						ctor: '_Tuple2',
 						_0: A2(
 							_user$project$Mathquelm_EditableMath$Cursor,
 							{ctor: '[]'},
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								_p69,
+								_p63,
 								{
 									ctor: '::',
 									_0: A2(
 										_user$project$Mathquelm_EditableMath$rebuildCommand,
-										_user$project$Mathquelm_EditableMath$rebuildBlock(_p72),
-										_p68),
-									_1: _p70
+										_user$project$Mathquelm_EditableMath$rebuildBlock(_p66),
+										_p62),
+									_1: _p64
 								})),
-						_1: _p71
+						_1: _p65
 					};
-					_p63 = _v39;
+					_p57 = _v35;
 					continue exitUp;
 				}
 			} else {
@@ -26184,136 +26150,131 @@ var _user$project$Mathquelm_EditableMath$exitUp = function (_p63) {
 		}
 	}
 };
-var _user$project$Mathquelm_EditableMath$goUp = function (_p73) {
-	var _p74 = _p73;
-	var _p77 = _p74._0;
-	var _p76 = _p74._1;
-	var _p75 = _p77;
-	if (_p75.ctor === 'Cursor') {
+var _user$project$Mathquelm_EditableMath$goUp = function (_p67) {
+	var _p68 = _p67;
+	var _p71 = _p68._0;
+	var _p70 = _p68._1;
+	var _p69 = _p71;
+	if (_p69.ctor === 'Cursor') {
 		return A2(
 			_user$project$Mathquelm_EditableMath$orElse,
 			_user$project$Mathquelm_EditableMath$exitUp(
-				{ctor: '_Tuple2', _0: _p77, _1: _p76}),
+				{ctor: '_Tuple2', _0: _p71, _1: _p70}),
 			A2(
 				_user$project$Mathquelm_EditableMath$orElse,
 				_user$project$Mathquelm_EditableMath$goRightUp(
-					{ctor: '_Tuple2', _0: _p77, _1: _p76}),
+					{ctor: '_Tuple2', _0: _p71, _1: _p70}),
 				_user$project$Mathquelm_EditableMath$goLeftUp(
-					{ctor: '_Tuple2', _0: _p77, _1: _p76})));
+					{ctor: '_Tuple2', _0: _p71, _1: _p70})));
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
 var _user$project$Mathquelm_EditableMath$CosCr = {ctor: 'CosCr'};
-var _user$project$Mathquelm_EditableMath$enterLeft = function (_p78) {
-	var _p79 = _p78;
-	var _p80 = _p79._0;
-	if ((_p80.ctor === 'Cursor') && (_p80._0.ctor === '::')) {
-		var enter = F2(
-			function (newBlock, newCrumb) {
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: A2(
-							_user$project$Mathquelm_EditableMath$Cursor,
-							_elm_lang$core$List$reverse(newBlock),
-							{ctor: '[]'}),
-						_1: {
-							ctor: '::',
-							_0: {left: _p80._0._1, command: newCrumb, right: _p80._1},
-							_1: _p79._1
-						}
-					});
-			});
-		var _p81 = _p80._0._0;
-		switch (_p81.ctor) {
-			case 'Cos':
-				return A2(enter, _p81._0, _user$project$Mathquelm_EditableMath$CosCr);
-			case 'Div':
-				return A2(
-					enter,
-					_p81._1,
-					_user$project$Mathquelm_EditableMath$BDivCr(_p81._0));
-			default:
-				return _elm_lang$core$Maybe$Nothing;
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$goLeft = function (_p82) {
-	var _p83 = _p82;
-	var _p86 = _p83._0;
-	var _p85 = _p83._1;
-	var _p84 = _p86;
-	if (_p84.ctor === 'Cursor') {
-		if (_p84._0.ctor === '::') {
-			return A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$swapLeft(
-					{ctor: '_Tuple2', _0: _p86, _1: _p85}),
-				_user$project$Mathquelm_EditableMath$enterLeft(
-					{ctor: '_Tuple2', _0: _p86, _1: _p85}));
+var _user$project$Mathquelm_EditableMath$goLeft = function (_p72) {
+	var _p73 = _p72;
+	var _p80 = _p73._0;
+	var _p79 = _p73._1;
+	var _p74 = _p80;
+	if (_p74.ctor === 'Cursor') {
+		if (_p74._0.ctor === '::') {
+			var _p78 = _p74._1;
+			var _p77 = _p74._0._1;
+			var _p76 = _p74._0._0;
+			var enter = F2(
+				function (newBlock, newCrumb) {
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: A2(
+								_user$project$Mathquelm_EditableMath$Cursor,
+								_elm_lang$core$List$reverse(newBlock),
+								{ctor: '[]'}),
+							_1: {
+								ctor: '::',
+								_0: {left: _p77, command: newCrumb, right: _p78},
+								_1: _p79
+							}
+						});
+				});
+			var _p75 = _p76;
+			switch (_p75.ctor) {
+				case 'Cos':
+					return A2(enter, _p75._0, _user$project$Mathquelm_EditableMath$CosCr);
+				case 'Div':
+					return A2(
+						enter,
+						_p75._1,
+						_user$project$Mathquelm_EditableMath$BDivCr(_p75._0));
+				default:
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: A2(
+								_user$project$Mathquelm_EditableMath$Cursor,
+								_p77,
+								{ctor: '::', _0: _p76, _1: _p78}),
+							_1: _p79
+						});
+			}
 		} else {
 			return _user$project$Mathquelm_EditableMath$exitLeft(
-				{ctor: '_Tuple2', _0: _p86, _1: _p85});
+				{ctor: '_Tuple2', _0: _p80, _1: _p79});
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$enterRight = function (_p87) {
-	var _p88 = _p87;
-	var _p89 = _p88._0;
-	if ((_p89.ctor === 'Cursor') && (_p89._1.ctor === '::')) {
-		var enter = F2(
-			function (newBlock, newCrumb) {
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: A2(
-							_user$project$Mathquelm_EditableMath$Cursor,
-							{ctor: '[]'},
-							newBlock),
-						_1: {
-							ctor: '::',
-							_0: {left: _p89._0, command: newCrumb, right: _p89._1._1},
-							_1: _p88._1
-						}
-					});
-			});
-		var _p90 = _p89._1._0;
-		switch (_p90.ctor) {
-			case 'Cos':
-				return A2(enter, _p90._0, _user$project$Mathquelm_EditableMath$CosCr);
-			case 'Div':
-				return A2(
-					enter,
-					_p90._0,
-					_user$project$Mathquelm_EditableMath$TDivCr(_p90._1));
-			default:
-				return _elm_lang$core$Maybe$Nothing;
+var _user$project$Mathquelm_EditableMath$goRight = function (_p81) {
+	var _p82 = _p81;
+	var _p89 = _p82._0;
+	var _p88 = _p82._1;
+	var _p83 = _p89;
+	if (_p83.ctor === 'Cursor') {
+		if (_p83._1.ctor === '::') {
+			var _p87 = _p83._1._1;
+			var _p86 = _p83._0;
+			var _p85 = _p83._1._0;
+			var enter = F2(
+				function (newBlock, newCrumb) {
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: A2(
+								_user$project$Mathquelm_EditableMath$Cursor,
+								{ctor: '[]'},
+								newBlock),
+							_1: {
+								ctor: '::',
+								_0: {left: _p86, command: newCrumb, right: _p87},
+								_1: _p88
+							}
+						});
+				});
+			var _p84 = _p85;
+			switch (_p84.ctor) {
+				case 'Cos':
+					return A2(enter, _p84._0, _user$project$Mathquelm_EditableMath$CosCr);
+				case 'Div':
+					return A2(
+						enter,
+						_p84._0,
+						_user$project$Mathquelm_EditableMath$TDivCr(_p84._1));
+				default:
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: A2(
+								_user$project$Mathquelm_EditableMath$Cursor,
+								{ctor: '::', _0: _p85, _1: _p86},
+								_p87),
+							_1: _p88
+						});
+			}
+		} else {
+			return _user$project$Mathquelm_EditableMath$exitRight(
+				{ctor: '_Tuple2', _0: _p89, _1: _p88});
 		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$goRight = function (_p91) {
-	var _p92 = _p91;
-	var _p95 = _p92._0;
-	var _p94 = _p92._1;
-	var _p93 = _p95;
-	if (_p93.ctor === 'Cursor') {
-		return A2(
-			_user$project$Mathquelm_EditableMath$orElse,
-			_user$project$Mathquelm_EditableMath$exitRight(
-				{ctor: '_Tuple2', _0: _p95, _1: _p94}),
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$swapRight(
-					{ctor: '_Tuple2', _0: _p95, _1: _p94}),
-				_user$project$Mathquelm_EditableMath$enterRight(
-					{ctor: '_Tuple2', _0: _p95, _1: _p94})));
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
