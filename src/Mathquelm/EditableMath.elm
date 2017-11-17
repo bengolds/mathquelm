@@ -17,11 +17,20 @@ type alias Block =
     List Command
 
 
-type alias MathBeingEdited =
-    ( BlockBeingEdited, RestOfTree )
+type MathBeingEdited
+    = Cursor MathWithCursor
+    | Selection MathWithSelection
 
 
-type alias RestOfTree =
+type alias MathWithCursor =
+    ( BlockWithCursor, TreeWithBlockHole )
+
+
+type alias MathWithSelection =
+    ( BlockWithSelection, TreeWithBlockHole )
+
+
+type alias TreeWithBlockHole =
     List BlockWithBlockHole
 
 
@@ -32,18 +41,13 @@ type alias BlockWithBlockHole =
     }
 
 
-type BlockBeingEdited
-    = BlockWithCursor CursorInfo
-    | BlockWithSelection SelectionInfo
-
-
-type alias CursorInfo =
+type alias BlockWithCursor =
     { left : Block
     , right : Block
     }
 
 
-type alias SelectionInfo =
+type alias BlockWithSelection =
     { left : Block
     , selected : Block
     , right : Block
@@ -69,19 +73,19 @@ toMath mathBeingEdited =
 
 
 stopEditingMath : MathBeingEdited -> Block
-stopEditingMath ( blockBeingEdited, restOfTree ) =
+stopEditingMath mathBeingEdited =
     List.foldl
         reassembleBlock
-        (stopEditingBlock blockBeingEdited)
-        restOfTree
+        (stopEditingBlock mathBeingEdited)
+        (getRestOfTree mathBeingEdited)
 
 
-stopEditingBlock blockBeingEdited =
-    case blockBeingEdited of
-        BlockWithCursor cursorBlock ->
+stopEditingBlock mathBeingEdited =
+    case mathBeingEdited of
+        Cursor ( cursorBlock, _ ) ->
             removeCursor cursorBlock
 
-        BlockWithSelection selectionBlock ->
+        Selection ( selectionBlock, _ ) ->
             removeSelection selectionBlock
 
 
@@ -104,55 +108,61 @@ orElse second first =
             first
 
 
-getBlockBeingEdited ( blockBeingEdited, _ ) =
-    blockBeingEdited
+getRestOfTree : MathBeingEdited -> TreeWithBlockHole
+getRestOfTree mathBeingEdited =
+    case mathBeingEdited of
+        Cursor ( _, restOfTree ) ->
+            restOfTree
 
-
-getRestOfTree ( _, restOfTree ) =
-    restOfTree
+        Selection ( _, restOfTree ) ->
+            restOfTree
 
 
 goLeft : MathBeingEdited -> Maybe MathBeingEdited
-goLeft math =
-    case getBlockBeingEdited math of
-        BlockWithCursor cursorBlock ->
-            let
-                restOfTree =
-                    getRestOfTree math
-            in
-            enterCommandToLeft cursorBlock restOfTree
-                |> orElse (jumpCommandToLeft cursorBlock restOfTree)
-                |> orElse (exitCurrentBlockLeftward cursorBlock restOfTree)
+goLeft mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            enterCommandToLeft mathWithCursor
+                |> orElse (jumpCommandToLeft mathWithCursor)
+                |> orElse (exitCurrentBlockLeftward mathWithCursor)
+                |> Maybe.map Cursor
 
         _ ->
             Nothing
 
 
 goRight : MathBeingEdited -> Maybe MathBeingEdited
-goRight math =
-    case getBlockBeingEdited math of
-        BlockWithCursor cursorBlock ->
-            let
-                restOfTree =
-                    getRestOfTree math
-            in
-            enterCommandToRight cursorBlock restOfTree
-                |> orElse (jumpCommandToRight cursorBlock restOfTree)
-                |> orElse (exitCurrentBlockRightward cursorBlock restOfTree)
+goRight mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            enterCommandToRight mathWithCursor
+                |> orElse (jumpCommandToRight mathWithCursor)
+                |> orElse (exitCurrentBlockRightward mathWithCursor)
+                |> Maybe.map Cursor
 
         _ ->
             Nothing
 
 
-goUp math =
-    Nothing
+goUp : MathBeingEdited -> Maybe MathBeingEdited
+goUp mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            enterTopOfCommandToRight mathWithCursor
+                |> orElse (enterTopOfCommandToLeft mathWithCursor)
+                |> orElse (exitCurrentBlockUpward mathWithCursor)
+                |> Maybe.map Cursor
+
+        _ ->
+            Nothing
 
 
 goDown math =
     Nothing
 
 
-enterCommandToLeft cursorBlock restOfTree =
+enterCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterCommandToLeft ( cursorBlock, restOfTree ) =
     case cursorBlock.left of
         (Cos blockToEnter) :: restOfLeft ->
             Just
@@ -182,7 +192,8 @@ enterCommandToLeft cursorBlock restOfTree =
             Nothing
 
 
-enterCommandToRight cursorBlock restOfTree =
+enterCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterCommandToRight ( cursorBlock, restOfTree ) =
     case cursorBlock.right of
         (Cos blockToEnter) :: restOfRight ->
             Just
@@ -212,14 +223,52 @@ enterCommandToRight cursorBlock restOfTree =
             Nothing
 
 
-jumpCommandToLeft cursorBlock restOfTree =
+enterTopOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterTopOfCommandToLeft ( cursorBlock, restOfTree ) =
+    case cursorBlock.left of
+        (Div blockToEnter bot) :: restOfLeft ->
+            Just
+                ( placeCursorOnRight blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        restOfLeft
+                        (DivWithTopHole bot)
+                        cursorBlock.right
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterTopOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterTopOfCommandToRight ( cursorBlock, restOfTree ) =
+    case cursorBlock.right of
+        (Div blockToEnter bot) :: restOfRight ->
+            Just
+                ( placeCursorOnLeft blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        cursorBlock.left
+                        (DivWithTopHole bot)
+                        restOfRight
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+jumpCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+jumpCommandToLeft ( cursorBlock, restOfTree ) =
     case cursorBlock.left of
         commandToLeft :: restOfLeft ->
             Just
-                ( BlockWithCursor
-                    { left = restOfLeft
-                    , right = commandToLeft :: cursorBlock.right
-                    }
+                ( { left = restOfLeft
+                  , right = commandToLeft :: cursorBlock.right
+                  }
                 , restOfTree
                 )
 
@@ -227,14 +276,14 @@ jumpCommandToLeft cursorBlock restOfTree =
             Nothing
 
 
-jumpCommandToRight cursorBlock restOfTree =
+jumpCommandToRight : MathWithCursor -> Maybe MathWithCursor
+jumpCommandToRight ( cursorBlock, restOfTree ) =
     case cursorBlock.right of
         commandToRight :: restOfRight ->
             Just
-                ( BlockWithCursor
-                    { left = commandToRight :: cursorBlock.left
-                    , right = restOfRight
-                    }
+                ( { left = commandToRight :: cursorBlock.left
+                  , right = restOfRight
+                  }
                 , restOfTree
                 )
 
@@ -291,7 +340,8 @@ getCommandBeingEdited restOfTree =
             Just parentBlockWithHole.command
 
 
-exitCurrentBlockLeftward cursorBlock restOfTree =
+exitCurrentBlockLeftward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockLeftward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             case parentBlockWithHole.commandWithBlockHole of
@@ -314,7 +364,8 @@ exitCurrentBlockLeftward cursorBlock restOfTree =
             Nothing
 
 
-exitCurrentBlockRightward cursorBlock restOfTree =
+exitCurrentBlockRightward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockRightward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             case parentBlockWithHole.commandWithBlockHole of
@@ -332,6 +383,27 @@ exitCurrentBlockRightward cursorBlock restOfTree =
                             cursorBlock
                             parentBlockWithHole
                             grandparents
+
+        [] ->
+            Nothing
+
+
+exitCurrentBlockUpward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockUpward ( cursorBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            case parentBlockWithHole.commandWithBlockHole of
+                DivWithBotHole top ->
+                    Just <|
+                        moveToTopOfFraction
+                            top
+                            cursorBlock
+                            parentBlockWithHole
+                            grandparents
+
+                _ ->
+                    exitCurrentCommandLeftward cursorBlock parentBlockWithHole grandparents
+                        |> exitCurrentBlockUpward
 
         [] ->
             Nothing
@@ -366,7 +438,6 @@ exitCurrentCommandLeftward cursorBlock parentBlockWithHole grandparents =
                 parentBlockWithHole.commandWithBlockHole
                 (removeCursor cursorBlock)
             )
-        |> BlockWithCursor
     , grandparents
     )
 
@@ -378,7 +449,6 @@ exitCurrentCommandRightward cursorBlock parentBlockWithHole grandparents =
                 parentBlockWithHole.commandWithBlockHole
                 (removeCursor cursorBlock)
             )
-        |> BlockWithCursor
     , grandparents
     )
 
@@ -387,12 +457,14 @@ changeCommand newCommand blockWithHole =
     { blockWithHole | commandWithBlockHole = newCommand }
 
 
+placeCursorOnRight : Block -> BlockWithCursor
 placeCursorOnRight block =
-    BlockWithCursor { left = List.reverse block, right = [] }
+    { left = List.reverse block, right = [] }
 
 
+placeCursorOnLeft : Block -> BlockWithCursor
 placeCursorOnLeft block =
-    BlockWithCursor { left = [], right = block }
+    { left = [], right = block }
 
 
 push blockWithBlockHole restOfTree =
@@ -674,7 +746,7 @@ appendRight toAppend math =
 
 startEditing : Block -> MathBeingEdited
 startEditing block =
-    ( placeCursorOnLeft block, [] )
+    Cursor ( placeCursorOnLeft block, [] )
 
 
 

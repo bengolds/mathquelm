@@ -24,14 +24,14 @@ type alias RBlock =
 
 
 fromEditable : EMath.MathBeingEdited -> RBlock
-fromEditable ( editingBlock, crumbs ) =
+fromEditable mathBeingEdited =
     let
         firstBlock =
-            case editingBlock of
-                EMath.BlockWithCursor { left, right } ->
+            case mathBeingEdited of
+                EMath.Cursor ( { left, right }, _ ) ->
                     toRBlock (List.reverse left) ++ Cursor :: toRBlock right
 
-                EMath.BlockWithSelection { left, selected, right } ->
+                EMath.Selection ( { left, selected, right }, _ ) ->
                     toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
 
         rebuild block cmd =
@@ -50,7 +50,7 @@ fromEditable ( editingBlock, crumbs ) =
             toRBlock (List.reverse left) ++ rebuild childBlock commandWithBlockHole :: toRBlock right
         )
         firstBlock
-        crumbs
+        (EMath.getRestOfTree mathBeingEdited)
 
 
 toRBlock : EMath.Block -> RBlock
