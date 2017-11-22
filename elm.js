@@ -27909,6 +27909,7 @@ var _user$project$Mathquelm_Render$Div = F2(
 	function (a, b) {
 		return {ctor: 'Div', _0: a, _1: b};
 	});
+var _user$project$Mathquelm_Render$Plus = {ctor: 'Plus'};
 var _user$project$Mathquelm_Render$insertEmpties = function (block) {
 	if (_elm_lang$core$List$isEmpty(block)) {
 		return {
@@ -27917,12 +27918,116 @@ var _user$project$Mathquelm_Render$insertEmpties = function (block) {
 			_1: {ctor: '[]'}
 		};
 	} else {
-		var beginning = function () {
+		var insertEmptiesHelper = function (block) {
 			var _p1 = block;
-			_v1_2:
+			_v1_6:
 			do {
 				if (_p1.ctor === '::') {
 					switch (_p1._0.ctor) {
+						case 'Div':
+							return {
+								ctor: '::',
+								_0: A2(
+									_user$project$Mathquelm_Render$Div,
+									_user$project$Mathquelm_Render$insertEmpties(_p1._0._0),
+									_user$project$Mathquelm_Render$insertEmpties(_p1._0._1)),
+								_1: insertEmptiesHelper(_p1._1)
+							};
+						case 'Cos':
+							return {
+								ctor: '::',
+								_0: _user$project$Mathquelm_Render$Cos(
+									_user$project$Mathquelm_Render$insertEmpties(_p1._0._0)),
+								_1: insertEmptiesHelper(_p1._1)
+							};
+						case 'Plus':
+							if (_p1._1.ctor === '[]') {
+								return {
+									ctor: '::',
+									_0: _user$project$Mathquelm_Render$Plus,
+									_1: {
+										ctor: '::',
+										_0: _user$project$Mathquelm_Render$Empty,
+										_1: {ctor: '[]'}
+									}
+								};
+							} else {
+								switch (_p1._1._0.ctor) {
+									case 'Plus':
+										return A2(
+											_elm_lang$core$Basics_ops['++'],
+											{
+												ctor: '::',
+												_0: _user$project$Mathquelm_Render$Plus,
+												_1: {
+													ctor: '::',
+													_0: _user$project$Mathquelm_Render$Empty,
+													_1: {ctor: '[]'}
+												}
+											},
+											insertEmptiesHelper(
+												{ctor: '::', _0: _user$project$Mathquelm_Render$Plus, _1: _p1._1._1}));
+									case 'Cursor':
+										if (_p1._1._1.ctor === '::') {
+											if (_p1._1._1._0.ctor === 'Plus') {
+												return A2(
+													_elm_lang$core$Basics_ops['++'],
+													{
+														ctor: '::',
+														_0: _user$project$Mathquelm_Render$Plus,
+														_1: {
+															ctor: '::',
+															_0: _user$project$Mathquelm_Render$Cursor,
+															_1: {
+																ctor: '::',
+																_0: _user$project$Mathquelm_Render$Empty,
+																_1: {ctor: '[]'}
+															}
+														}
+													},
+													insertEmptiesHelper(
+														{ctor: '::', _0: _user$project$Mathquelm_Render$Plus, _1: _p1._1._1._1}));
+											} else {
+												break _v1_6;
+											}
+										} else {
+											return {
+												ctor: '::',
+												_0: _user$project$Mathquelm_Render$Plus,
+												_1: {
+													ctor: '::',
+													_0: _user$project$Mathquelm_Render$Cursor,
+													_1: {
+														ctor: '::',
+														_0: _user$project$Mathquelm_Render$Empty,
+														_1: {ctor: '[]'}
+													}
+												}
+											};
+										}
+									default:
+										break _v1_6;
+								}
+							}
+						default:
+							break _v1_6;
+					}
+				} else {
+					return {ctor: '[]'};
+				}
+			} while(false);
+			return {
+				ctor: '::',
+				_0: _p1._0,
+				_1: insertEmptiesHelper(_p1._1)
+			};
+		};
+		var beginning = function () {
+			var _p2 = block;
+			_v2_2:
+			do {
+				if (_p2.ctor === '::') {
+					switch (_p2._0.ctor) {
 						case 'Plus':
 							return {
 								ctor: '::',
@@ -27930,90 +28035,30 @@ var _user$project$Mathquelm_Render$insertEmpties = function (block) {
 								_1: {ctor: '[]'}
 							};
 						case 'Cursor':
-							if ((_p1._1.ctor === '::') && (_p1._1._0.ctor === 'Plus')) {
+							if ((_p2._1.ctor === '::') && (_p2._1._0.ctor === 'Plus')) {
 								return {
 									ctor: '::',
 									_0: _user$project$Mathquelm_Render$Empty,
 									_1: {ctor: '[]'}
 								};
 							} else {
-								break _v1_2;
+								break _v2_2;
 							}
 						default:
-							break _v1_2;
+							break _v2_2;
 					}
 				} else {
-					break _v1_2;
+					break _v2_2;
 				}
 			} while(false);
 			return {ctor: '[]'};
 		}();
-		return _elm_lang$core$List$reverse(
-			A3(
-				_elm_lang$core$List$foldl,
-				F2(
-					function (cmd, acc) {
-						var _p2 = cmd;
-						switch (_p2.ctor) {
-							case 'Div':
-								return {
-									ctor: '::',
-									_0: A2(
-										_user$project$Mathquelm_Render$Div,
-										_user$project$Mathquelm_Render$insertEmpties(_p2._0),
-										_user$project$Mathquelm_Render$insertEmpties(_p2._1)),
-									_1: acc
-								};
-							case 'Cos':
-								return {
-									ctor: '::',
-									_0: _user$project$Mathquelm_Render$Cos(
-										_user$project$Mathquelm_Render$insertEmpties(_p2._0)),
-									_1: acc
-								};
-							case 'Plus':
-								var _p3 = acc;
-								_v3_3:
-								do {
-									if (_p3.ctor === '[]') {
-										return {
-											ctor: '::',
-											_0: _user$project$Mathquelm_Render$Empty,
-											_1: {ctor: '[]'}
-										};
-									} else {
-										switch (_p3._0.ctor) {
-											case 'Plus':
-												return {
-													ctor: '::',
-													_0: cmd,
-													_1: {ctor: '::', _0: _user$project$Mathquelm_Render$Empty, _1: acc}
-												};
-											case 'Cursor':
-												if ((_p3._1.ctor === '::') && (_p3._1._0.ctor === 'Plus')) {
-													return {
-														ctor: '::',
-														_0: cmd,
-														_1: {ctor: '::', _0: _user$project$Mathquelm_Render$Empty, _1: acc}
-													};
-												} else {
-													break _v3_3;
-												}
-											default:
-												break _v3_3;
-										}
-									}
-								} while(false);
-								return {ctor: '::', _0: cmd, _1: acc};
-							default:
-								return {ctor: '::', _0: cmd, _1: acc};
-						}
-					}),
-				beginning,
-				block));
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			beginning,
+			insertEmptiesHelper(block));
 	}
 };
-var _user$project$Mathquelm_Render$Plus = {ctor: 'Plus'};
 var _user$project$Mathquelm_Render$Num = function (a) {
 	return {ctor: 'Num', _0: a};
 };
@@ -28026,19 +28071,19 @@ var _user$project$Mathquelm_Render$toRBlock = function (block) {
 			_elm_lang$core$List$foldl,
 			F2(
 				function (cmd, acc) {
-					var _p4 = cmd;
-					switch (_p4.ctor) {
+					var _p3 = cmd;
+					switch (_p3.ctor) {
 						case 'Digit':
 							return {
 								ctor: '::',
 								_0: _user$project$Mathquelm_Render$Num(
-									_user$project$Mathquelm_Digit$parse(_p4._0)),
+									_user$project$Mathquelm_Digit$parse(_p3._0)),
 								_1: acc
 							};
 						case 'Var':
 							return {
 								ctor: '::',
-								_0: _user$project$Mathquelm_Render$Var(_p4._0),
+								_0: _user$project$Mathquelm_Render$Var(_p3._0),
 								_1: acc
 							};
 						case 'Div':
@@ -28046,15 +28091,15 @@ var _user$project$Mathquelm_Render$toRBlock = function (block) {
 								ctor: '::',
 								_0: A2(
 									_user$project$Mathquelm_Render$Div,
-									_user$project$Mathquelm_Render$toRBlock(_p4._0),
-									_user$project$Mathquelm_Render$toRBlock(_p4._1)),
+									_user$project$Mathquelm_Render$toRBlock(_p3._0),
+									_user$project$Mathquelm_Render$toRBlock(_p3._1)),
 								_1: acc
 							};
 						case 'Cos':
 							return {
 								ctor: '::',
 								_0: _user$project$Mathquelm_Render$Cos(
-									_user$project$Mathquelm_Render$toRBlock(_p4._0)),
+									_user$project$Mathquelm_Render$toRBlock(_p3._0)),
 								_1: acc
 							};
 						default:
@@ -28067,43 +28112,43 @@ var _user$project$Mathquelm_Render$toRBlock = function (block) {
 var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 	var rebuild = F2(
 		function (block, cmd) {
-			var _p5 = cmd;
-			switch (_p5.ctor) {
+			var _p4 = cmd;
+			switch (_p4.ctor) {
 				case 'CosWithHole':
 					return _user$project$Mathquelm_Render$Cos(block);
 				case 'DivWithTopHole':
 					return A2(
 						_user$project$Mathquelm_Render$Div,
 						block,
-						_user$project$Mathquelm_Render$toRBlock(_p5._0));
+						_user$project$Mathquelm_Render$toRBlock(_p4._0));
 				default:
 					return A2(
 						_user$project$Mathquelm_Render$Div,
-						_user$project$Mathquelm_Render$toRBlock(_p5._0),
+						_user$project$Mathquelm_Render$toRBlock(_p4._0),
 						block);
 			}
 		});
 	var firstBlock = function () {
-		var _p6 = mathBeingEdited;
-		if (_p6.ctor === 'Cursor') {
+		var _p5 = mathBeingEdited;
+		if (_p5.ctor === 'Cursor') {
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
 				_user$project$Mathquelm_Render$toRBlock(
-					_elm_lang$core$List$reverse(_p6._0._0.left)),
+					_elm_lang$core$List$reverse(_p5._0._0.left)),
 				{
 					ctor: '::',
 					_0: _user$project$Mathquelm_Render$Cursor,
-					_1: _user$project$Mathquelm_Render$toRBlock(_p6._0._0.right)
+					_1: _user$project$Mathquelm_Render$toRBlock(_p5._0._0.right)
 				});
 		} else {
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
-				_user$project$Mathquelm_Render$toRBlock(_p6._0._0.left),
+				_user$project$Mathquelm_Render$toRBlock(_p5._0._0.left),
 				{
 					ctor: '::',
 					_0: _user$project$Mathquelm_Render$Selection(
-						_user$project$Mathquelm_Render$toRBlock(_p6._0._0.selected)),
-					_1: _user$project$Mathquelm_Render$toRBlock(_p6._0._0.right)
+						_user$project$Mathquelm_Render$toRBlock(_p5._0._0.selected)),
+					_1: _user$project$Mathquelm_Render$toRBlock(_p5._0._0.right)
 				});
 		}
 	}();
@@ -28111,16 +28156,16 @@ var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 		A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p7, childBlock) {
-					var _p8 = _p7;
+				function (_p6, childBlock) {
+					var _p7 = _p6;
 					return A2(
 						_elm_lang$core$Basics_ops['++'],
 						_user$project$Mathquelm_Render$toRBlock(
-							_elm_lang$core$List$reverse(_p8.left)),
+							_elm_lang$core$List$reverse(_p7.left)),
 						{
 							ctor: '::',
-							_0: A2(rebuild, childBlock, _p8.commandWithBlockHole),
-							_1: _user$project$Mathquelm_Render$toRBlock(_p8.right)
+							_0: A2(rebuild, childBlock, _p7.commandWithBlockHole),
+							_1: _user$project$Mathquelm_Render$toRBlock(_p7.right)
 						});
 				}),
 			firstBlock,

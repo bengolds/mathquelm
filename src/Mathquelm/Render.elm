@@ -97,36 +97,35 @@ insertEmpties block =
 
                     _ ->
                         []
+
+            insertEmptiesHelper : RBlock -> RBlock
+            insertEmptiesHelper block =
+                case block of
+                    (Div top bot) :: rest ->
+                        Div (insertEmpties top) (insertEmpties bot) :: insertEmptiesHelper rest
+
+                    (Cos operand) :: rest ->
+                        Cos (insertEmpties operand) :: insertEmptiesHelper rest
+
+                    Plus :: Plus :: rest ->
+                        [ Plus, Empty ] ++ insertEmptiesHelper (Plus :: rest)
+
+                    Plus :: Cursor :: Plus :: rest ->
+                        [ Plus, Cursor, Empty ] ++ insertEmptiesHelper (Plus :: rest)
+
+                    Plus :: [] ->
+                        [ Plus, Empty ]
+
+                    Plus :: Cursor :: [] ->
+                        [ Plus, Cursor, Empty ]
+
+                    cmd :: rest ->
+                        cmd :: insertEmptiesHelper rest
+
+                    [] ->
+                        []
         in
-        List.foldl
-            (\cmd acc ->
-                case cmd of
-                    Div top bot ->
-                        Div (insertEmpties top) (insertEmpties bot) :: acc
-
-                    Cos operand ->
-                        Cos (insertEmpties operand) :: acc
-
-                    Plus ->
-                        case acc of
-                            [] ->
-                                [ Empty ]
-
-                            Plus :: _ ->
-                                cmd :: Empty :: acc
-
-                            Cursor :: Plus :: _ ->
-                                cmd :: Empty :: acc
-
-                            _ ->
-                                cmd :: acc
-
-                    _ ->
-                        cmd :: acc
-            )
-            beginning
-            block
-            |> List.reverse
+        beginning ++ insertEmptiesHelper block
 
 
 
