@@ -1,6 +1,5 @@
 module Mathquelm.EditableMath exposing (..)
 
-import List.Extra as List
 import Mathquelm.Digit as Digit exposing (Digit)
 import Mathquelm.Math as Math exposing (Math)
 
@@ -80,6 +79,7 @@ stopEditingMath mathBeingEdited =
         (getRestOfTree mathBeingEdited)
 
 
+stopEditingBlock : MathBeingEdited -> Block
 stopEditingBlock mathBeingEdited =
     case mathBeingEdited of
         Cursor ( cursorBlock, _ ) ->
@@ -89,6 +89,7 @@ stopEditingBlock mathBeingEdited =
             removeSelection selectionBlock
 
 
+reassembleBlock : BlockWithBlockHole -> Block -> Block
 reassembleBlock blockWithBlockHole fillerBlock =
     List.reverse blockWithBlockHole.left
         ++ [ reassembleCommand
@@ -157,8 +158,17 @@ goUp mathBeingEdited =
             Nothing
 
 
-goDown math =
-    Nothing
+goDown : MathBeingEdited -> Maybe MathBeingEdited
+goDown mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            enterBottomOfCommandToRight mathWithCursor
+                |> orElse (enterBottomOfCommandToLeft mathWithCursor)
+                |> orElse (exitCurrentBlockDownward mathWithCursor)
+                |> Maybe.map Cursor
+
+        _ ->
+            Nothing
 
 
 enterCommandToLeft : MathWithCursor -> Maybe MathWithCursor
@@ -252,6 +262,44 @@ enterTopOfCommandToRight ( cursorBlock, restOfTree ) =
                     (BlockWithBlockHole
                         cursorBlock.left
                         (DivWithTopHole bot)
+                        restOfRight
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterBottomOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterBottomOfCommandToLeft ( cursorBlock, restOfTree ) =
+    case cursorBlock.left of
+        (Div top blockToEnter) :: restOfLeft ->
+            Just
+                ( placeCursorOnRight blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        restOfLeft
+                        (DivWithBotHole top)
+                        cursorBlock.right
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterBottomOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterBottomOfCommandToRight ( cursorBlock, restOfTree ) =
+    case cursorBlock.right of
+        (Div top blockToEnter) :: restOfRight ->
+            Just
+                ( placeCursorOnLeft blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        cursorBlock.left
+                        (DivWithBotHole top)
                         restOfRight
                     )
                     restOfTree
@@ -409,6 +457,28 @@ exitCurrentBlockUpward ( cursorBlock, restOfTree ) =
             Nothing
 
 
+exitCurrentBlockDownward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockDownward ( cursorBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            case parentBlockWithHole.commandWithBlockHole of
+                DivWithTopHole bot ->
+                    Just <|
+                        moveToBottomOfFraction
+                            bot
+                            cursorBlock
+                            parentBlockWithHole
+                            grandparents
+
+                _ ->
+                    exitCurrentCommandLeftward cursorBlock parentBlockWithHole grandparents
+                        |> exitCurrentBlockDownward
+
+        [] ->
+            Nothing
+
+
+moveToTopOfFraction : Block -> BlockWithCursor -> BlockWithBlockHole -> TreeWithBlockHole -> MathWithCursor
 moveToTopOfFraction top cursorBlock parentBlockWithHole grandparents =
     ( placeCursorOnRight top
     , push
@@ -453,6 +523,7 @@ exitCurrentCommandRightward cursorBlock parentBlockWithHole grandparents =
     )
 
 
+changeCommand : CommandWithBlockHole -> BlockWithBlockHole -> BlockWithBlockHole
 changeCommand newCommand blockWithHole =
     { blockWithHole | commandWithBlockHole = newCommand }
 
@@ -467,8 +538,50 @@ placeCursorOnLeft block =
     { left = [], right = block }
 
 
+push : BlockWithBlockHole -> TreeWithBlockHole -> TreeWithBlockHole
 push blockWithBlockHole restOfTree =
     blockWithBlockHole :: restOfTree
+
+
+selectRight : MathBeingEdited -> Maybe MathBeingEdited
+selectRight mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            turnCursorIntoSelection Right mathWithCursor
+                |> Selection
+                |> selectRight
+
+        Selection mathWithSelection ->
+            --WHAT DO I DOOO
+            --You can either exit the block
+            --Or extend the block if it's a right selection
+            --Or shrink the block if it's a left selection
+            Nothing
+
+
+turnCursorIntoSelection direction ( cursorBlock, restOfTree ) =
+    ( { left = cursorBlock.left
+      , selected = []
+      , right = cursorBlock.right
+      , direction = direction
+      }
+    , restOfTree
+    )
+
+
+selectLeft : MathBeingEdited -> Maybe MathBeingEdited
+selectLeft mathBeingEdited =
+    Nothing
+
+
+selectUp : MathBeingEdited -> Maybe MathBeingEdited
+selectUp mathBeingEdited =
+    Nothing
+
+
+selectDown : MathBeingEdited -> Maybe MathBeingEdited
+selectDown mathBeingEdited =
+    Nothing
 
 
 

@@ -3,7 +3,7 @@ module Mathquelm exposing (..)
 import Element exposing (..)
 import Html exposing (Html)
 import Keyboard
-import List.Extra as List
+import Keyboard.Extra exposing (Key(..))
 import Mathquelm.Config as Config exposing (Config)
 import Mathquelm.Digit as Digit
 import Mathquelm.EditableMath exposing (..)
@@ -18,7 +18,7 @@ str val =
         |> List.map
             (\char ->
                 if char == '+' then
-                    Plus
+                    Mathquelm.EditableMath.Plus
                 else
                     Digit.fromChar char
                         |> Maybe.map Digit
@@ -32,7 +32,7 @@ sampleTree =
         str "abc+"
             ++ [ Cos (str "xy+z")
                , Div [ Cos (str "hi"), Digit Digit.Nine ]
-                    (str "lo")
+                    [ Div (str "lo") (str "lower") ]
                ]
             ++ str "de++"
 
@@ -71,11 +71,13 @@ type Msg
     | Delete DeleteDirection
     | CharacterInserted Char
     | ExitBlock
+    | KeyMsg Keyboard.Extra.Msg
 
 
 type alias Model =
     { tree : MathBeingEdited
     , config : Config
+    , pressedKeys : List Key
     }
 
 
@@ -83,89 +85,95 @@ defaultModel : Model
 defaultModel =
     { tree = startEditing []
     , config = Config.default
+    , pressedKeys = []
     }
 
 
 update : Msg -> Model -> Model
 update msg model =
-    case msg of
-        Move Right ->
+    let
+        tryEdit editFunc =
             { model
                 | tree =
-                    goRight model.tree
+                    editFunc model.tree
                         |> Maybe.withDefault model.tree
             }
+    in
+    case msg of
+        KeyMsg keyMsg ->
+            { model | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys }
+
+        Move Right ->
+            tryEdit goRight
 
         Move Left ->
-            { model
-                | tree =
-                    goLeft model.tree
-                        |> Maybe.withDefault model.tree
-            }
+            tryEdit goLeft
 
         Move Up ->
-            { model
-                | tree =
-                    goUp model.tree
-                        |> Maybe.withDefault model.tree
-            }
+            tryEdit goUp
 
         Move Down ->
-            { model
-                | tree =
-                    goDown model.tree
-                        |> Maybe.withDefault model.tree
-            }
+            tryEdit goDown
 
-        --{ model | cursor = moveCursor dir model.rootBlock model.cursor }
+        Select Right ->
+            tryEdit selectRight
+
+        Select Left ->
+            tryEdit selectLeft
+
+        Select Up ->
+            tryEdit selectUp
+
+        Select Down ->
+            tryEdit selectDown
+
         _ ->
             model
 
 
 
-{--
-  -        Diacritic _ _ ->
-  -            0
-  -
-  -        Subscript _ ->
-  -            0
-  -
-  -        Superscript block ->
-  -            getChildrenHeight block
-  -
-  -        Subsuperscript _ super ->
-  -            getChildrenHeight super
-  -
-  -        SquareRoot block ->
-  -            blockCenterLine context block
-  -
-  --}
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Keyboard.downs keyPressed
+    Sub.batch
+        [ Sub.map KeyMsg Keyboard.Extra.subscriptions
+        , Keyboard.Extra.downs (keyDown model.pressedKeys)
+        ]
 
 
-keyPressed : Keyboard.KeyCode -> Msg
-keyPressed keyCode =
-    let
-        _ =
-            Debug.log "keyCode" (toString keyCode)
-    in
-    case keyCode of
-        37 ->
-            Move Left
+keyDown : List Key -> Key -> Msg
+keyDown pressedKeys key =
+    if List.member Shift pressedKeys then
+        case key of
+            ArrowLeft ->
+                Select Left
 
-        38 ->
-            Move Up
+            ArrowUp ->
+                Select Up
 
-        39 ->
-            Move Right
+            ArrowRight ->
+                Select Right
 
-        40 ->
-            Move Down
+            ArrowDown ->
+                Select Down
 
-        _ ->
-            Noop
+            _ ->
+                Noop
+    else
+        case key of
+            ArrowLeft ->
+                Move Left
+
+            ArrowUp ->
+                Move Up
+
+            ArrowRight ->
+                Move Right
+
+            ArrowDown ->
+                Move Down
+
+            _ ->
+                Noop
