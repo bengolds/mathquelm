@@ -129,6 +129,12 @@ update msg model =
         Select Down ->
             tryEdit selectDown
 
+        Delete DeleteLeft ->
+            tryEdit deleteLeft
+
+        Delete DeleteRight ->
+            tryEdit deleteRight
+
         Insert insertion ->
             { model | tree = insert insertion model.tree }
 
@@ -222,6 +228,12 @@ keyDown pressedKeys key =
                 Select Down
             else
                 Move Down
+
+        BackSpace ->
+            Delete DeleteLeft
+
+        Keyboard.Extra.Delete ->
+            Delete DeleteRight
 
         _ ->
             getAsChar pressedKeys key

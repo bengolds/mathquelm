@@ -584,181 +584,95 @@ selectDown mathBeingEdited =
     Nothing
 
 
+deleteLeft : MathBeingEdited -> Maybe MathBeingEdited
+deleteLeft mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            deleteLeftOfCursor mathWithCursor
+                |> orElse (deleteParentCommand mathWithCursor)
+                |> Maybe.map Cursor
 
-{--
-  -exitRight : EditableMath -> Maybe EditableMath
-  -exitRight ( editable, crumbs ) =
-  -    case ( editable, crumbs ) of
-  -        ( Cursor _ [], { left, command, right } :: xs ) ->
-  -            case command of
-  -                TDivCr bot ->
-  -                    Just
-  -                        ( Cursor [] bot
-  -                        , { left = left, command = BDivCr (rebuildBlock editable), right = right } :: xs
-  -                        )
-  -
-  -                _ ->
-  -                    Just ( Cursor (rebuildCommand (rebuildBlock editable) command :: left) right, xs )
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goUp : EditableMath -> Maybe EditableMath
-  -goUp ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor left right ->
-  -            goLeftUp ( editable, crumbs )
-  -                |> orElse (goRightUp ( editable, crumbs ))
-  -                |> orElse (exitUp ( editable, crumbs ))
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goLeftUp : EditableMath -> Maybe EditableMath
-  -goLeftUp ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor ((Div top bot) :: left) right ->
-  -            Just
-  -                ( Cursor (List.reverse top) []
-  -                , { left = left
-  -                  , command = TDivCr bot
-  -                  , right = right
-  -                  }
-  -                    :: crumbs
-  -                )
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goRightUp : EditableMath -> Maybe EditableMath
-  -goRightUp ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor left ((Div top bot) :: right) ->
-  -            Just
-  -                ( Cursor [] top
-  -                , { left = left
-  -                  , command = TDivCr bot
-  -                  , right = right
-  -                  }
-  -                    :: crumbs
-  -                )
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -exitUp : EditableMath -> Maybe EditableMath
-  -exitUp ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor _ _ ->
-  -            case crumbs of
-  -                { left, command, right } :: xs ->
-  -                    case command of
-  -                        BDivCr top ->
-  -                            Just
-  -                                ( Cursor [] top
-  -                                , { left = left
-  -                                  , command = TDivCr (rebuildBlock editable)
-  -                                  , right = right
-  -                                  }
-  -                                    :: xs
-  -                                )
-  -
-  -                        _ ->
-  -                            exitUp
-  -                                ( Cursor [] (left ++ rebuildCommand (rebuildBlock editable) command :: right)
-  -                                , xs
-  -                                )
-  -
-  -                [] ->
-  -                    Nothing
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goDown : EditableMath -> Maybe EditableMath
-  -goDown ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor left right ->
-  -            goLeftDown ( editable, crumbs )
-  -                |> orElse (goRightDown ( editable, crumbs ))
-  -                |> orElse (exitDown ( editable, crumbs ))
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goLeftDown : EditableMath -> Maybe EditableMath
-  -goLeftDown ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor ((Div top bot) :: left) right ->
-  -            Just
-  -                ( Cursor (List.reverse bot) []
-  -                , { left = left
-  -                  , command = BDivCr top
-  -                  , right = right
-  -                  }
-  -                    :: crumbs
-  -                )
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -goRightDown : EditableMath -> Maybe EditableMath
-  -goRightDown ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor left ((Div top bot) :: right) ->
-  -            Just
-  -                ( Cursor [] bot
-  -                , { left = left
-  -                  , command = BDivCr top
-  -                  , right = right
-  -                  }
-  -                    :: crumbs
-  -                )
-  -
-  -        _ ->
-  -            Nothing
-  -
-  -
-  -exitDown : EditableMath -> Maybe EditableMath
-  -exitDown ( editable, crumbs ) =
-  -    case editable of
-  -        Cursor _ _ ->
-  -            case crumbs of
-  -                { left, command, right } :: xs ->
-  -                    case command of
-  -                        TDivCr bot ->
-  -                            Just
-  -                                ( Cursor [] bot
-  -                                , { left = left
-  -                                  , command = BDivCr (rebuildBlock editable)
-  -                                  , right = right
-  -                                  }
-  -                                    :: xs
-  -                                )
-  -
-  -                        _ ->
-  -                            exitDown
-  -                                ( Cursor left (rebuildCommand (rebuildBlock editable) command :: right)
-  -                                , xs
-  -                                )
-  -
-  -                [] ->
-  -                    Nothing
-  -
-  -        _ ->
-  -            Nothing
-  -
-  --}
---insert : Command -> EditableMath -> EditableMath
---deleteLeft : EditableMath -> Maybe EditableMath
---deleteRight : EditableMath -> Maybe EditableMath
+        Selection mathWithSelection ->
+            Just (Cursor (deleteInsideSelection mathWithSelection))
+
+
+deleteRight : MathBeingEdited -> Maybe MathBeingEdited
+deleteRight mathBeingEdited =
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            deleteRightOfCursor mathWithCursor
+                |> orElse (deleteParentCommand mathWithCursor)
+                |> Maybe.map Cursor
+
+        Selection mathWithSelection ->
+            Just (Cursor (deleteInsideSelection mathWithSelection))
+
+
+deleteLeftOfCursor : MathWithCursor -> Maybe MathWithCursor
+deleteLeftOfCursor ( cursorBlock, restOfTree ) =
+    case cursorBlock.left of
+        (Cos operands) :: xs ->
+            enterCommandToLeft ( cursorBlock, restOfTree )
+
+        (Div top bottom) :: xs ->
+            enterBottomOfCommandToLeft ( cursorBlock, restOfTree )
+
+        _ :: xs ->
+            Just ( { cursorBlock | left = xs }, restOfTree )
+
+        [] ->
+            Nothing
+
+
+deleteRightOfCursor : MathWithCursor -> Maybe MathWithCursor
+deleteRightOfCursor ( cursorBlock, restOfTree ) =
+    case cursorBlock.right of
+        (Cos operands) :: xs ->
+            Just ( { cursorBlock | right = operands ++ xs }, restOfTree )
+
+        (Div top bottom) :: xs ->
+            enterTopOfCommandToRight ( cursorBlock, restOfTree )
+
+        _ :: xs ->
+            Just ( { cursorBlock | right = xs }, restOfTree )
+
+        [] ->
+            Nothing
+
+
+deleteParentCommand : MathWithCursor -> Maybe MathWithCursor
+deleteParentCommand ( cursorBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: xs ->
+            let
+                reassembledBlockWithCursor =
+                    case parentBlockWithHole.commandWithBlockHole of
+                        CosWithHole ->
+                            BlockWithCursor
+                                (cursorBlock.left ++ parentBlockWithHole.left)
+                                (cursorBlock.right ++ parentBlockWithHole.right)
+
+                        DivWithTopHole bot ->
+                            BlockWithCursor
+                                (cursorBlock.left ++ parentBlockWithHole.left)
+                                (cursorBlock.right ++ bot ++ parentBlockWithHole.right)
+
+                        DivWithBotHole top ->
+                            BlockWithCursor
+                                (cursorBlock.left ++ List.reverse top ++ parentBlockWithHole.left)
+                                (cursorBlock.right ++ parentBlockWithHole.right)
+            in
+            Just ( reassembledBlockWithCursor, xs )
+
+        [] ->
+            Nothing
+
+
+deleteInsideSelection : MathWithSelection -> MathWithCursor
+deleteInsideSelection ( selectionBlock, restOfTree ) =
+    ( { left = selectionBlock.left, right = selectionBlock.right }
+    , restOfTree
+    )
 
 
 blockToMath : Block -> Math
@@ -860,43 +774,3 @@ appendRight toAppend math =
 startEditing : Block -> MathBeingEdited
 startEditing block =
     Cursor ( placeCursorOnLeft block, [] )
-
-
-
-{--
-  -
-  -top : EditableMath -> Block
-  -top ( editingBlock, crumbs ) =
-  -    List.foldl
-  -        (\{ left, command, right } childBlock ->
-  -            List.reverse left ++ rebuildCommand childBlock command :: right
-  -        )
-  -        (rebuildBlock editingBlock)
-  -        crumbs
-  -
-  -
-  -rebuildBlock : EditingBlock -> Block
-  -rebuildBlock editingBlock =
-  -    case editingBlock of
-  -        Cursor left right ->
-  -            List.reverse left ++ right
-  -
-  -        LSel left selection right ->
-  -            left ++ selection ++ right
-  -
-  -        RSel left selection right ->
-  -            left ++ selection ++ right
-  -
-  -
-  -rebuildCommand : Block -> CommandCrumb -> Command
-  -rebuildCommand block commandWithHole =
-  -    case commandWithHole of
-  -        CosCr ->
-  -            Cos block
-  -
-  -        TDivCr bot ->
-  -            Div block bot
-  -
-  -        BDivCr top ->
-  -            Div top block
-  --}
