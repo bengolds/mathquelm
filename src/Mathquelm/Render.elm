@@ -47,40 +47,86 @@ fromEditable mathBeingEdited =
     in
     List.foldl
         (\{ left, commandWithBlockHole, right } childBlock ->
-            toRBlock (List.reverse left) ++ rebuild childBlock commandWithBlockHole :: toRBlock right
+            toRBlock (List.reverse left)
+                ++ rebuild childBlock commandWithBlockHole
+                :: toRBlock right
         )
         firstBlock
         (EMath.getRestOfTree mathBeingEdited)
+        |> insertEmpties
 
 
 toRBlock : EMath.Block -> RBlock
 toRBlock block =
     List.foldl
-        (\cmd rblock ->
+        (\cmd acc ->
             case cmd of
                 EMath.Digit digit ->
-                    Num (Digit.parse digit) :: rblock
+                    Num (Digit.parse digit) :: acc
 
                 EMath.Var name ->
-                    Var name :: rblock
+                    Var name :: acc
 
                 EMath.Div top bot ->
-                    Div (toRBlock top) (toRBlock bot) :: rblock
+                    Div (toRBlock top) (toRBlock bot) :: acc
 
                 EMath.Cos x ->
-                    Cos (toRBlock x) :: rblock
+                    Cos (toRBlock x) :: acc
 
                 EMath.Plus ->
-                    case rblock of
-                        Plus :: rest ->
-                            Plus :: Empty :: rblock
-
-                        _ ->
-                            Plus :: rblock
+                    Plus :: acc
         )
         []
         block
         |> List.reverse
+
+
+insertEmpties : RBlock -> RBlock
+insertEmpties block =
+    if List.isEmpty block then
+        [ Empty ]
+    else
+        let
+            beginning =
+                case block of
+                    Plus :: _ ->
+                        [ Empty ]
+
+                    Cursor :: Plus :: _ ->
+                        [ Empty ]
+
+                    _ ->
+                        []
+        in
+        List.foldl
+            (\cmd acc ->
+                case cmd of
+                    Div top bot ->
+                        Div (insertEmpties top) (insertEmpties bot) :: acc
+
+                    Cos operand ->
+                        Cos (insertEmpties operand) :: acc
+
+                    Plus ->
+                        case acc of
+                            [] ->
+                                [ Empty ]
+
+                            Plus :: _ ->
+                                cmd :: Empty :: acc
+
+                            Cursor :: Plus :: _ ->
+                                cmd :: Empty :: acc
+
+                            _ ->
+                                cmd :: acc
+
+                    _ ->
+                        cmd :: acc
+            )
+            beginning
+            block
+            |> List.reverse
 
 
 

@@ -1,5 +1,6 @@
 module Mathquelm exposing (..)
 
+import Char
 import Element exposing (..)
 import Html exposing (Html)
 import Keyboard
@@ -7,6 +8,7 @@ import Keyboard.Extra exposing (Key(..))
 import Mathquelm.Config as Config exposing (Config)
 import Mathquelm.Digit as Digit
 import Mathquelm.EditableMath exposing (..)
+import Mathquelm.Insert exposing (Insertion(..), insert)
 import Mathquelm.Math as Math
 import Mathquelm.Render as Render
 import Mathquelm.Styles exposing (..)
@@ -69,7 +71,7 @@ type Msg
     | Move MoveDirection
     | Select MoveDirection
     | Delete DeleteDirection
-    | CharacterInserted Char
+    | Insert Insertion
     | ExitBlock
     | KeyMsg Keyboard.Extra.Msg
 
@@ -127,6 +129,9 @@ update msg model =
         Select Down ->
             tryEdit selectDown
 
+        Insert insertion ->
+            { model | tree = insert insertion model.tree }
+
         _ ->
             model
 
@@ -143,37 +148,82 @@ subscriptions model =
         ]
 
 
+getAsChar : List Key -> Key -> Maybe Msg
+getAsChar pressedKeys key =
+    let
+        char =
+            Keyboard.Extra.toCode key
+                |> Char.fromCode
+
+        isAlpha x =
+            Char.isUpper x || Char.isUpper x
+    in
+    if isAlpha char then
+        Just
+            (Insert
+                (InsertVar
+                    (if isShiftDown pressedKeys then
+                        Char.toUpper char
+                            |> String.fromChar
+                     else
+                        Char.toLower char
+                            |> String.fromChar
+                    )
+                )
+            )
+    else if Char.isDigit char then
+        Digit.fromChar char
+            |> Maybe.map (InsertDigit >> Insert)
+    else
+        Nothing
+
+
+getAsOp pressedKeys key =
+    if (key == Add) || (isShiftDown pressedKeys && key == Equals) then
+        Just (Insert InsertPlus)
+    else if key == Slash || key == Divide then
+        Just (Insert InsertFraction)
+    else
+        Nothing
+
+
+isShiftDown : List Key -> Bool
+isShiftDown pressedKeys =
+    List.member Shift pressedKeys
+
+
 keyDown : List Key -> Key -> Msg
 keyDown pressedKeys key =
-    if List.member Shift pressedKeys then
-        case key of
-            ArrowLeft ->
+    let
+        _ =
+            Debug.log "pressedKey" key
+    in
+    case key of
+        ArrowLeft ->
+            if isShiftDown pressedKeys then
                 Select Left
-
-            ArrowUp ->
-                Select Up
-
-            ArrowRight ->
-                Select Right
-
-            ArrowDown ->
-                Select Down
-
-            _ ->
-                Noop
-    else
-        case key of
-            ArrowLeft ->
+            else
                 Move Left
 
-            ArrowUp ->
+        ArrowUp ->
+            if isShiftDown pressedKeys then
+                Select Up
+            else
                 Move Up
 
-            ArrowRight ->
+        ArrowRight ->
+            if isShiftDown pressedKeys then
+                Select Right
+            else
                 Move Right
 
-            ArrowDown ->
+        ArrowDown ->
+            if isShiftDown pressedKeys then
+                Select Down
+            else
                 Move Down
 
-            _ ->
-                Noop
+        _ ->
+            getAsChar pressedKeys key
+                |> orElse (getAsOp pressedKeys key)
+                |> Maybe.withDefault Noop
