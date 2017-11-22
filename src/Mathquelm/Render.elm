@@ -166,7 +166,7 @@ renderCommand config command =
             el None [] <| text (toString num)
 
         Cursor ->
-            el None [ width <| px 0 ] empty
+            el None [ width <| px 0, height (px 16) ] empty
                 |> within
                     [ el CursorLine [ width (px 2), height (px 16) ] empty
 

@@ -1,7 +1,8 @@
 module Mathquelm.Insert exposing (..)
 
+import List.Extra as List
 import Mathquelm.Digit as Digit exposing (Digit)
-import Mathquelm.EditableMath as EMath exposing (MathBeingEdited(..))
+import Mathquelm.EditableMath as EMath exposing (Command(..), MathBeingEdited(..))
 
 
 type Insertion
@@ -42,4 +43,35 @@ checkForAutoCmds =
 
 
 insertFraction mathBeingEdited =
-    mathBeingEdited
+    case mathBeingEdited of
+        Cursor ( cursorBlock, restOfTree ) ->
+            Cursor <|
+                let
+                    rightParent =
+                        cursorBlock.right
+
+                    ( leftParent, numerator ) =
+                        splitAtRightMostTerm (List.reverse cursorBlock.left)
+
+                    fraction =
+                        if List.isEmpty numerator then
+                            EMath.DivWithTopHole []
+                        else
+                            EMath.DivWithBotHole numerator
+
+                    blockWithBlockHole =
+                        EMath.BlockWithBlockHole
+                            (List.reverse leftParent)
+                            fraction
+                            rightParent
+                in
+                ( EMath.BlockWithCursor [] [], blockWithBlockHole :: restOfTree )
+
+        Selection ( selectionBlock, restOfTree ) ->
+            mathBeingEdited
+
+
+splitAtRightMostTerm block =
+    ( List.dropWhileRight ((/=) Plus) block
+    , List.takeWhileRight ((/=) Plus) block
+    )
