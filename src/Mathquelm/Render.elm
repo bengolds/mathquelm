@@ -34,8 +34,10 @@ fromEditable mathBeingEdited =
                         |> ListZipper.insertBefore [ Cursor ]
                         |> ListZipper.toList
 
-                EMath.Selection ( { left, selected, right }, _ ) ->
-                    toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
+                EMath.Selection ( { restOfBlock, selected }, _ ) ->
+                    ListZipper.map toRCommand restOfBlock
+                        |> ListZipper.insertAfter (toRBlock selected)
+                        |> ListZipper.toList
 
         rebuild block cmd =
             case cmd of

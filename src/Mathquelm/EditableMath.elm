@@ -680,9 +680,8 @@ removeCursor cursorBlock =
 
 turnCursorIntoSelection : LeftRight -> MathWithCursor -> MathWithSelection
 turnCursorIntoSelection direction ( cursorBlock, restOfTree ) =
-    ( { left = ListZipper.getAllBefore cursorBlock |> List.reverse
+    ( { restOfBlock = cursorBlock
       , selected = []
-      , right = ListZipper.getAllAfter cursorBlock
       , direction = direction
       }
     , restOfTree
@@ -714,25 +713,22 @@ type LeftRight
 
 
 type alias BlockWithSelection =
-    { left : Block
+    { restOfBlock : ListZipper Command
     , selected : Block
-    , right : Block
     , direction : LeftRight
     }
 
 
 removeSelection : BlockWithSelection -> Block
 removeSelection selectionBlock =
-    List.reverse selectionBlock.left
-        ++ selectionBlock.selected
-        ++ selectionBlock.right
+    selectionBlock.restOfBlock
+        |> ListZipper.insertAfter selectionBlock.selected
+        |> ListZipper.toList
 
 
 deleteInsideSelection : MathWithSelection -> MathWithCursor
 deleteInsideSelection ( selectionBlock, restOfTree ) =
-    ( ListZipper.empty
-        |> ListZipper.insertBefore (List.reverse selectionBlock.left)
-        |> ListZipper.insertAfter selectionBlock.right
+    ( selectionBlock.restOfBlock
     , restOfTree
     )
 
