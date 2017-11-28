@@ -3,6 +3,7 @@ module Mathquelm.Insert exposing (..)
 import List.Extra as List
 import Mathquelm.Digit as Digit exposing (Digit)
 import Mathquelm.EditableMath as EMath exposing (Command(..), MathBeingEdited(..))
+import Mathquelm.ListZipper as ListZipper
 
 
 type Insertion
@@ -48,10 +49,10 @@ insertFraction mathBeingEdited =
             Cursor <|
                 let
                     rightParent =
-                        cursorBlock.right
+                        ListZipper.getAllAfter cursorBlock
 
                     ( leftParent, numerator ) =
-                        splitAtRightMostTerm (List.reverse cursorBlock.left)
+                        splitAtRightMostTerm (ListZipper.getAllBefore cursorBlock)
 
                     fraction =
                         if List.isEmpty numerator then
@@ -59,13 +60,15 @@ insertFraction mathBeingEdited =
                         else
                             EMath.DivWithBotHole numerator
 
-                    blockWithBlockHole =
+                    newParentBlock =
                         EMath.BlockWithBlockHole
-                            (List.reverse leftParent)
+                            -- TODO THIS IS JANKY
+                            (ListZipper.fromList rightParent
+                                |> ListZipper.insertBefore leftParent
+                            )
                             fraction
-                            rightParent
                 in
-                ( EMath.BlockWithCursor [] [], blockWithBlockHole :: restOfTree )
+                ( ListZipper.empty, newParentBlock :: restOfTree )
 
         Selection ( selectionBlock, restOfTree ) ->
             mathBeingEdited

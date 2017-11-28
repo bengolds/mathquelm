@@ -1,6 +1,7 @@
 module Mathquelm.EditableMath exposing (..)
 
 import Mathquelm.Digit as Digit exposing (Digit)
+import Mathquelm.ListZipper as ListZipper exposing (ListZipper, getAllAfter, getAllBefore)
 import Mathquelm.Math as Math exposing (Math)
 
 
@@ -54,294 +55,6 @@ goDown mathBeingEdited =
                 |> orElse (enterBottomOfCommandToLeft mathWithCursor)
                 |> orElse (exitCurrentBlockDownward mathWithCursor)
                 |> Maybe.map Cursor
-
-        _ ->
-            Nothing
-
-
-enterCommandToLeft : MathWithCursor -> Maybe MathWithCursor
-enterCommandToLeft ( cursorBlock, restOfTree ) =
-    case cursorBlock.left of
-        (Cos blockToEnter) :: restOfLeft ->
-            Just
-                ( placeCursorOnRight blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        restOfLeft
-                        CosWithHole
-                        cursorBlock.right
-                    )
-                    restOfTree
-                )
-
-        (Div top blockToEnter) :: restOfLeft ->
-            Just
-                ( placeCursorOnRight blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        restOfLeft
-                        (DivWithBotHole top)
-                        cursorBlock.right
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-enterCommandToRight : MathWithCursor -> Maybe MathWithCursor
-enterCommandToRight ( cursorBlock, restOfTree ) =
-    case cursorBlock.right of
-        (Cos blockToEnter) :: restOfRight ->
-            Just
-                ( placeCursorOnLeft blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        cursorBlock.left
-                        CosWithHole
-                        restOfRight
-                    )
-                    restOfTree
-                )
-
-        (Div blockToEnter bot) :: restOfRight ->
-            Just
-                ( placeCursorOnLeft blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        cursorBlock.left
-                        (DivWithTopHole bot)
-                        restOfRight
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-enterTopOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
-enterTopOfCommandToLeft ( cursorBlock, restOfTree ) =
-    case cursorBlock.left of
-        (Div blockToEnter bot) :: restOfLeft ->
-            Just
-                ( placeCursorOnRight blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        restOfLeft
-                        (DivWithTopHole bot)
-                        cursorBlock.right
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-enterTopOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
-enterTopOfCommandToRight ( cursorBlock, restOfTree ) =
-    case cursorBlock.right of
-        (Div blockToEnter bot) :: restOfRight ->
-            Just
-                ( placeCursorOnLeft blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        cursorBlock.left
-                        (DivWithTopHole bot)
-                        restOfRight
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-enterBottomOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
-enterBottomOfCommandToLeft ( cursorBlock, restOfTree ) =
-    case cursorBlock.left of
-        (Div top blockToEnter) :: restOfLeft ->
-            Just
-                ( placeCursorOnRight blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        restOfLeft
-                        (DivWithBotHole top)
-                        cursorBlock.right
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-enterBottomOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
-enterBottomOfCommandToRight ( cursorBlock, restOfTree ) =
-    case cursorBlock.right of
-        (Div top blockToEnter) :: restOfRight ->
-            Just
-                ( placeCursorOnLeft blockToEnter
-                , push
-                    (BlockWithBlockHole
-                        cursorBlock.left
-                        (DivWithBotHole top)
-                        restOfRight
-                    )
-                    restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-jumpCommandToLeft : MathWithCursor -> Maybe MathWithCursor
-jumpCommandToLeft ( cursorBlock, restOfTree ) =
-    case cursorBlock.left of
-        commandToLeft :: restOfLeft ->
-            Just
-                ( { left = restOfLeft
-                  , right = commandToLeft :: cursorBlock.right
-                  }
-                , restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-jumpCommandToRight : MathWithCursor -> Maybe MathWithCursor
-jumpCommandToRight ( cursorBlock, restOfTree ) =
-    case cursorBlock.right of
-        commandToRight :: restOfRight ->
-            Just
-                ( { left = commandToRight :: cursorBlock.left
-                  , right = restOfRight
-                  }
-                , restOfTree
-                )
-
-        _ ->
-            Nothing
-
-
-exitCurrentBlockLeftward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockLeftward ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithBotHole top) ->
-            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
-
-        Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
-
-        Nothing ->
-            Nothing
-
-
-exitCurrentBlockRightward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockRightward ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithTopHole bottom) ->
-            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
-
-        Just _ ->
-            exitCurrentCommandRightward ( cursorBlock, restOfTree )
-
-        _ ->
-            Nothing
-
-
-exitCurrentBlockUpward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockUpward ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithBotHole top) ->
-            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
-
-        Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
-                |> Maybe.andThen exitCurrentBlockUpward
-
-        Nothing ->
-            Nothing
-
-
-exitCurrentBlockDownward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockDownward ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithTopHole bot) ->
-            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
-
-        Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
-                |> Maybe.andThen exitCurrentBlockDownward
-
-        Nothing ->
-            Nothing
-
-
-exitCurrentCommandLeftward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentCommandLeftward ( cursorBlock, restOfTree ) =
-    case restOfTree of
-        parentBlockWithHole :: grandparents ->
-            Just
-                ( placeCursorAtHole parentBlockWithHole
-                    |> insertRightOfCursor
-                        (fillCommandHole
-                            parentBlockWithHole.commandWithBlockHole
-                            (removeCursor cursorBlock)
-                        )
-                , grandparents
-                )
-
-        _ ->
-            Nothing
-
-
-exitCurrentCommandRightward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentCommandRightward ( cursorBlock, restOfTree ) =
-    case restOfTree of
-        parentBlockWithHole :: grandparents ->
-            Just
-                ( placeCursorAtHole parentBlockWithHole
-                    |> insertLeftOfCursor
-                        (fillCommandHole
-                            parentBlockWithHole.commandWithBlockHole
-                            (removeCursor cursorBlock)
-                        )
-                , grandparents
-                )
-
-        _ ->
-            Nothing
-
-
-moveCursorToBottomOfFraction : MathWithCursor -> Maybe MathWithCursor
-moveCursorToBottomOfFraction ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithTopHole bot) ->
-            Just
-                (( cursorBlock, restOfTree )
-                    |> setCursorBlock (placeCursorOnLeft bot)
-                    |> setCommandBeingEdited
-                        (DivWithBotHole (removeCursor cursorBlock))
-                )
-
-        _ ->
-            Nothing
-
-
-moveCursorToTopOfFraction : MathWithCursor -> Maybe MathWithCursor
-moveCursorToTopOfFraction ( cursorBlock, restOfTree ) =
-    case getCommandBeingEdited restOfTree of
-        Just (DivWithBotHole top) ->
-            Just
-                (( cursorBlock, restOfTree )
-                    |> setCursorBlock (placeCursorOnRight top)
-                    |> setCommandBeingEdited
-                        (DivWithTopHole (removeCursor cursorBlock))
-                )
 
         _ ->
             Nothing
@@ -572,7 +285,7 @@ getRestOfTree mathBeingEdited =
 
 
 -- }}}
--- MathWithCursor  {{{
+-- Cursor editing  {{{
 
 
 type alias MathWithCursor =
@@ -580,9 +293,362 @@ type alias MathWithCursor =
 
 
 type alias BlockWithCursor =
-    { left : Block
-    , right : Block
-    }
+    ListZipper Command
+
+
+
+-- Cursor Movement {{{
+
+
+enterCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterCommandToLeft ( cursorBlock, restOfTree ) =
+    case ListZipper.getBefore cursorBlock of
+        Just (Cos blockToEnter) ->
+            Just
+                ( placeCursorOnRight blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeBefore cursorBlock)
+                        CosWithHole
+                    )
+                    restOfTree
+                )
+
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnRight bot
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeBefore cursorBlock)
+                        (DivWithBotHole top)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterCommandToRight ( cursorBlock, restOfTree ) =
+    case ListZipper.getAfter cursorBlock of
+        Just (Cos blockToEnter) ->
+            Just
+                ( placeCursorOnLeft blockToEnter
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeAfter cursorBlock)
+                        CosWithHole
+                    )
+                    restOfTree
+                )
+
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnLeft top
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeAfter cursorBlock)
+                        (DivWithTopHole bot)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterTopOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterTopOfCommandToLeft ( cursorBlock, restOfTree ) =
+    case ListZipper.getBefore cursorBlock of
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnRight top
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeBefore cursorBlock)
+                        (DivWithTopHole bot)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterTopOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterTopOfCommandToRight ( cursorBlock, restOfTree ) =
+    case ListZipper.getAfter cursorBlock of
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnLeft top
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeAfter cursorBlock)
+                        (DivWithTopHole bot)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterBottomOfCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+enterBottomOfCommandToLeft ( cursorBlock, restOfTree ) =
+    case ListZipper.getBefore cursorBlock of
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnRight bot
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeBefore cursorBlock)
+                        (DivWithBotHole top)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+enterBottomOfCommandToRight : MathWithCursor -> Maybe MathWithCursor
+enterBottomOfCommandToRight ( cursorBlock, restOfTree ) =
+    case ListZipper.getAfter cursorBlock of
+        Just (Div top bot) ->
+            Just
+                ( placeCursorOnLeft bot
+                , push
+                    (BlockWithBlockHole
+                        (ListZipper.removeAfter cursorBlock)
+                        (DivWithBotHole top)
+                    )
+                    restOfTree
+                )
+
+        _ ->
+            Nothing
+
+
+jumpCommandToLeft : MathWithCursor -> Maybe MathWithCursor
+jumpCommandToLeft ( cursorBlock, restOfTree ) =
+    if not (ListZipper.isAtStart cursorBlock) then
+        Just ( ListZipper.goLeft cursorBlock, restOfTree )
+    else
+        Nothing
+
+
+jumpCommandToRight : MathWithCursor -> Maybe MathWithCursor
+jumpCommandToRight ( cursorBlock, restOfTree ) =
+    if not (ListZipper.isAtEnd cursorBlock) then
+        Just ( ListZipper.goRight cursorBlock, restOfTree )
+    else
+        Nothing
+
+
+exitCurrentBlockLeftward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockLeftward ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithBotHole top) ->
+            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
+
+        Just _ ->
+            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
+
+        Nothing ->
+            Nothing
+
+
+exitCurrentBlockRightward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockRightward ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithTopHole bottom) ->
+            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
+
+        Just _ ->
+            exitCurrentCommandRightward ( cursorBlock, restOfTree )
+
+        _ ->
+            Nothing
+
+
+exitCurrentBlockUpward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockUpward ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithBotHole top) ->
+            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
+
+        Just _ ->
+            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
+                |> Maybe.andThen exitCurrentBlockUpward
+
+        Nothing ->
+            Nothing
+
+
+exitCurrentBlockDownward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentBlockDownward ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithTopHole bot) ->
+            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
+
+        Just _ ->
+            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
+                |> Maybe.andThen exitCurrentBlockDownward
+
+        Nothing ->
+            Nothing
+
+
+exitCurrentCommandLeftward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentCommandLeftward ( cursorBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            Just
+                ( placeCursorAtHole parentBlockWithHole
+                    |> insertRightOfCursor
+                        (fillCommandHole
+                            parentBlockWithHole.commandWithBlockHole
+                            (removeCursor cursorBlock)
+                        )
+                , grandparents
+                )
+
+        _ ->
+            Nothing
+
+
+exitCurrentCommandRightward : MathWithCursor -> Maybe MathWithCursor
+exitCurrentCommandRightward ( cursorBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            Just
+                ( placeCursorAtHole parentBlockWithHole
+                    |> insertLeftOfCursor
+                        (fillCommandHole
+                            parentBlockWithHole.commandWithBlockHole
+                            (removeCursor cursorBlock)
+                        )
+                , grandparents
+                )
+
+        _ ->
+            Nothing
+
+
+moveCursorToBottomOfFraction : MathWithCursor -> Maybe MathWithCursor
+moveCursorToBottomOfFraction ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithTopHole bot) ->
+            Just
+                (( cursorBlock, restOfTree )
+                    |> setCursorBlock (placeCursorOnLeft bot)
+                    |> setCommandBeingEdited
+                        (DivWithBotHole (removeCursor cursorBlock))
+                )
+
+        _ ->
+            Nothing
+
+
+moveCursorToTopOfFraction : MathWithCursor -> Maybe MathWithCursor
+moveCursorToTopOfFraction ( cursorBlock, restOfTree ) =
+    case getCommandBeingEdited restOfTree of
+        Just (DivWithBotHole top) ->
+            Just
+                (( cursorBlock, restOfTree )
+                    |> setCursorBlock (placeCursorOnRight top)
+                    |> setCommandBeingEdited
+                        (DivWithTopHole (removeCursor cursorBlock))
+                )
+
+        _ ->
+            Nothing
+
+
+
+-- }}}
+-- Insertion with Cursor {{{
+
+
+insertRightOfCursor : Command -> BlockWithCursor -> BlockWithCursor
+insertRightOfCursor command cursorBlock =
+    ListZipper.insertAfter [ command ] cursorBlock
+
+
+insertLeftOfCursor : Command -> BlockWithCursor -> BlockWithCursor
+insertLeftOfCursor command cursorBlock =
+    ListZipper.insertBefore [ command ] cursorBlock
+
+
+
+-- }}}
+-- Deletion with Cursor {{{
+
+
+deleteParentCommand : MathWithCursor -> Maybe MathWithCursor
+deleteParentCommand ( cursorBlock, restOfTree ) =
+    --TODO I Think this can be clearer
+    case restOfTree of
+        parentBlockWithHole :: xs ->
+            let
+                reassembledBlockWithCursor =
+                    case parentBlockWithHole.commandWithBlockHole of
+                        --TODO Make this better explained
+                        CosWithHole ->
+                            parentBlockWithHole.restOfBlock
+                                |> ListZipper.nest cursorBlock
+
+                        DivWithTopHole bot ->
+                            parentBlockWithHole.restOfBlock
+                                |> ListZipper.insertAfter bot
+                                |> ListZipper.nest cursorBlock
+
+                        DivWithBotHole top ->
+                            parentBlockWithHole.restOfBlock
+                                |> ListZipper.insertBefore top
+                                |> ListZipper.nest cursorBlock
+            in
+            Just ( reassembledBlockWithCursor, xs )
+
+        [] ->
+            Nothing
+
+
+deleteLeftOfCursor : MathWithCursor -> Maybe MathWithCursor
+deleteLeftOfCursor ( cursorBlock, restOfTree ) =
+    case ListZipper.getBefore cursorBlock of
+        Just (Cos operands) ->
+            enterCommandToLeft ( cursorBlock, restOfTree )
+
+        Just (Div top bottom) ->
+            enterBottomOfCommandToLeft ( cursorBlock, restOfTree )
+
+        Just _ ->
+            Just ( ListZipper.removeBefore cursorBlock, restOfTree )
+
+        Nothing ->
+            Nothing
+
+
+deleteRightOfCursor : MathWithCursor -> Maybe MathWithCursor
+deleteRightOfCursor ( cursorBlock, restOfTree ) =
+    case ListZipper.getAfter cursorBlock of
+        Just (Cos operands) ->
+            Just ( ListZipper.insertAfter operands cursorBlock, restOfTree )
+
+        Just (Div top bottom) ->
+            enterTopOfCommandToRight ( cursorBlock, restOfTree )
+
+        Just _ ->
+            Just ( ListZipper.removeAfter cursorBlock, restOfTree )
+
+        Nothing ->
+            Nothing
+
+
+
+-- }}}
 
 
 setCursorBlock : BlockWithCursor -> MathWithCursor -> MathWithCursor
@@ -600,9 +666,8 @@ setCommandBeingEdited newCommand ( cursorBlock, restOfTree ) =
 
         [] ->
             ( cursorBlock
-            , [ { left = []
+            , [ { restOfBlock = ListZipper.empty
                 , commandWithBlockHole = newCommand
-                , right = []
                 }
               ]
             )
@@ -610,88 +675,14 @@ setCommandBeingEdited newCommand ( cursorBlock, restOfTree ) =
 
 removeCursor : BlockWithCursor -> Block
 removeCursor cursorBlock =
-    List.reverse cursorBlock.left ++ cursorBlock.right
-
-
-insertRightOfCursor : Command -> BlockWithCursor -> BlockWithCursor
-insertRightOfCursor command cursorBlock =
-    { left = cursorBlock.left
-    , right = command :: cursorBlock.right
-    }
-
-
-insertLeftOfCursor : Command -> BlockWithCursor -> BlockWithCursor
-insertLeftOfCursor command cursorBlock =
-    { left = command :: cursorBlock.left
-    , right = cursorBlock.right
-    }
-
-
-deleteParentCommand : MathWithCursor -> Maybe MathWithCursor
-deleteParentCommand ( cursorBlock, restOfTree ) =
-    case restOfTree of
-        parentBlockWithHole :: xs ->
-            let
-                reassembledBlockWithCursor =
-                    case parentBlockWithHole.commandWithBlockHole of
-                        CosWithHole ->
-                            BlockWithCursor
-                                (cursorBlock.left ++ parentBlockWithHole.left)
-                                (cursorBlock.right ++ parentBlockWithHole.right)
-
-                        DivWithTopHole bot ->
-                            BlockWithCursor
-                                (cursorBlock.left ++ parentBlockWithHole.left)
-                                (cursorBlock.right ++ bot ++ parentBlockWithHole.right)
-
-                        DivWithBotHole top ->
-                            BlockWithCursor
-                                (cursorBlock.left ++ List.reverse top ++ parentBlockWithHole.left)
-                                (cursorBlock.right ++ parentBlockWithHole.right)
-            in
-            Just ( reassembledBlockWithCursor, xs )
-
-        [] ->
-            Nothing
-
-
-deleteLeftOfCursor : MathWithCursor -> Maybe MathWithCursor
-deleteLeftOfCursor ( cursorBlock, restOfTree ) =
-    case cursorBlock.left of
-        (Cos operands) :: xs ->
-            enterCommandToLeft ( cursorBlock, restOfTree )
-
-        (Div top bottom) :: xs ->
-            enterBottomOfCommandToLeft ( cursorBlock, restOfTree )
-
-        _ :: xs ->
-            Just ( { cursorBlock | left = xs }, restOfTree )
-
-        [] ->
-            Nothing
-
-
-deleteRightOfCursor : MathWithCursor -> Maybe MathWithCursor
-deleteRightOfCursor ( cursorBlock, restOfTree ) =
-    case cursorBlock.right of
-        (Cos operands) :: xs ->
-            Just ( { cursorBlock | right = operands ++ xs }, restOfTree )
-
-        (Div top bottom) :: xs ->
-            enterTopOfCommandToRight ( cursorBlock, restOfTree )
-
-        _ :: xs ->
-            Just ( { cursorBlock | right = xs }, restOfTree )
-
-        [] ->
-            Nothing
+    ListZipper.toList cursorBlock
 
 
 turnCursorIntoSelection : LeftRight -> MathWithCursor -> MathWithSelection
 turnCursorIntoSelection direction ( cursorBlock, restOfTree ) =
-    ( { left = cursorBlock.left
+    ( { left = ListZipper.getAllBefore cursorBlock |> List.reverse
       , selected = []
-      , right = cursorBlock.right
+      , right = ListZipper.getAllAfter cursorBlock
       , direction = direction
       }
     , restOfTree
@@ -699,13 +690,13 @@ turnCursorIntoSelection direction ( cursorBlock, restOfTree ) =
 
 
 placeCursorOnRight : Block -> BlockWithCursor
-placeCursorOnRight block =
-    { left = List.reverse block, right = [] }
+placeCursorOnRight =
+    ListZipper.fromListEnd
 
 
 placeCursorOnLeft : Block -> BlockWithCursor
-placeCursorOnLeft block =
-    { left = [], right = block }
+placeCursorOnLeft =
+    ListZipper.fromList
 
 
 
@@ -739,7 +730,9 @@ removeSelection selectionBlock =
 
 deleteInsideSelection : MathWithSelection -> MathWithCursor
 deleteInsideSelection ( selectionBlock, restOfTree ) =
-    ( { left = selectionBlock.left, right = selectionBlock.right }
+    ( ListZipper.empty
+        |> ListZipper.insertBefore (List.reverse selectionBlock.left)
+        |> ListZipper.insertAfter selectionBlock.right
     , restOfTree
     )
 
@@ -760,27 +753,25 @@ type CommandWithBlockHole
 
 
 type alias BlockWithBlockHole =
-    { left : Block
+    { restOfBlock : ListZipper Command
     , commandWithBlockHole : CommandWithBlockHole
-    , right : Block
     }
 
 
 fillBlockHole : BlockWithBlockHole -> Block -> Block
 fillBlockHole blockWithBlockHole fillerBlock =
-    List.reverse blockWithBlockHole.left
-        ++ [ fillCommandHole
+    blockWithBlockHole.restOfBlock
+        |> ListZipper.insertBefore
+            [ fillCommandHole
                 blockWithBlockHole.commandWithBlockHole
                 fillerBlock
-           ]
-        ++ blockWithBlockHole.right
+            ]
+        |> ListZipper.toList
 
 
 placeCursorAtHole : BlockWithBlockHole -> BlockWithCursor
 placeCursorAtHole blockWithBlockHole =
-    { left = blockWithBlockHole.left
-    , right = blockWithBlockHole.right
-    }
+    blockWithBlockHole.restOfBlock
 
 
 fillCommandHole : CommandWithBlockHole -> Block -> Command

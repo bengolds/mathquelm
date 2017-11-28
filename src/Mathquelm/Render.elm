@@ -5,6 +5,7 @@ import Element.Attributes exposing (..)
 import Mathquelm.Config exposing (Config)
 import Mathquelm.Digit as Digit
 import Mathquelm.EditableMath as EMath
+import Mathquelm.ListZipper as ListZipper
 import Mathquelm.Styles exposing (..)
 
 
@@ -28,8 +29,10 @@ fromEditable mathBeingEdited =
     let
         firstBlock =
             case mathBeingEdited of
-                EMath.Cursor ( { left, right }, _ ) ->
-                    toRBlock (List.reverse left) ++ Cursor :: toRBlock right
+                EMath.Cursor ( cursorBlock, _ ) ->
+                    ListZipper.map toRCommand cursorBlock
+                        |> ListZipper.insertBefore [ Cursor ]
+                        |> ListZipper.toList
 
                 EMath.Selection ( { left, selected, right }, _ ) ->
                     toRBlock left ++ Selection (toRBlock selected) :: toRBlock right
@@ -46,39 +49,39 @@ fromEditable mathBeingEdited =
                     Div (toRBlock top) block
     in
     List.foldl
-        (\{ left, commandWithBlockHole, right } childBlock ->
-            toRBlock (List.reverse left)
-                ++ rebuild childBlock commandWithBlockHole
-                :: toRBlock right
+        (\{ restOfBlock, commandWithBlockHole } childBlock ->
+            ListZipper.map toRCommand restOfBlock
+                |> ListZipper.insertBefore
+                    [ rebuild childBlock commandWithBlockHole ]
+                |> ListZipper.toList
         )
         firstBlock
         (EMath.getRestOfTree mathBeingEdited)
         |> insertEmpties
 
 
+toRCommand : EMath.Command -> RCommand
+toRCommand cmd =
+    case cmd of
+        EMath.Digit digit ->
+            Num (Digit.parse digit)
+
+        EMath.Var name ->
+            Var name
+
+        EMath.Div top bot ->
+            Div (toRBlock top) (toRBlock bot)
+
+        EMath.Cos x ->
+            Cos (toRBlock x)
+
+        EMath.Plus ->
+            Plus
+
+
 toRBlock : EMath.Block -> RBlock
 toRBlock block =
-    List.foldl
-        (\cmd acc ->
-            case cmd of
-                EMath.Digit digit ->
-                    Num (Digit.parse digit) :: acc
-
-                EMath.Var name ->
-                    Var name :: acc
-
-                EMath.Div top bot ->
-                    Div (toRBlock top) (toRBlock bot) :: acc
-
-                EMath.Cos x ->
-                    Cos (toRBlock x) :: acc
-
-                EMath.Plus ->
-                    Plus :: acc
-        )
-        []
-        block
-        |> List.reverse
+    List.map toRCommand block
 
 
 insertEmpties : RBlock -> RBlock
