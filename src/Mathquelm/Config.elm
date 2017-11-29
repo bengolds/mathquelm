@@ -1,5 +1,6 @@
 module Mathquelm.Config exposing (..)
 
+import Mathquelm.AutoCommands exposing (AutoCommand)
 import Style.Scale as Scale
 
 
@@ -9,6 +10,7 @@ type alias Config =
     , maxDepth : Int
     , baseFontSize : Float
     , modularScale : Float
+    , autoCmds : List AutoCommand
     }
 
 
@@ -18,6 +20,7 @@ default =
     , maxDepth = 3
     , baseFontSize = 28.8
     , modularScale = 0.7
+    , autoCmds = [ Mathquelm.AutoCommands.Cos ]
     }
 
 

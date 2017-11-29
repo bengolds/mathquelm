@@ -22445,26 +22445,6 @@ var _ohanhi$keyboard_extra$Keyboard_Extra$targetKey = A2(
 	_ohanhi$keyboard_extra$Keyboard_Extra$fromCode,
 	A2(_elm_lang$core$Json_Decode$field, 'keyCode', _elm_lang$core$Json_Decode$int));
 
-var _user$project$Mathquelm_Config$toggleBoxesDisplay = function (config) {
-	return _elm_lang$core$Native_Utils.update(
-		config,
-		{showBoxes: !config.showBoxes});
-};
-var _user$project$Mathquelm_Config$toggleCenterLineDisplay = function (config) {
-	return _elm_lang$core$Native_Utils.update(
-		config,
-		{showCenterLines: !config.showCenterLines});
-};
-var _user$project$Mathquelm_Config$scaled = F2(
-	function (config, depth) {
-		return A3(_mdgriffith$style_elements$Style_Scale$modular, config.baseFontSize, config.modularScale, depth);
-	});
-var _user$project$Mathquelm_Config$default = {showCenterLines: false, showBoxes: false, maxDepth: 3, baseFontSize: 28.8, modularScale: 0.7};
-var _user$project$Mathquelm_Config$Config = F5(
-	function (a, b, c, d, e) {
-		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e};
-	});
-
 var _user$project$Mathquelm_Digit$parse = function (digit) {
 	var _p0 = digit;
 	switch (_p0.ctor) {
@@ -23644,6 +23624,48 @@ var _user$project$Mathquelm_EditableMath$goRight = function (mathBeingEdited) {
 	}
 };
 
+var _user$project$Mathquelm_AutoCommands$toCommand = function (autoCmd) {
+	var _p0 = autoCmd;
+	return _user$project$Mathquelm_EditableMath$Cos(
+		{ctor: '[]'});
+};
+var _user$project$Mathquelm_AutoCommands$triggerString = function (autoCmd) {
+	var _p1 = autoCmd;
+	return 'cos';
+};
+var _user$project$Mathquelm_AutoCommands$Cos = {ctor: 'Cos'};
+
+var _user$project$Mathquelm_Config$toggleBoxesDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showBoxes: !config.showBoxes});
+};
+var _user$project$Mathquelm_Config$toggleCenterLineDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showCenterLines: !config.showCenterLines});
+};
+var _user$project$Mathquelm_Config$scaled = F2(
+	function (config, depth) {
+		return A3(_mdgriffith$style_elements$Style_Scale$modular, config.baseFontSize, config.modularScale, depth);
+	});
+var _user$project$Mathquelm_Config$default = {
+	showCenterLines: false,
+	showBoxes: false,
+	maxDepth: 3,
+	baseFontSize: 28.8,
+	modularScale: 0.7,
+	autoCmds: {
+		ctor: '::',
+		_0: _user$project$Mathquelm_AutoCommands$Cos,
+		_1: {ctor: '[]'}
+	}
+};
+var _user$project$Mathquelm_Config$Config = F6(
+	function (a, b, c, d, e, f) {
+		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e, autoCmds: f};
+	});
+
 var _user$project$Mathquelm_Insert$splitAtRightMostTerm = function (block) {
 	return {
 		ctor: '_Tuple2',
@@ -23693,24 +23715,131 @@ var _user$project$Mathquelm_Insert$insertFraction = function (mathBeingEdited) {
 		return mathBeingEdited;
 	}
 };
-var _user$project$Mathquelm_Insert$checkForAutoCmds = _elm_lang$core$Basics$identity;
+var _user$project$Mathquelm_Insert$getStringAroundCursor = function (cursorBlock) {
+	var isVar = function (cmd) {
+		var _p3 = cmd;
+		if (_p3.ctor === 'Var') {
+			return true;
+		} else {
+			return false;
+		}
+	};
+	var buildString = F2(
+		function (nextCmd, string) {
+			var _p4 = nextCmd;
+			if (_p4.ctor === 'Var') {
+				return A2(_elm_lang$core$Basics_ops['++'], string, _p4._0);
+			} else {
+				return string;
+			}
+		});
+	var leftString = _elm_lang$core$String$reverse(
+		A3(
+			_elm_lang$core$List$foldr,
+			buildString,
+			'',
+			A2(
+				_elm_community$list_extra$List_Extra$takeWhileRight,
+				isVar,
+				_user$project$Mathquelm_ListZipper$getAllBefore(cursorBlock))));
+	var cursorIndex = _elm_lang$core$String$length(leftString);
+	var rightString = A3(
+		_elm_lang$core$List$foldl,
+		buildString,
+		'',
+		A2(
+			_elm_community$list_extra$List_Extra$takeWhile,
+			isVar,
+			_user$project$Mathquelm_ListZipper$getAllAfter(cursorBlock)));
+	var stringAroundCursor = A2(_elm_lang$core$Basics_ops['++'], leftString, rightString);
+	return {ctor: '_Tuple2', _0: stringAroundCursor, _1: cursorIndex};
+};
+var _user$project$Mathquelm_Insert$tryMatchAutoCmd = F2(
+	function (_p5, autoCmd) {
+		var _p6 = _p5;
+		var _p9 = _p6._0;
+		var nTimes = F3(
+			function (n, fn, val) {
+				return (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) ? val : fn(
+					A3(nTimes, n - 1, fn, val));
+			});
+		var _p7 = _user$project$Mathquelm_Insert$getStringAroundCursor(_p9);
+		var stringAroundCursor = _p7._0;
+		var cursorIndex = _p7._1;
+		var _p8 = A2(
+			_elm_lang$core$Debug$log,
+			'stringAroundCursor: ',
+			{ctor: '_Tuple2', _0: stringAroundCursor, _1: cursorIndex});
+		var cmdString = _user$project$Mathquelm_AutoCommands$triggerString(autoCmd);
+		var getFirstMatchContainingCursor = function (startIndices) {
+			return _elm_lang$core$List$head(
+				A2(
+					_elm_lang$core$List$filter,
+					function (startIndex) {
+						return (_elm_lang$core$Native_Utils.cmp(startIndex, cursorIndex) < 0) && (_elm_lang$core$Native_Utils.cmp(
+							cursorIndex,
+							startIndex + _elm_lang$core$String$length(cmdString)) < 1);
+					},
+					startIndices));
+		};
+		return A2(
+			_elm_lang$core$Maybe$andThen,
+			function (startIndex) {
+				return _user$project$Mathquelm_EditableMath$enterCommandToRight(
+					function (c) {
+						return {ctor: '_Tuple2', _0: c, _1: _p6._1};
+					}(
+						A2(
+							_user$project$Mathquelm_ListZipper$insertAfter,
+							{
+								ctor: '::',
+								_0: _user$project$Mathquelm_AutoCommands$toCommand(autoCmd),
+								_1: {ctor: '[]'}
+							},
+							A3(
+								nTimes,
+								(startIndex + _elm_lang$core$String$length(cmdString)) - cursorIndex,
+								_user$project$Mathquelm_ListZipper$removeAfter,
+								A3(nTimes, cursorIndex - startIndex, _user$project$Mathquelm_ListZipper$removeBefore, _p9)))));
+			},
+			getFirstMatchContainingCursor(
+				A2(_elm_lang$core$String$indices, cmdString, stringAroundCursor)));
+	});
+var _user$project$Mathquelm_Insert$checkForAutoCmds = F2(
+	function (autoCmds, mathBeingEdited) {
+		var _p10 = mathBeingEdited;
+		if (_p10.ctor === 'Cursor') {
+			var _p11 = _p10._0;
+			return _user$project$Mathquelm_EditableMath$Cursor(
+				A2(
+					_elm_lang$core$Maybe$withDefault,
+					_p11,
+					_elm_lang$core$List$head(
+						A2(
+							_elm_lang$core$List$filterMap,
+							_user$project$Mathquelm_Insert$tryMatchAutoCmd(_p11),
+							autoCmds))));
+		} else {
+			return _user$project$Mathquelm_EditableMath$Selection(
+				{ctor: '_Tuple2', _0: _p10._0._0, _1: _p10._0._1});
+		}
+	});
 var _user$project$Mathquelm_Insert$insertCmd = F2(
 	function (cmd, mathBeingEdited) {
-		var _p3 = mathBeingEdited;
-		if (_p3.ctor === 'Cursor') {
-			return _user$project$Mathquelm_Insert$checkForAutoCmds(
-				_user$project$Mathquelm_EditableMath$Cursor(
-					{
-						ctor: '_Tuple2',
-						_0: A2(_user$project$Mathquelm_EditableMath$insertLeftOfCursor, cmd, _p3._0._0),
-						_1: _p3._0._1
-					}));
+		var _p12 = mathBeingEdited;
+		if (_p12.ctor === 'Cursor') {
+			return _user$project$Mathquelm_EditableMath$Cursor(
+				{
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Mathquelm_EditableMath$insertLeftOfCursor, cmd, _p12._0._0),
+					_1: _p12._0._1
+				});
 		} else {
 			return _user$project$Mathquelm_EditableMath$Selection(
 				{
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
-						_p3._0._0,
+						_p12._0._0,
 						{
 							selected: {
 								ctor: '::',
@@ -23718,23 +23847,26 @@ var _user$project$Mathquelm_Insert$insertCmd = F2(
 								_1: {ctor: '[]'}
 							}
 						}),
-					_1: _p3._0._1
+					_1: _p12._0._1
 				});
 		}
 	});
-var _user$project$Mathquelm_Insert$insert = F2(
-	function (insertion, mathBeingEdited) {
-		var _p4 = insertion;
-		switch (_p4.ctor) {
+var _user$project$Mathquelm_Insert$insert = F3(
+	function (config, insertion, mathBeingEdited) {
+		var _p13 = insertion;
+		switch (_p13.ctor) {
 			case 'InsertVar':
 				return A2(
-					_user$project$Mathquelm_Insert$insertCmd,
-					_user$project$Mathquelm_EditableMath$Var(_p4._0),
-					mathBeingEdited);
+					_user$project$Mathquelm_Insert$checkForAutoCmds,
+					config.autoCmds,
+					A2(
+						_user$project$Mathquelm_Insert$insertCmd,
+						_user$project$Mathquelm_EditableMath$Var(_p13._0),
+						mathBeingEdited));
 			case 'InsertDigit':
 				return A2(
 					_user$project$Mathquelm_Insert$insertCmd,
-					_user$project$Mathquelm_EditableMath$Digit(_p4._0),
+					_user$project$Mathquelm_EditableMath$Digit(_p13._0),
 					mathBeingEdited);
 			case 'InsertFraction':
 				return _user$project$Mathquelm_Insert$insertFraction(mathBeingEdited);
@@ -24396,7 +24528,7 @@ var _user$project$Mathquelm$update = F2(
 				return _elm_lang$core$Native_Utils.update(
 					model,
 					{
-						tree: A2(_user$project$Mathquelm_Insert$insert, _p0._0, model.tree)
+						tree: A3(_user$project$Mathquelm_Insert$insert, model.config, _p0._0, model.tree)
 					});
 			default:
 				return model;

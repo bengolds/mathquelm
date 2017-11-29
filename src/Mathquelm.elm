@@ -136,7 +136,7 @@ update msg model =
             tryEdit deleteRight
 
         Insert insertion ->
-            { model | tree = insert insertion model.tree }
+            { model | tree = insert model.config insertion model.tree }
 
         _ ->
             model
