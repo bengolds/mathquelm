@@ -137,6 +137,16 @@ moveEdgeOfSelectionRightward mathWithSelection =
     case getDirection mathWithSelection of
         Left ->
             case getSelectedBlock mathWithSelection of
+                leftmost :: [] ->
+                    restoreToInnerSelection mathWithSelection
+                        |> orElse
+                            (--TODO THIS IS REPETITIVE, GIVE A VERB?
+                             Just
+                                (setSelectedBlock [] mathWithSelection
+                                    |> insertBeforeSelection leftmost
+                                )
+                            )
+
                 leftmost :: remainingSelection ->
                     Just
                         (setSelectedBlock remainingSelection mathWithSelection
@@ -163,6 +173,16 @@ moveEdgeOfSelectionLeftward mathWithSelection =
     case getDirection mathWithSelection of
         Right ->
             case List.reverse (getSelectedBlock mathWithSelection) of
+                rightmost :: [] ->
+                    restoreToInnerSelection mathWithSelection
+                        |> orElse
+                            (--TODO THIS IS REPETITIVE, GIVE A VERB?
+                             Just
+                                (setSelectedBlock [] mathWithSelection
+                                    |> insertAfterSelection rightmost
+                                )
+                            )
+
                 rightmost :: remainingSelectionReversed ->
                     Just
                         (setSelectedBlock
@@ -186,9 +206,29 @@ moveEdgeOfSelectionLeftward mathWithSelection =
                     Nothing
 
 
+
+--TODO make this more idiomatic
+
+
 selectWholeBlock : MathWithSelection -> Maybe MathWithSelection
-selectWholeBlock mathWithSelection =
-    Nothing
+selectWholeBlock ( selectionBlock, restOfTree ) =
+    case restOfTree of
+        parentBlockWithHole :: grandparents ->
+            Just
+                ( { restOfBlock = parentBlockWithHole.restOfBlock
+                  , selected =
+                        [ fillCommandHole
+                            parentBlockWithHole.commandWithBlockHole
+                            (removeSelection selectionBlock)
+                        ]
+                  , direction = selectionBlock.direction
+                  , innerSelection = InnerSelection ( selectionBlock, restOfTree )
+                  }
+                , grandparents
+                )
+
+        _ ->
+            Nothing
 
 
 
@@ -749,6 +789,7 @@ turnCursorIntoSelection direction ( cursorBlock, restOfTree ) =
     ( { restOfBlock = cursorBlock
       , selected = []
       , direction = direction
+      , innerSelection = None
       }
     , restOfTree
     )
@@ -781,8 +822,18 @@ type LeftRight
 type alias BlockWithSelection =
     { restOfBlock : ListZipper Command
     , selected : Block
+    , innerSelection : InnerSelection
     , direction : LeftRight
     }
+
+
+
+-- TODO: Is there a way to do this with a recursive thing -- essentially, have one previous selection?
+
+
+type InnerSelection
+    = InnerSelection MathWithSelection
+    | None
 
 
 normalizeSelection : MathWithSelection -> MathBeingEdited
@@ -793,6 +844,16 @@ normalizeSelection mathWithSelection =
 
         _ ->
             Selection mathWithSelection
+
+
+restoreToInnerSelection : MathWithSelection -> Maybe MathWithSelection
+restoreToInnerSelection ( selectionBlock, restOfTree ) =
+    case selectionBlock.innerSelection of
+        InnerSelection inner ->
+            Just inner
+
+        None ->
+            Nothing
 
 
 getDirection : MathWithSelection -> LeftRight
