@@ -611,13 +611,14 @@ exitCurrentCommandLeftward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             Just
-                ( placeCursorAtHole parentBlockWithHole
+                (( placeCursorAtHole parentBlockWithHole
+                 , grandparents
+                 )
                     |> insertRightOfCursor
                         (fillCommandHole
                             parentBlockWithHole.commandWithBlockHole
                             (removeCursor cursorBlock)
                         )
-                , grandparents
                 )
 
         _ ->
@@ -629,13 +630,14 @@ exitCurrentCommandRightward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             Just
-                ( placeCursorAtHole parentBlockWithHole
+                (( placeCursorAtHole parentBlockWithHole
+                 , grandparents
+                 )
                     |> insertLeftOfCursor
                         (fillCommandHole
                             parentBlockWithHole.commandWithBlockHole
                             (removeCursor cursorBlock)
                         )
-                , grandparents
                 )
 
         _ ->
@@ -677,14 +679,14 @@ moveCursorToTopOfFraction ( cursorBlock, restOfTree ) =
 -- Insertion with Cursor {{{
 
 
-insertRightOfCursor : Command -> BlockWithCursor -> BlockWithCursor
-insertRightOfCursor command cursorBlock =
-    ListZipper.insertAfter [ command ] cursorBlock
+insertRightOfCursor : Command -> MathWithCursor -> MathWithCursor
+insertRightOfCursor command ( cursorBlock, restOfTree ) =
+    ( ListZipper.insertAfter [ command ] cursorBlock, restOfTree )
 
 
-insertLeftOfCursor : Command -> BlockWithCursor -> BlockWithCursor
-insertLeftOfCursor command cursorBlock =
-    ListZipper.insertBefore [ command ] cursorBlock
+insertLeftOfCursor : Command -> MathWithCursor -> MathWithCursor
+insertLeftOfCursor command ( cursorBlock, restOfTree ) =
+    ( ListZipper.insertBefore [ command ] cursorBlock, restOfTree )
 
 
 

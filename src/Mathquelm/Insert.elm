@@ -35,11 +35,14 @@ insert config insertion mathBeingEdited =
 insertCmd : Command -> MathBeingEdited -> MathBeingEdited
 insertCmd cmd mathBeingEdited =
     case mathBeingEdited of
-        Cursor ( cursorBlock, restOfTree ) ->
-            Cursor ( EMath.insertLeftOfCursor cmd cursorBlock, restOfTree )
+        Cursor mathWithCursor ->
+            Cursor (EMath.insertLeftOfCursor cmd mathWithCursor)
 
-        Selection ( selectionBlock, restOfTree ) ->
-            Selection ( { selectionBlock | selected = [ cmd ] }, restOfTree )
+        Selection mathWithSelection ->
+            Cursor
+                (EMath.deleteInsideSelection mathWithSelection
+                    |> EMath.insertLeftOfCursor cmd
+                )
 
 
 checkForAutoCmds autoCmds mathBeingEdited =
