@@ -1,6 +1,6 @@
 module Mathquelm.AutoCommands exposing (..)
 
-import Mathquelm.EditableMath as EMath
+import Mathquelm.Edit.Command as EditCommand
 
 
 type AutoCommand
@@ -14,8 +14,8 @@ triggerString autoCmd =
             "cos"
 
 
-toCommand : AutoCommand -> EMath.Command
+toCommand : AutoCommand -> EditCommand.Command
 toCommand autoCmd =
     case autoCmd of
         Cos ->
-            EMath.Cos []
+            EditCommand.Cos []

@@ -4,7 +4,11 @@ import List.Extra as List
 import Mathquelm.AutoCommands as AutoCommand exposing (AutoCommand)
 import Mathquelm.Config exposing (Config)
 import Mathquelm.Digit as Digit exposing (Digit)
-import Mathquelm.EditableMath as EMath exposing (BlockWithCursor, Command(..), MathBeingEdited(..))
+import Mathquelm.Edit.Command exposing (Command(..))
+import Mathquelm.Edit.EditableMath as EditableMath exposing (MathBeingEdited(..))
+import Mathquelm.Edit.MathWithCursor as Cursor exposing (BlockWithCursor)
+import Mathquelm.Edit.MathWithSelection as Selection exposing (BlockWithSelection)
+import Mathquelm.Edit.TreeWithBlockHole as TreeWithBlockHole exposing (CommandWithBlockHole(..))
 import Mathquelm.ListZipper as ListZipper
 
 
@@ -19,29 +23,29 @@ insert : Config -> Insertion -> MathBeingEdited -> MathBeingEdited
 insert config insertion mathBeingEdited =
     case insertion of
         InsertVar var ->
-            insertCmd (EMath.Var var) mathBeingEdited
+            insertCmd (Var var) mathBeingEdited
                 |> checkForAutoCmds config.autoCmds
 
         InsertDigit digit ->
-            insertCmd (EMath.Digit digit) mathBeingEdited
+            insertCmd (Digit digit) mathBeingEdited
 
         InsertFraction ->
             insertFraction mathBeingEdited
 
         InsertPlus ->
-            insertCmd EMath.Plus mathBeingEdited
+            insertCmd Plus mathBeingEdited
 
 
 insertCmd : Command -> MathBeingEdited -> MathBeingEdited
 insertCmd cmd mathBeingEdited =
     case mathBeingEdited of
         Cursor mathWithCursor ->
-            Cursor (EMath.insertLeftOfCursor cmd mathWithCursor)
+            Cursor (Cursor.insertLeftOfCursor cmd mathWithCursor)
 
         Selection mathWithSelection ->
             Cursor
-                (EMath.deleteInsideSelection mathWithSelection
-                    |> EMath.insertLeftOfCursor cmd
+                (EditableMath.deleteInsideSelection mathWithSelection
+                    |> Cursor.insertLeftOfCursor cmd
                 )
 
 
@@ -97,7 +101,7 @@ getStringAroundCursor cursorBlock =
     ( stringAroundCursor, cursorIndex )
 
 
-tryMatchAutoCmd : EMath.MathWithCursor -> AutoCommand -> Maybe EMath.MathWithCursor
+tryMatchAutoCmd : Cursor.MathWithCursor -> AutoCommand -> Maybe Cursor.MathWithCursor
 tryMatchAutoCmd ( cursorBlock, restOfTree ) autoCmd =
     let
         cmdString =
@@ -135,7 +139,7 @@ tryMatchAutoCmd ( cursorBlock, restOfTree ) autoCmd =
                     |> ListZipper.insertAfter
                         [ AutoCommand.toCommand autoCmd ]
                     |> (\c -> ( c, restOfTree ))
-                    |> EMath.enterCommandToRight
+                    |> Cursor.enterCommandToRight
             )
 
 
@@ -152,9 +156,9 @@ insertFraction mathBeingEdited =
 
                     fraction =
                         if List.isEmpty numerator then
-                            EMath.DivWithTopHole []
+                            DivWithTopHole []
                         else
-                            EMath.DivWithBotHole numerator
+                            DivWithBotHole numerator
 
                     newParentBlock =
                         EMath.BlockWithBlockHole

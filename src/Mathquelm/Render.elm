@@ -4,7 +4,11 @@ import Element exposing (..)
 import Element.Attributes exposing (..)
 import Mathquelm.Config exposing (Config)
 import Mathquelm.Digit as Digit
-import Mathquelm.EditableMath as EMath
+import Mathquelm.Edit.Command as EditCommand
+import Mathquelm.Edit.EditableMath as EMath
+import Mathquelm.Edit.MathWithCursor as Cursor
+import Mathquelm.Edit.MathWithSelection as Selection
+import Mathquelm.Edit.TreeWithBlockHole exposing (CommandWithBlockHole(..))
 import Mathquelm.ListZipper as ListZipper
 import Mathquelm.Styles exposing (..)
 
@@ -38,10 +42,10 @@ fromEditable mathBeingEdited =
                     let
                         insertCursor =
                             case direction of
-                                EMath.Left ->
+                                Selection.Left ->
                                     ListZipper.insertBefore [ Cursor ]
 
-                                EMath.Right ->
+                                Selection.Right ->
                                     ListZipper.insertAfter [ Cursor ]
                     in
                     ListZipper.map toRCommand restOfBlock
@@ -51,13 +55,13 @@ fromEditable mathBeingEdited =
 
         rebuild block cmd =
             case cmd of
-                EMath.CosWithHole ->
+                CosWithHole ->
                     Cos block
 
-                EMath.DivWithTopHole bot ->
+                DivWithTopHole bot ->
                     Div block (toRBlock bot)
 
-                EMath.DivWithBotHole top ->
+                DivWithBotHole top ->
                     Div (toRBlock top) block
     in
     List.foldl
@@ -72,26 +76,26 @@ fromEditable mathBeingEdited =
         |> insertEmpties
 
 
-toRCommand : EMath.Command -> RCommand
+toRCommand : EditCommand.Command -> RCommand
 toRCommand cmd =
     case cmd of
-        EMath.Digit digit ->
+        EditCommand.Digit digit ->
             Num (Digit.parse digit)
 
-        EMath.Var name ->
+        EditCommand.Var name ->
             Var name
 
-        EMath.Div top bot ->
+        EditCommand.Div top bot ->
             Div (toRBlock top) (toRBlock bot)
 
-        EMath.Cos x ->
+        EditCommand.Cos x ->
             Cos (toRBlock x)
 
-        EMath.Plus ->
+        EditCommand.Plus ->
             Plus
 
 
-toRBlock : EMath.Block -> RBlock
+toRBlock : EditCommand.Block -> RBlock
 toRBlock block =
     List.map toRCommand block
 

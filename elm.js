@@ -26477,6 +26477,238 @@ var _user$project$Mathquelm_Digit$fromChar = function ($char) {
 	}
 };
 
+var _user$project$Mathquelm_Math$frac = F2(
+	function (top, bottom) {
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'\\frac{',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				top,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'}{',
+					A2(_elm_lang$core$Basics_ops['++'], bottom, '}'))));
+	});
+var _user$project$Mathquelm_Math$toLatex = function (math) {
+	var _p0 = math;
+	switch (_p0.ctor) {
+		case 'Var':
+			return _p0._0;
+		case 'Num':
+			return _elm_lang$core$Basics$toString(_p0._0);
+		case 'Plus':
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_user$project$Mathquelm_Math$toLatex(_p0._0),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'+',
+					_user$project$Mathquelm_Math$toLatex(_p0._1)));
+		case 'Mul':
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				_user$project$Mathquelm_Math$toLatex(_p0._0),
+				_user$project$Mathquelm_Math$toLatex(_p0._1));
+		case 'Div':
+			return A2(
+				_user$project$Mathquelm_Math$frac,
+				_user$project$Mathquelm_Math$toLatex(_p0._0),
+				_user$project$Mathquelm_Math$toLatex(_p0._1));
+		case 'Cos':
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				'\\cos ',
+				_user$project$Mathquelm_Math$toLatex(_p0._0));
+		default:
+			return '';
+	}
+};
+var _user$project$Mathquelm_Math$Empty = {ctor: 'Empty'};
+var _user$project$Mathquelm_Math$Cos = function (a) {
+	return {ctor: 'Cos', _0: a};
+};
+var _user$project$Mathquelm_Math$Div = F2(
+	function (a, b) {
+		return {ctor: 'Div', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Math$Plus = F2(
+	function (a, b) {
+		return {ctor: 'Plus', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Math$Mul = F2(
+	function (a, b) {
+		return {ctor: 'Mul', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Math$Num = function (a) {
+	return {ctor: 'Num', _0: a};
+};
+var _user$project$Mathquelm_Math$Var = function (a) {
+	return {ctor: 'Var', _0: a};
+};
+
+var _user$project$Mathquelm_Edit_Command$updateRightMost = F2(
+	function (fn, tree) {
+		var _p0 = tree;
+		switch (_p0.ctor) {
+			case 'Empty':
+				return fn(_user$project$Mathquelm_Math$Empty);
+			case 'Num':
+				return fn(
+					_user$project$Mathquelm_Math$Num(_p0._0));
+			case 'Var':
+				return fn(
+					_user$project$Mathquelm_Math$Var(_p0._0));
+			case 'Mul':
+				return A2(
+					_elm_lang$core$Maybe$map,
+					_user$project$Mathquelm_Math$Mul(_p0._0),
+					A2(_user$project$Mathquelm_Edit_Command$updateRightMost, fn, _p0._1));
+			case 'Plus':
+				return A2(
+					_elm_lang$core$Maybe$map,
+					_user$project$Mathquelm_Math$Plus(_p0._0),
+					A2(_user$project$Mathquelm_Edit_Command$updateRightMost, fn, _p0._1));
+			default:
+				return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _user$project$Mathquelm_Edit_Command$multiplyBelowPluses = F2(
+	function (toMultiply, math) {
+		var _p1 = math;
+		if (_p1.ctor === 'Plus') {
+			return A2(
+				_user$project$Mathquelm_Math$Plus,
+				_p1._0,
+				A2(_user$project$Mathquelm_Edit_Command$multiplyBelowPluses, toMultiply, _p1._1));
+		} else {
+			return A2(_user$project$Mathquelm_Math$Mul, math, toMultiply);
+		}
+	});
+var _user$project$Mathquelm_Edit_Command$appendRight = F2(
+	function (toAppend, math) {
+		var replaceEmpty = function (math) {
+			var _p2 = math;
+			if (_p2.ctor === 'Empty') {
+				return _elm_lang$core$Maybe$Just(toAppend);
+			} else {
+				return _elm_lang$core$Maybe$Nothing;
+			}
+		};
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			A2(_user$project$Mathquelm_Edit_Command$multiplyBelowPluses, toAppend, math),
+			A2(_user$project$Mathquelm_Edit_Command$updateRightMost, replaceEmpty, math));
+	});
+var _user$project$Mathquelm_Edit_Command$blockToMath = function (block) {
+	return A3(_elm_lang$core$List$foldl, _user$project$Mathquelm_Edit_Command$insertRight, _user$project$Mathquelm_Math$Empty, block);
+};
+var _user$project$Mathquelm_Edit_Command$insertRight = F2(
+	function (cmd, math) {
+		var _p3 = cmd;
+		switch (_p3.ctor) {
+			case 'Digit':
+				var asInt = _user$project$Mathquelm_Digit$parse(_p3._0);
+				var replaceOrAppend = function (rightmost) {
+					var _p4 = rightmost;
+					switch (_p4.ctor) {
+						case 'Empty':
+							return _elm_lang$core$Maybe$Just(
+								_user$project$Mathquelm_Math$Num(asInt));
+						case 'Num':
+							return _elm_lang$core$Maybe$Just(
+								_user$project$Mathquelm_Math$Num((_p4._0 * 10) + asInt));
+						default:
+							return _elm_lang$core$Maybe$Nothing;
+					}
+				};
+				return A2(
+					_elm_lang$core$Maybe$withDefault,
+					A2(
+						_user$project$Mathquelm_Edit_Command$multiplyBelowPluses,
+						_user$project$Mathquelm_Math$Num(asInt),
+						math),
+					A2(_user$project$Mathquelm_Edit_Command$updateRightMost, replaceOrAppend, math));
+			case 'Var':
+				return A2(
+					_user$project$Mathquelm_Edit_Command$appendRight,
+					_user$project$Mathquelm_Math$Var(_p3._0),
+					math);
+			case 'Div':
+				return A2(
+					_user$project$Mathquelm_Edit_Command$appendRight,
+					A2(
+						_user$project$Mathquelm_Math$Div,
+						_user$project$Mathquelm_Edit_Command$blockToMath(_p3._0),
+						_user$project$Mathquelm_Edit_Command$blockToMath(_p3._1)),
+					math);
+			case 'Cos':
+				return A2(
+					_user$project$Mathquelm_Edit_Command$appendRight,
+					_user$project$Mathquelm_Math$Cos(
+						_user$project$Mathquelm_Edit_Command$blockToMath(_p3._0)),
+					math);
+			default:
+				return A2(_user$project$Mathquelm_Math$Plus, math, _user$project$Mathquelm_Math$Empty);
+		}
+	});
+var _user$project$Mathquelm_Edit_Command$Plus = {ctor: 'Plus'};
+var _user$project$Mathquelm_Edit_Command$Cos = function (a) {
+	return {ctor: 'Cos', _0: a};
+};
+var _user$project$Mathquelm_Edit_Command$Div = F2(
+	function (a, b) {
+		return {ctor: 'Div', _0: a, _1: b};
+	});
+var _user$project$Mathquelm_Edit_Command$Digit = function (a) {
+	return {ctor: 'Digit', _0: a};
+};
+var _user$project$Mathquelm_Edit_Command$Var = function (a) {
+	return {ctor: 'Var', _0: a};
+};
+
+var _user$project$Mathquelm_AutoCommands$toCommand = function (autoCmd) {
+	var _p0 = autoCmd;
+	return _user$project$Mathquelm_Edit_Command$Cos(
+		{ctor: '[]'});
+};
+var _user$project$Mathquelm_AutoCommands$triggerString = function (autoCmd) {
+	var _p1 = autoCmd;
+	return 'cos';
+};
+var _user$project$Mathquelm_AutoCommands$Cos = {ctor: 'Cos'};
+
+var _user$project$Mathquelm_Config$toggleBoxesDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showBoxes: !config.showBoxes});
+};
+var _user$project$Mathquelm_Config$toggleCenterLineDisplay = function (config) {
+	return _elm_lang$core$Native_Utils.update(
+		config,
+		{showCenterLines: !config.showCenterLines});
+};
+var _user$project$Mathquelm_Config$scaled = F2(
+	function (config, depth) {
+		return A3(_mdgriffith$style_elements$Style_Scale$modular, config.baseFontSize, config.modularScale, depth);
+	});
+var _user$project$Mathquelm_Config$default = {
+	showCenterLines: false,
+	showBoxes: false,
+	maxDepth: 3,
+	baseFontSize: 28.8,
+	modularScale: 0.7,
+	autoCmds: {
+		ctor: '::',
+		_0: _user$project$Mathquelm_AutoCommands$Cos,
+		_1: {ctor: '[]'}
+	}
+};
+var _user$project$Mathquelm_Config$Config = F6(
+	function (a, b, c, d, e, f) {
+		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e, autoCmds: f};
+	});
+
 var _user$project$Mathquelm_ListZipper$right = function (zipper) {
 	var _p0 = zipper;
 	return _p0._1;
@@ -26643,263 +26875,87 @@ var _user$project$Mathquelm_ListZipper$map = F2(
 				_user$project$Mathquelm_ListZipper$right(zipper)));
 	});
 
-var _user$project$Mathquelm_Math$frac = F2(
-	function (top, bottom) {
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			'\\frac{',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				top,
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'}{',
-					A2(_elm_lang$core$Basics_ops['++'], bottom, '}'))));
-	});
-var _user$project$Mathquelm_Math$toLatex = function (math) {
-	var _p0 = math;
-	switch (_p0.ctor) {
-		case 'Var':
-			return _p0._0;
-		case 'Num':
-			return _elm_lang$core$Basics$toString(_p0._0);
-		case 'Plus':
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				_user$project$Mathquelm_Math$toLatex(_p0._0),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'+',
-					_user$project$Mathquelm_Math$toLatex(_p0._1)));
-		case 'Mul':
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				_user$project$Mathquelm_Math$toLatex(_p0._0),
-				_user$project$Mathquelm_Math$toLatex(_p0._1));
-		case 'Div':
-			return A2(
-				_user$project$Mathquelm_Math$frac,
-				_user$project$Mathquelm_Math$toLatex(_p0._0),
-				_user$project$Mathquelm_Math$toLatex(_p0._1));
-		case 'Cos':
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				'\\cos ',
-				_user$project$Mathquelm_Math$toLatex(_p0._0));
-		default:
-			return '';
-	}
-};
-var _user$project$Mathquelm_Math$Empty = {ctor: 'Empty'};
-var _user$project$Mathquelm_Math$Cos = function (a) {
-	return {ctor: 'Cos', _0: a};
-};
-var _user$project$Mathquelm_Math$Div = F2(
-	function (a, b) {
-		return {ctor: 'Div', _0: a, _1: b};
-	});
-var _user$project$Mathquelm_Math$Plus = F2(
-	function (a, b) {
-		return {ctor: 'Plus', _0: a, _1: b};
-	});
-var _user$project$Mathquelm_Math$Mul = F2(
-	function (a, b) {
-		return {ctor: 'Mul', _0: a, _1: b};
-	});
-var _user$project$Mathquelm_Math$Num = function (a) {
-	return {ctor: 'Num', _0: a};
-};
-var _user$project$Mathquelm_Math$Var = function (a) {
-	return {ctor: 'Var', _0: a};
-};
-
-var _user$project$Mathquelm_EditableMath$orElse = F2(
-	function (second, first) {
-		var _p0 = first;
-		if (_p0.ctor === 'Nothing') {
-			return second;
-		} else {
-			return first;
-		}
-	});
-var _user$project$Mathquelm_EditableMath$push = F2(
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$push = F2(
 	function (blockWithBlockHole, restOfTree) {
 		return {ctor: '::', _0: blockWithBlockHole, _1: restOfTree};
 	});
-var _user$project$Mathquelm_EditableMath$changeCommand = F2(
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$changeCommand = F2(
 	function (newCommand, blockWithHole) {
 		return _elm_lang$core$Native_Utils.update(
 			blockWithHole,
 			{commandWithBlockHole: newCommand});
 	});
-var _user$project$Mathquelm_EditableMath$getCommandBeingEdited = function (restOfTree) {
-	var _p1 = restOfTree;
-	if (_p1.ctor === '[]') {
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited = function (restOfTree) {
+	var _p0 = restOfTree;
+	if (_p0.ctor === '[]') {
 		return _elm_lang$core$Maybe$Nothing;
 	} else {
-		return _elm_lang$core$Maybe$Just(_p1._0.commandWithBlockHole);
+		return _elm_lang$core$Maybe$Just(_p0._0.commandWithBlockHole);
 	}
 };
-var _user$project$Mathquelm_EditableMath$placeCursorAtHole = function (blockWithBlockHole) {
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$fillCommandHole = F2(
+	function (commandWithBlockHole, fillerBlock) {
+		var _p1 = commandWithBlockHole;
+		switch (_p1.ctor) {
+			case 'CosWithHole':
+				return _user$project$Mathquelm_Edit_Command$Cos(fillerBlock);
+			case 'DivWithTopHole':
+				return A2(_user$project$Mathquelm_Edit_Command$Div, fillerBlock, _p1._0);
+			default:
+				return A2(_user$project$Mathquelm_Edit_Command$Div, _p1._0, fillerBlock);
+		}
+	});
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$fillBlockHole = F2(
+	function (blockWithBlockHole, fillerBlock) {
+		return _user$project$Mathquelm_ListZipper$toList(
+			A2(
+				_user$project$Mathquelm_ListZipper$insertBefore,
+				{
+					ctor: '::',
+					_0: A2(_user$project$Mathquelm_Edit_TreeWithBlockHole$fillCommandHole, blockWithBlockHole.commandWithBlockHole, fillerBlock),
+					_1: {ctor: '[]'}
+				},
+				blockWithBlockHole.restOfBlock));
+	});
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole = F2(
+	function (a, b) {
+		return {restOfBlock: a, commandWithBlockHole: b};
+	});
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole = function (a) {
+	return {ctor: 'DivWithBotHole', _0: a};
+};
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole = function (a) {
+	return {ctor: 'DivWithTopHole', _0: a};
+};
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$CosWithHole = {ctor: 'CosWithHole'};
+
+var _user$project$Mathquelm_Edit_MathWithCursor$placeCursorAtHole = function (blockWithBlockHole) {
 	return blockWithBlockHole.restOfBlock;
 };
-var _user$project$Mathquelm_EditableMath$deleteInsideSelection = function (_p2) {
-	var _p3 = _p2;
-	return {ctor: '_Tuple2', _0: _p3._0.restOfBlock, _1: _p3._1};
-};
-var _user$project$Mathquelm_EditableMath$placeCursorAtRightOfSelection = function (_p4) {
-	var _p5 = _p4;
-	return {
-		ctor: '_Tuple2',
-		_0: A2(_user$project$Mathquelm_ListZipper$insertBefore, _p5._0.selected, _p5._0.restOfBlock),
-		_1: _p5._1
-	};
-};
-var _user$project$Mathquelm_EditableMath$placeCursorAtLeftOfSelection = function (_p6) {
-	var _p7 = _p6;
-	return {
-		ctor: '_Tuple2',
-		_0: A2(_user$project$Mathquelm_ListZipper$insertAfter, _p7._0.selected, _p7._0.restOfBlock),
-		_1: _p7._1
-	};
-};
-var _user$project$Mathquelm_EditableMath$removeSelection = function (selectionBlock) {
-	return _user$project$Mathquelm_ListZipper$toList(
-		A2(_user$project$Mathquelm_ListZipper$insertAfter, selectionBlock.selected, selectionBlock.restOfBlock));
-};
-var _user$project$Mathquelm_EditableMath$getBeforeSelection = function (_p8) {
-	var _p9 = _p8;
-	return _user$project$Mathquelm_ListZipper$getBefore(_p9._0.restOfBlock);
-};
-var _user$project$Mathquelm_EditableMath$getAfterSelection = function (_p10) {
-	var _p11 = _p10;
-	return _user$project$Mathquelm_ListZipper$getAfter(_p11._0.restOfBlock);
-};
-var _user$project$Mathquelm_EditableMath$setSelectedBlock = F2(
-	function (newSelected, _p12) {
-		var _p13 = _p12;
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				_p13._0,
-				{selected: newSelected}),
-			_1: _p13._1
-		};
-	});
-var _user$project$Mathquelm_EditableMath$updateRestOfBlock = F2(
-	function (fn, _p14) {
-		var _p15 = _p14;
-		var _p16 = _p15._0;
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				_p16,
-				{
-					restOfBlock: fn(_p16.restOfBlock)
-				}),
-			_1: _p15._1
-		};
-	});
-var _user$project$Mathquelm_EditableMath$insertBeforeSelection = F2(
-	function (toInsert, mathWithSelection) {
-		return A2(
-			_user$project$Mathquelm_EditableMath$updateRestOfBlock,
-			_user$project$Mathquelm_ListZipper$insertBefore(
-				{
-					ctor: '::',
-					_0: toInsert,
-					_1: {ctor: '[]'}
-				}),
-			mathWithSelection);
-	});
-var _user$project$Mathquelm_EditableMath$insertAfterSelection = F2(
-	function (toInsert, mathWithSelection) {
-		return A2(
-			_user$project$Mathquelm_EditableMath$updateRestOfBlock,
-			_user$project$Mathquelm_ListZipper$insertAfter(
-				{
-					ctor: '::',
-					_0: toInsert,
-					_1: {ctor: '[]'}
-				}),
-			mathWithSelection);
-	});
-var _user$project$Mathquelm_EditableMath$removeCommandAfterSelection = function (mathWithSelection) {
-	return A2(_user$project$Mathquelm_EditableMath$updateRestOfBlock, _user$project$Mathquelm_ListZipper$removeAfter, mathWithSelection);
-};
-var _user$project$Mathquelm_EditableMath$removeCommandBeforeSelection = function (mathWithSelection) {
-	return A2(_user$project$Mathquelm_EditableMath$updateRestOfBlock, _user$project$Mathquelm_ListZipper$removeBefore, mathWithSelection);
-};
-var _user$project$Mathquelm_EditableMath$getRestOfBlock = function (_p17) {
-	var _p18 = _p17;
-	return _p18._0.restOfBlock;
-};
-var _user$project$Mathquelm_EditableMath$getSelectedBlock = function (_p19) {
-	var _p20 = _p19;
-	return _p20._0.selected;
-};
-var _user$project$Mathquelm_EditableMath$addToEndOfSelection = F2(
-	function (toAdd, mathWithSelection) {
-		return A2(
-			_user$project$Mathquelm_EditableMath$setSelectedBlock,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				_user$project$Mathquelm_EditableMath$getSelectedBlock(mathWithSelection),
-				{
-					ctor: '::',
-					_0: toAdd,
-					_1: {ctor: '[]'}
-				}),
-			mathWithSelection);
-	});
-var _user$project$Mathquelm_EditableMath$addToStartOfSelection = F2(
-	function (toAdd, mathWithSelection) {
-		return A2(
-			_user$project$Mathquelm_EditableMath$setSelectedBlock,
-			{
-				ctor: '::',
-				_0: toAdd,
-				_1: _user$project$Mathquelm_EditableMath$getSelectedBlock(mathWithSelection)
-			},
-			mathWithSelection);
-	});
-var _user$project$Mathquelm_EditableMath$getDirection = function (_p21) {
-	var _p22 = _p21;
-	return _p22._0.direction;
-};
-var _user$project$Mathquelm_EditableMath$restoreToInnerSelection = function (_p23) {
-	var _p24 = _p23;
-	var _p25 = _p24._0.innerSelection;
-	if (_p25.ctor === 'InnerSelection') {
-		return _elm_lang$core$Maybe$Just(_p25._0);
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$placeCursorOnLeft = _user$project$Mathquelm_ListZipper$fromList;
-var _user$project$Mathquelm_EditableMath$placeCursorOnRight = _user$project$Mathquelm_ListZipper$fromListEnd;
-var _user$project$Mathquelm_EditableMath$removeCursor = function (cursorBlock) {
+var _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft = _user$project$Mathquelm_ListZipper$fromList;
+var _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight = _user$project$Mathquelm_ListZipper$fromListEnd;
+var _user$project$Mathquelm_Edit_MathWithCursor$removeCursor = function (cursorBlock) {
 	return _user$project$Mathquelm_ListZipper$toList(cursorBlock);
 };
-var _user$project$Mathquelm_EditableMath$setCommandBeingEdited = F2(
-	function (newCommand, _p26) {
-		var _p27 = _p26;
-		var _p29 = _p27._0;
-		var _p28 = _p27._1;
-		if (_p28.ctor === '::') {
+var _user$project$Mathquelm_Edit_MathWithCursor$setCommandBeingEdited = F2(
+	function (newCommand, _p0) {
+		var _p1 = _p0;
+		var _p3 = _p1._0;
+		var _p2 = _p1._1;
+		if (_p2.ctor === '::') {
 			return {
 				ctor: '_Tuple2',
-				_0: _p29,
+				_0: _p3,
 				_1: {
 					ctor: '::',
-					_0: A2(_user$project$Mathquelm_EditableMath$changeCommand, newCommand, _p28._0),
-					_1: _p28._1
+					_0: A2(_user$project$Mathquelm_Edit_TreeWithBlockHole$changeCommand, newCommand, _p2._0),
+					_1: _p2._1
 				}
 			};
 		} else {
 			return {
 				ctor: '_Tuple2',
-				_0: _p29,
+				_0: _p3,
 				_1: {
 					ctor: '::',
 					_0: {restOfBlock: _user$project$Mathquelm_ListZipper$empty, commandWithBlockHole: newCommand},
@@ -26908,43 +26964,43 @@ var _user$project$Mathquelm_EditableMath$setCommandBeingEdited = F2(
 			};
 		}
 	});
-var _user$project$Mathquelm_EditableMath$setCursorBlock = F2(
-	function (newCursorBlock, _p30) {
-		var _p31 = _p30;
-		return {ctor: '_Tuple2', _0: newCursorBlock, _1: _p31._1};
+var _user$project$Mathquelm_Edit_MathWithCursor$setCursorBlock = F2(
+	function (newCursorBlock, _p4) {
+		var _p5 = _p4;
+		return {ctor: '_Tuple2', _0: newCursorBlock, _1: _p5._1};
 	});
-var _user$project$Mathquelm_EditableMath$deleteParentCommand = function (_p32) {
-	var _p33 = _p32;
-	var _p37 = _p33._0;
-	var _p34 = _p33._1;
-	if (_p34.ctor === '::') {
-		var _p36 = _p34._0;
+var _user$project$Mathquelm_Edit_MathWithCursor$deleteParentCommand = function (_p6) {
+	var _p7 = _p6;
+	var _p11 = _p7._0;
+	var _p8 = _p7._1;
+	if (_p8.ctor === '::') {
+		var _p10 = _p8._0;
 		var reassembledBlockWithCursor = function () {
-			var _p35 = _p36.commandWithBlockHole;
-			switch (_p35.ctor) {
+			var _p9 = _p10.commandWithBlockHole;
+			switch (_p9.ctor) {
 				case 'CosWithHole':
-					return A2(_user$project$Mathquelm_ListZipper$nest, _p37, _p36.restOfBlock);
+					return A2(_user$project$Mathquelm_ListZipper$nest, _p11, _p10.restOfBlock);
 				case 'DivWithTopHole':
 					return A2(
 						_user$project$Mathquelm_ListZipper$nest,
-						_p37,
-						A2(_user$project$Mathquelm_ListZipper$insertAfter, _p35._0, _p36.restOfBlock));
+						_p11,
+						A2(_user$project$Mathquelm_ListZipper$insertAfter, _p9._0, _p10.restOfBlock));
 				default:
 					return A2(
 						_user$project$Mathquelm_ListZipper$nest,
-						_p37,
-						A2(_user$project$Mathquelm_ListZipper$insertBefore, _p35._0, _p36.restOfBlock));
+						_p11,
+						A2(_user$project$Mathquelm_ListZipper$insertBefore, _p9._0, _p10.restOfBlock));
 			}
 		}();
 		return _elm_lang$core$Maybe$Just(
-			{ctor: '_Tuple2', _0: reassembledBlockWithCursor, _1: _p34._1});
+			{ctor: '_Tuple2', _0: reassembledBlockWithCursor, _1: _p8._1});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$insertLeftOfCursor = F2(
-	function (command, _p38) {
-		var _p39 = _p38;
+var _user$project$Mathquelm_Edit_MathWithCursor$insertLeftOfCursor = F2(
+	function (command, _p12) {
+		var _p13 = _p12;
 		return {
 			ctor: '_Tuple2',
 			_0: A2(
@@ -26954,13 +27010,13 @@ var _user$project$Mathquelm_EditableMath$insertLeftOfCursor = F2(
 					_0: command,
 					_1: {ctor: '[]'}
 				},
-				_p39._0),
-			_1: _p39._1
+				_p13._0),
+			_1: _p13._1
 		};
 	});
-var _user$project$Mathquelm_EditableMath$insertRightOfCursor = F2(
-	function (command, _p40) {
-		var _p41 = _p40;
+var _user$project$Mathquelm_Edit_MathWithCursor$insertRightOfCursor = F2(
+	function (command, _p14) {
+		var _p15 = _p14;
 		return {
 			ctor: '_Tuple2',
 			_0: A2(
@@ -26970,952 +27026,901 @@ var _user$project$Mathquelm_EditableMath$insertRightOfCursor = F2(
 					_0: command,
 					_1: {ctor: '[]'}
 				},
-				_p41._0),
-			_1: _p41._1
+				_p15._0),
+			_1: _p15._1
 		};
 	});
-var _user$project$Mathquelm_EditableMath$jumpCommandToRight = function (_p42) {
-	var _p43 = _p42;
-	var _p44 = _p43._0;
-	return (!_user$project$Mathquelm_ListZipper$isAtEnd(_p44)) ? _elm_lang$core$Maybe$Just(
-		{
-			ctor: '_Tuple2',
-			_0: _user$project$Mathquelm_ListZipper$goRight(_p44),
-			_1: _p43._1
-		}) : _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$jumpCommandToLeft = function (_p45) {
-	var _p46 = _p45;
-	var _p47 = _p46._0;
-	return (!_user$project$Mathquelm_ListZipper$isAtStart(_p47)) ? _elm_lang$core$Maybe$Just(
-		{
-			ctor: '_Tuple2',
-			_0: _user$project$Mathquelm_ListZipper$goLeft(_p47),
-			_1: _p46._1
-		}) : _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$getRestOfTree = function (mathBeingEdited) {
-	var _p48 = mathBeingEdited;
-	if (_p48.ctor === 'Cursor') {
-		return _p48._0._1;
+var _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToTopOfFraction = function (_p16) {
+	var _p17 = _p16;
+	var _p20 = _p17._1;
+	var _p19 = _p17._0;
+	var _p18 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p20);
+	if ((_p18.ctor === 'Just') && (_p18._0.ctor === 'DivWithBotHole')) {
+		return _elm_lang$core$Maybe$Just(
+			A2(
+				_user$project$Mathquelm_Edit_MathWithCursor$setCommandBeingEdited,
+				_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole(
+					_user$project$Mathquelm_Edit_MathWithCursor$removeCursor(_p19)),
+				A2(
+					_user$project$Mathquelm_Edit_MathWithCursor$setCursorBlock,
+					_user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight(_p18._0._0),
+					{ctor: '_Tuple2', _0: _p19, _1: _p20})));
 	} else {
-		return _p48._0._1;
+		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$getBlockBeingEdited = function (mathBeingEdited) {
-	var _p49 = mathBeingEdited;
-	if (_p49.ctor === 'Cursor') {
-		return _user$project$Mathquelm_EditableMath$removeCursor(_p49._0._0);
+var _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToBottomOfFraction = function (_p21) {
+	var _p22 = _p21;
+	var _p25 = _p22._1;
+	var _p24 = _p22._0;
+	var _p23 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p25);
+	if ((_p23.ctor === 'Just') && (_p23._0.ctor === 'DivWithTopHole')) {
+		return _elm_lang$core$Maybe$Just(
+			A2(
+				_user$project$Mathquelm_Edit_MathWithCursor$setCommandBeingEdited,
+				_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole(
+					_user$project$Mathquelm_Edit_MathWithCursor$removeCursor(_p24)),
+				A2(
+					_user$project$Mathquelm_Edit_MathWithCursor$setCursorBlock,
+					_user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(_p23._0._0),
+					{ctor: '_Tuple2', _0: _p24, _1: _p25})));
 	} else {
-		return _user$project$Mathquelm_EditableMath$removeSelection(_p49._0._0);
+		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$updateRightMost = F2(
-	function (fn, tree) {
-		var _p50 = tree;
-		switch (_p50.ctor) {
-			case 'Empty':
-				return fn(_user$project$Mathquelm_Math$Empty);
-			case 'Num':
-				return fn(
-					_user$project$Mathquelm_Math$Num(_p50._0));
-			case 'Var':
-				return fn(
-					_user$project$Mathquelm_Math$Var(_p50._0));
-			case 'Mul':
-				return A2(
-					_elm_lang$core$Maybe$map,
-					_user$project$Mathquelm_Math$Mul(_p50._0),
-					A2(_user$project$Mathquelm_EditableMath$updateRightMost, fn, _p50._1));
-			case 'Plus':
-				return A2(
-					_elm_lang$core$Maybe$map,
-					_user$project$Mathquelm_Math$Plus(_p50._0),
-					A2(_user$project$Mathquelm_EditableMath$updateRightMost, fn, _p50._1));
-			default:
-				return _elm_lang$core$Maybe$Nothing;
-		}
-	});
-var _user$project$Mathquelm_EditableMath$multiplyBelowPluses = F2(
-	function (toMultiply, math) {
-		var _p51 = math;
-		if (_p51.ctor === 'Plus') {
-			return A2(
-				_user$project$Mathquelm_Math$Plus,
-				_p51._0,
-				A2(_user$project$Mathquelm_EditableMath$multiplyBelowPluses, toMultiply, _p51._1));
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandRightward = function (_p26) {
+	var _p27 = _p26;
+	var _p28 = _p27._1;
+	if (_p28.ctor === '::') {
+		var _p29 = _p28._0;
+		return _elm_lang$core$Maybe$Just(
+			A2(
+				_user$project$Mathquelm_Edit_MathWithCursor$insertLeftOfCursor,
+				A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$fillCommandHole,
+					_p29.commandWithBlockHole,
+					_user$project$Mathquelm_Edit_MathWithCursor$removeCursor(_p27._0)),
+				{
+					ctor: '_Tuple2',
+					_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorAtHole(_p29),
+					_1: _p28._1
+				}));
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward = function (_p30) {
+	var _p31 = _p30;
+	var _p32 = _p31._1;
+	if (_p32.ctor === '::') {
+		var _p33 = _p32._0;
+		return _elm_lang$core$Maybe$Just(
+			A2(
+				_user$project$Mathquelm_Edit_MathWithCursor$insertRightOfCursor,
+				A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$fillCommandHole,
+					_p33.commandWithBlockHole,
+					_user$project$Mathquelm_Edit_MathWithCursor$removeCursor(_p31._0)),
+				{
+					ctor: '_Tuple2',
+					_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorAtHole(_p33),
+					_1: _p32._1
+				}));
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward = function (_p34) {
+	var _p35 = _p34;
+	var _p38 = _p35._1;
+	var _p37 = _p35._0;
+	var _p36 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p38);
+	if (_p36.ctor === 'Just') {
+		if (_p36._0.ctor === 'DivWithTopHole') {
+			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToBottomOfFraction(
+				{ctor: '_Tuple2', _0: _p37, _1: _p38});
 		} else {
-			return A2(_user$project$Mathquelm_Math$Mul, math, toMultiply);
+			return A2(
+				_elm_lang$core$Maybe$andThen,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+					{ctor: '_Tuple2', _0: _p37, _1: _p38}));
 		}
-	});
-var _user$project$Mathquelm_EditableMath$appendRight = F2(
-	function (toAppend, math) {
-		var replaceEmpty = function (math) {
-			var _p52 = math;
-			if (_p52.ctor === 'Empty') {
-				return _elm_lang$core$Maybe$Just(toAppend);
-			} else {
-				return _elm_lang$core$Maybe$Nothing;
-			}
-		};
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			A2(_user$project$Mathquelm_EditableMath$multiplyBelowPluses, toAppend, math),
-			A2(_user$project$Mathquelm_EditableMath$updateRightMost, replaceEmpty, math));
-	});
-var _user$project$Mathquelm_EditableMath$blockToMath = function (block) {
-	return A3(_elm_lang$core$List$foldl, _user$project$Mathquelm_EditableMath$insertRight, _user$project$Mathquelm_Math$Empty, block);
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
 };
-var _user$project$Mathquelm_EditableMath$insertRight = F2(
-	function (cmd, math) {
-		var _p53 = cmd;
-		switch (_p53.ctor) {
-			case 'Digit':
-				var asInt = _user$project$Mathquelm_Digit$parse(_p53._0);
-				var replaceOrAppend = function (rightmost) {
-					var _p54 = rightmost;
-					switch (_p54.ctor) {
-						case 'Empty':
-							return _elm_lang$core$Maybe$Just(
-								_user$project$Mathquelm_Math$Num(asInt));
-						case 'Num':
-							return _elm_lang$core$Maybe$Just(
-								_user$project$Mathquelm_Math$Num((_p54._0 * 10) + asInt));
-						default:
-							return _elm_lang$core$Maybe$Nothing;
-					}
-				};
-				return A2(
-					_elm_lang$core$Maybe$withDefault,
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward = function (_p39) {
+	var _p40 = _p39;
+	var _p43 = _p40._1;
+	var _p42 = _p40._0;
+	var _p41 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p43);
+	if (_p41.ctor === 'Just') {
+		if (_p41._0.ctor === 'DivWithBotHole') {
+			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToTopOfFraction(
+				{ctor: '_Tuple2', _0: _p42, _1: _p43});
+		} else {
+			return A2(
+				_elm_lang$core$Maybe$andThen,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+					{ctor: '_Tuple2', _0: _p42, _1: _p43}));
+		}
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockRightward = function (_p44) {
+	var _p45 = _p44;
+	var _p48 = _p45._1;
+	var _p47 = _p45._0;
+	var _p46 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p48);
+	if (_p46.ctor === 'Just') {
+		if (_p46._0.ctor === 'DivWithTopHole') {
+			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToBottomOfFraction(
+				{ctor: '_Tuple2', _0: _p47, _1: _p48});
+		} else {
+			return _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandRightward(
+				{ctor: '_Tuple2', _0: _p47, _1: _p48});
+		}
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockLeftward = function (_p49) {
+	var _p50 = _p49;
+	var _p53 = _p50._1;
+	var _p52 = _p50._0;
+	var _p51 = _user$project$Mathquelm_Edit_TreeWithBlockHole$getCommandBeingEdited(_p53);
+	if (_p51.ctor === 'Just') {
+		if (_p51._0.ctor === 'DivWithBotHole') {
+			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToTopOfFraction(
+				{ctor: '_Tuple2', _0: _p52, _1: _p53});
+		} else {
+			return _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+				{ctor: '_Tuple2', _0: _p52, _1: _p53});
+		}
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToRight = function (_p54) {
+	var _p55 = _p54;
+	var _p56 = _p55._0;
+	return (!_user$project$Mathquelm_ListZipper$isAtEnd(_p56)) ? _elm_lang$core$Maybe$Just(
+		{
+			ctor: '_Tuple2',
+			_0: _user$project$Mathquelm_ListZipper$goRight(_p56),
+			_1: _p55._1
+		}) : _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToLeft = function (_p57) {
+	var _p58 = _p57;
+	var _p59 = _p58._0;
+	return (!_user$project$Mathquelm_ListZipper$isAtStart(_p59)) ? _elm_lang$core$Maybe$Just(
+		{
+			ctor: '_Tuple2',
+			_0: _user$project$Mathquelm_ListZipper$goLeft(_p59),
+			_1: _p58._1
+		}) : _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToRight = function (_p60) {
+	var _p61 = _p60;
+	var _p63 = _p61._0;
+	var _p62 = _user$project$Mathquelm_ListZipper$getAfter(_p63);
+	if ((_p62.ctor === 'Just') && (_p62._0.ctor === 'Div')) {
+		return _elm_lang$core$Maybe$Just(
+			{
+				ctor: '_Tuple2',
+				_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(_p62._0._1),
+				_1: A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
 					A2(
-						_user$project$Mathquelm_EditableMath$multiplyBelowPluses,
-						_user$project$Mathquelm_Math$Num(asInt),
-						math),
-					A2(_user$project$Mathquelm_EditableMath$updateRightMost, replaceOrAppend, math));
-			case 'Var':
-				return A2(
-					_user$project$Mathquelm_EditableMath$appendRight,
-					_user$project$Mathquelm_Math$Var(_p53._0),
-					math);
-			case 'Div':
-				return A2(
-					_user$project$Mathquelm_EditableMath$appendRight,
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+						_user$project$Mathquelm_ListZipper$removeAfter(_p63),
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole(_p62._0._0)),
+					_p61._1)
+			});
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToLeft = function (_p64) {
+	var _p65 = _p64;
+	var _p67 = _p65._0;
+	var _p66 = _user$project$Mathquelm_ListZipper$getBefore(_p67);
+	if ((_p66.ctor === 'Just') && (_p66._0.ctor === 'Div')) {
+		return _elm_lang$core$Maybe$Just(
+			{
+				ctor: '_Tuple2',
+				_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight(_p66._0._1),
+				_1: A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
 					A2(
-						_user$project$Mathquelm_Math$Div,
-						_user$project$Mathquelm_EditableMath$blockToMath(_p53._0),
-						_user$project$Mathquelm_EditableMath$blockToMath(_p53._1)),
-					math);
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+						_user$project$Mathquelm_ListZipper$removeBefore(_p67),
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole(_p66._0._0)),
+					_p65._1)
+			});
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToRight = function (_p68) {
+	var _p69 = _p68;
+	var _p71 = _p69._0;
+	var _p70 = _user$project$Mathquelm_ListZipper$getAfter(_p71);
+	if ((_p70.ctor === 'Just') && (_p70._0.ctor === 'Div')) {
+		return _elm_lang$core$Maybe$Just(
+			{
+				ctor: '_Tuple2',
+				_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(_p70._0._0),
+				_1: A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+					A2(
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+						_user$project$Mathquelm_ListZipper$removeAfter(_p71),
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole(_p70._0._1)),
+					_p69._1)
+			});
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$deleteRightOfCursor = function (_p72) {
+	var _p73 = _p72;
+	var _p76 = _p73._1;
+	var _p75 = _p73._0;
+	var _p74 = _user$project$Mathquelm_ListZipper$getAfter(_p75);
+	if (_p74.ctor === 'Just') {
+		switch (_p74._0.ctor) {
 			case 'Cos':
-				return A2(
-					_user$project$Mathquelm_EditableMath$appendRight,
-					_user$project$Mathquelm_Math$Cos(
-						_user$project$Mathquelm_EditableMath$blockToMath(_p53._0)),
-					math);
+				return _elm_lang$core$Maybe$Just(
+					{
+						ctor: '_Tuple2',
+						_0: A2(_user$project$Mathquelm_ListZipper$insertAfter, _p74._0._0, _p75),
+						_1: _p76
+					});
+			case 'Div':
+				return _user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToRight(
+					{ctor: '_Tuple2', _0: _p75, _1: _p76});
 			default:
-				return A2(_user$project$Mathquelm_Math$Plus, math, _user$project$Mathquelm_Math$Empty);
+				return _elm_lang$core$Maybe$Just(
+					{
+						ctor: '_Tuple2',
+						_0: _user$project$Mathquelm_ListZipper$removeAfter(_p75),
+						_1: _p76
+					});
+		}
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToLeft = function (_p77) {
+	var _p78 = _p77;
+	var _p80 = _p78._0;
+	var _p79 = _user$project$Mathquelm_ListZipper$getBefore(_p80);
+	if ((_p79.ctor === 'Just') && (_p79._0.ctor === 'Div')) {
+		return _elm_lang$core$Maybe$Just(
+			{
+				ctor: '_Tuple2',
+				_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight(_p79._0._0),
+				_1: A2(
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+					A2(
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+						_user$project$Mathquelm_ListZipper$removeBefore(_p80),
+						_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole(_p79._0._1)),
+					_p78._1)
+			});
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterCommandToRight = function (_p81) {
+	var _p82 = _p81;
+	var _p85 = _p82._1;
+	var _p84 = _p82._0;
+	var _p83 = _user$project$Mathquelm_ListZipper$getAfter(_p84);
+	_v37_2:
+	do {
+		if (_p83.ctor === 'Just') {
+			switch (_p83._0.ctor) {
+				case 'Cos':
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(_p83._0._0),
+							_1: A2(
+								_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+								A2(
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+									_user$project$Mathquelm_ListZipper$removeAfter(_p84),
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$CosWithHole),
+								_p85)
+						});
+				case 'Div':
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(_p83._0._0),
+							_1: A2(
+								_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+								A2(
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+									_user$project$Mathquelm_ListZipper$removeAfter(_p84),
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole(_p83._0._1)),
+								_p85)
+						});
+				default:
+					break _v37_2;
+			}
+		} else {
+			break _v37_2;
+		}
+	} while(false);
+	return _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$enterCommandToLeft = function (_p86) {
+	var _p87 = _p86;
+	var _p90 = _p87._1;
+	var _p89 = _p87._0;
+	var _p88 = _user$project$Mathquelm_ListZipper$getBefore(_p89);
+	_v39_2:
+	do {
+		if (_p88.ctor === 'Just') {
+			switch (_p88._0.ctor) {
+				case 'Cos':
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight(_p88._0._0),
+							_1: A2(
+								_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+								A2(
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+									_user$project$Mathquelm_ListZipper$removeBefore(_p89),
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$CosWithHole),
+								_p90)
+						});
+				case 'Div':
+					return _elm_lang$core$Maybe$Just(
+						{
+							ctor: '_Tuple2',
+							_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnRight(_p88._0._1),
+							_1: A2(
+								_user$project$Mathquelm_Edit_TreeWithBlockHole$push,
+								A2(
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
+									_user$project$Mathquelm_ListZipper$removeBefore(_p89),
+									_user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole(_p88._0._0)),
+								_p90)
+						});
+				default:
+					break _v39_2;
+			}
+		} else {
+			break _v39_2;
+		}
+	} while(false);
+	return _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_MathWithCursor$deleteLeftOfCursor = function (_p91) {
+	var _p92 = _p91;
+	var _p95 = _p92._1;
+	var _p94 = _p92._0;
+	var _p93 = _user$project$Mathquelm_ListZipper$getBefore(_p94);
+	if (_p93.ctor === 'Just') {
+		switch (_p93._0.ctor) {
+			case 'Cos':
+				return _user$project$Mathquelm_Edit_MathWithCursor$enterCommandToLeft(
+					{ctor: '_Tuple2', _0: _p94, _1: _p95});
+			case 'Div':
+				return _user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToLeft(
+					{ctor: '_Tuple2', _0: _p94, _1: _p95});
+			default:
+				return _elm_lang$core$Maybe$Just(
+					{
+						ctor: '_Tuple2',
+						_0: _user$project$Mathquelm_ListZipper$removeBefore(_p94),
+						_1: _p95
+					});
+		}
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+
+var _user$project$Mathquelm_Util$orElse = F2(
+	function (second, first) {
+		var _p0 = first;
+		if (_p0.ctor === 'Nothing') {
+			return second;
+		} else {
+			return first;
 		}
 	});
-var _user$project$Mathquelm_EditableMath$moveEdgeOfSelectionLeftward = function (mathWithSelection) {
-	var _p55 = _user$project$Mathquelm_EditableMath$getDirection(mathWithSelection);
-	if (_p55.ctor === 'Right') {
-		var _p56 = _elm_lang$core$List$reverse(
-			_user$project$Mathquelm_EditableMath$getSelectedBlock(mathWithSelection));
-		if (_p56.ctor === '::') {
-			if (_p56._1.ctor === '[]') {
+
+var _user$project$Mathquelm_Edit_MathWithSelection$removeSelection = function (selectionBlock) {
+	return _user$project$Mathquelm_ListZipper$toList(
+		A2(_user$project$Mathquelm_ListZipper$insertAfter, selectionBlock.selected, selectionBlock.restOfBlock));
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$getBeforeSelection = function (_p0) {
+	var _p1 = _p0;
+	return _user$project$Mathquelm_ListZipper$getBefore(_p1._0.restOfBlock);
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$getAfterSelection = function (_p2) {
+	var _p3 = _p2;
+	return _user$project$Mathquelm_ListZipper$getAfter(_p3._0.restOfBlock);
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock = F2(
+	function (newSelected, _p4) {
+		var _p5 = _p4;
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				_p5._0,
+				{selected: newSelected}),
+			_1: _p5._1
+		};
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$updateRestOfBlock = F2(
+	function (fn, _p6) {
+		var _p7 = _p6;
+		var _p8 = _p7._0;
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				_p8,
+				{
+					restOfBlock: fn(_p8.restOfBlock)
+				}),
+			_1: _p7._1
+		};
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$insertBeforeSelection = F2(
+	function (toInsert, mathWithSelection) {
+		return A2(
+			_user$project$Mathquelm_Edit_MathWithSelection$updateRestOfBlock,
+			_user$project$Mathquelm_ListZipper$insertBefore(
+				{
+					ctor: '::',
+					_0: toInsert,
+					_1: {ctor: '[]'}
+				}),
+			mathWithSelection);
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$insertAfterSelection = F2(
+	function (toInsert, mathWithSelection) {
+		return A2(
+			_user$project$Mathquelm_Edit_MathWithSelection$updateRestOfBlock,
+			_user$project$Mathquelm_ListZipper$insertAfter(
+				{
+					ctor: '::',
+					_0: toInsert,
+					_1: {ctor: '[]'}
+				}),
+			mathWithSelection);
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$removeCommandAfterSelection = function (mathWithSelection) {
+	return A2(_user$project$Mathquelm_Edit_MathWithSelection$updateRestOfBlock, _user$project$Mathquelm_ListZipper$removeAfter, mathWithSelection);
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$removeCommandBeforeSelection = function (mathWithSelection) {
+	return A2(_user$project$Mathquelm_Edit_MathWithSelection$updateRestOfBlock, _user$project$Mathquelm_ListZipper$removeBefore, mathWithSelection);
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$getRestOfBlock = function (_p9) {
+	var _p10 = _p9;
+	return _p10._0.restOfBlock;
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock = function (_p11) {
+	var _p12 = _p11;
+	return _p12._0.selected;
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$addToEndOfSelection = F2(
+	function (toAdd, mathWithSelection) {
+		return A2(
+			_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection),
+				{
+					ctor: '::',
+					_0: toAdd,
+					_1: {ctor: '[]'}
+				}),
+			mathWithSelection);
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$addToStartOfSelection = F2(
+	function (toAdd, mathWithSelection) {
+		return A2(
+			_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock,
+			{
+				ctor: '::',
+				_0: toAdd,
+				_1: _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection)
+			},
+			mathWithSelection);
+	});
+var _user$project$Mathquelm_Edit_MathWithSelection$getDirection = function (_p13) {
+	var _p14 = _p13;
+	return _p14._0.direction;
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$restoreToInnerSelection = function (_p15) {
+	var _p16 = _p15;
+	var _p17 = _p16._0.innerSelection;
+	if (_p17.ctor === 'InnerSelection') {
+		return _elm_lang$core$Maybe$Just(_p17._0);
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionRightward = function (mathWithSelection) {
+	var _p18 = _user$project$Mathquelm_Edit_MathWithSelection$getDirection(mathWithSelection);
+	if (_p18.ctor === 'Left') {
+		var _p19 = _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection);
+		if (_p19.ctor === '::') {
+			if (_p19._1.ctor === '[]') {
 				return A2(
-					_user$project$Mathquelm_EditableMath$orElse,
+					_user$project$Mathquelm_Util$orElse,
 					_elm_lang$core$Maybe$Just(
 						A2(
-							_user$project$Mathquelm_EditableMath$insertAfterSelection,
-							_p56._0,
+							_user$project$Mathquelm_Edit_MathWithSelection$insertBeforeSelection,
+							_p19._0,
 							A2(
-								_user$project$Mathquelm_EditableMath$setSelectedBlock,
+								_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock,
 								{ctor: '[]'},
 								mathWithSelection))),
-					_user$project$Mathquelm_EditableMath$restoreToInnerSelection(mathWithSelection));
+					_user$project$Mathquelm_Edit_MathWithSelection$restoreToInnerSelection(mathWithSelection));
 			} else {
 				return _elm_lang$core$Maybe$Just(
 					A2(
-						_user$project$Mathquelm_EditableMath$insertAfterSelection,
-						_p56._0,
+						_user$project$Mathquelm_Edit_MathWithSelection$insertBeforeSelection,
+						_p19._0,
+						A2(_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock, _p19._1, mathWithSelection)));
+			}
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	} else {
+		var _p20 = _user$project$Mathquelm_Edit_MathWithSelection$getAfterSelection(mathWithSelection);
+		if (_p20.ctor === 'Just') {
+			return _elm_lang$core$Maybe$Just(
+				A2(
+					_user$project$Mathquelm_Edit_MathWithSelection$addToEndOfSelection,
+					_p20._0,
+					_user$project$Mathquelm_Edit_MathWithSelection$removeCommandAfterSelection(mathWithSelection)));
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	}
+};
+var _user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionLeftward = function (mathWithSelection) {
+	var _p21 = _user$project$Mathquelm_Edit_MathWithSelection$getDirection(mathWithSelection);
+	if (_p21.ctor === 'Right') {
+		var _p22 = _elm_lang$core$List$reverse(
+			_user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection));
+		if (_p22.ctor === '::') {
+			if (_p22._1.ctor === '[]') {
+				return A2(
+					_user$project$Mathquelm_Util$orElse,
+					_elm_lang$core$Maybe$Just(
 						A2(
-							_user$project$Mathquelm_EditableMath$setSelectedBlock,
-							_elm_lang$core$List$reverse(_p56._1),
+							_user$project$Mathquelm_Edit_MathWithSelection$insertAfterSelection,
+							_p22._0,
+							A2(
+								_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock,
+								{ctor: '[]'},
+								mathWithSelection))),
+					_user$project$Mathquelm_Edit_MathWithSelection$restoreToInnerSelection(mathWithSelection));
+			} else {
+				return _elm_lang$core$Maybe$Just(
+					A2(
+						_user$project$Mathquelm_Edit_MathWithSelection$insertAfterSelection,
+						_p22._0,
+						A2(
+							_user$project$Mathquelm_Edit_MathWithSelection$setSelectedBlock,
+							_elm_lang$core$List$reverse(_p22._1),
 							mathWithSelection)));
 			}
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
 		}
 	} else {
-		var _p57 = _user$project$Mathquelm_EditableMath$getBeforeSelection(mathWithSelection);
-		if (_p57.ctor === 'Just') {
+		var _p23 = _user$project$Mathquelm_Edit_MathWithSelection$getBeforeSelection(mathWithSelection);
+		if (_p23.ctor === 'Just') {
 			return _elm_lang$core$Maybe$Just(
 				A2(
-					_user$project$Mathquelm_EditableMath$addToStartOfSelection,
-					_p57._0,
-					_user$project$Mathquelm_EditableMath$removeCommandBeforeSelection(mathWithSelection)));
+					_user$project$Mathquelm_Edit_MathWithSelection$addToStartOfSelection,
+					_p23._0,
+					_user$project$Mathquelm_Edit_MathWithSelection$removeCommandBeforeSelection(mathWithSelection)));
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
 		}
 	}
 };
-var _user$project$Mathquelm_EditableMath$moveEdgeOfSelectionRightward = function (mathWithSelection) {
-	var _p58 = _user$project$Mathquelm_EditableMath$getDirection(mathWithSelection);
-	if (_p58.ctor === 'Left') {
-		var _p59 = _user$project$Mathquelm_EditableMath$getSelectedBlock(mathWithSelection);
-		if (_p59.ctor === '::') {
-			if (_p59._1.ctor === '[]') {
-				return A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_elm_lang$core$Maybe$Just(
-						A2(
-							_user$project$Mathquelm_EditableMath$insertBeforeSelection,
-							_p59._0,
-							A2(
-								_user$project$Mathquelm_EditableMath$setSelectedBlock,
-								{ctor: '[]'},
-								mathWithSelection))),
-					_user$project$Mathquelm_EditableMath$restoreToInnerSelection(mathWithSelection));
-			} else {
-				return _elm_lang$core$Maybe$Just(
-					A2(
-						_user$project$Mathquelm_EditableMath$insertBeforeSelection,
-						_p59._0,
-						A2(_user$project$Mathquelm_EditableMath$setSelectedBlock, _p59._1, mathWithSelection)));
-			}
-		} else {
-			return _elm_lang$core$Maybe$Nothing;
-		}
-	} else {
-		var _p60 = _user$project$Mathquelm_EditableMath$getAfterSelection(mathWithSelection);
-		if (_p60.ctor === 'Just') {
-			return _elm_lang$core$Maybe$Just(
-				A2(
-					_user$project$Mathquelm_EditableMath$addToEndOfSelection,
-					_p60._0,
-					_user$project$Mathquelm_EditableMath$removeCommandAfterSelection(mathWithSelection)));
-		} else {
-			return _elm_lang$core$Maybe$Nothing;
-		}
-	}
-};
-var _user$project$Mathquelm_EditableMath$selectDown = function (mathBeingEdited) {
-	return _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$selectUp = function (mathBeingEdited) {
-	return _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$BlockWithSelection = F4(
+var _user$project$Mathquelm_Edit_MathWithSelection$BlockWithSelection = F4(
 	function (a, b, c, d) {
 		return {restOfBlock: a, selected: b, innerSelection: c, direction: d};
 	});
-var _user$project$Mathquelm_EditableMath$BlockWithBlockHole = F2(
-	function (a, b) {
-		return {restOfBlock: a, commandWithBlockHole: b};
-	});
-var _user$project$Mathquelm_EditableMath$Plus = {ctor: 'Plus'};
-var _user$project$Mathquelm_EditableMath$Cos = function (a) {
-	return {ctor: 'Cos', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$Div = F2(
-	function (a, b) {
-		return {ctor: 'Div', _0: a, _1: b};
-	});
-var _user$project$Mathquelm_EditableMath$fillCommandHole = F2(
-	function (commandWithBlockHole, fillerBlock) {
-		var _p61 = commandWithBlockHole;
-		switch (_p61.ctor) {
-			case 'CosWithHole':
-				return _user$project$Mathquelm_EditableMath$Cos(fillerBlock);
-			case 'DivWithTopHole':
-				return A2(_user$project$Mathquelm_EditableMath$Div, fillerBlock, _p61._0);
-			default:
-				return A2(_user$project$Mathquelm_EditableMath$Div, _p61._0, fillerBlock);
-		}
-	});
-var _user$project$Mathquelm_EditableMath$exitCurrentCommandLeftward = function (_p62) {
-	var _p63 = _p62;
-	var _p64 = _p63._1;
-	if (_p64.ctor === '::') {
-		var _p65 = _p64._0;
-		return _elm_lang$core$Maybe$Just(
-			A2(
-				_user$project$Mathquelm_EditableMath$insertRightOfCursor,
-				A2(
-					_user$project$Mathquelm_EditableMath$fillCommandHole,
-					_p65.commandWithBlockHole,
-					_user$project$Mathquelm_EditableMath$removeCursor(_p63._0)),
-				{
-					ctor: '_Tuple2',
-					_0: _user$project$Mathquelm_EditableMath$placeCursorAtHole(_p65),
-					_1: _p64._1
-				}));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$exitCurrentCommandRightward = function (_p66) {
-	var _p67 = _p66;
-	var _p68 = _p67._1;
-	if (_p68.ctor === '::') {
-		var _p69 = _p68._0;
-		return _elm_lang$core$Maybe$Just(
-			A2(
-				_user$project$Mathquelm_EditableMath$insertLeftOfCursor,
-				A2(
-					_user$project$Mathquelm_EditableMath$fillCommandHole,
-					_p69.commandWithBlockHole,
-					_user$project$Mathquelm_EditableMath$removeCursor(_p67._0)),
-				{
-					ctor: '_Tuple2',
-					_0: _user$project$Mathquelm_EditableMath$placeCursorAtHole(_p69),
-					_1: _p68._1
-				}));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$fillBlockHole = F2(
-	function (blockWithBlockHole, fillerBlock) {
-		return _user$project$Mathquelm_ListZipper$toList(
-			A2(
-				_user$project$Mathquelm_ListZipper$insertBefore,
-				{
-					ctor: '::',
-					_0: A2(_user$project$Mathquelm_EditableMath$fillCommandHole, blockWithBlockHole.commandWithBlockHole, fillerBlock),
-					_1: {ctor: '[]'}
-				},
-				blockWithBlockHole.restOfBlock));
-	});
-var _user$project$Mathquelm_EditableMath$stopEditing = function (mathBeingEdited) {
-	return A3(
-		_elm_lang$core$List$foldl,
-		_user$project$Mathquelm_EditableMath$fillBlockHole,
-		_user$project$Mathquelm_EditableMath$getBlockBeingEdited(mathBeingEdited),
-		_user$project$Mathquelm_EditableMath$getRestOfTree(mathBeingEdited));
-};
-var _user$project$Mathquelm_EditableMath$toMath = function (mathBeingEdited) {
-	return _user$project$Mathquelm_EditableMath$blockToMath(
-		_user$project$Mathquelm_EditableMath$stopEditing(mathBeingEdited));
-};
-var _user$project$Mathquelm_EditableMath$Digit = function (a) {
-	return {ctor: 'Digit', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$Var = function (a) {
-	return {ctor: 'Var', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$Selection = function (a) {
-	return {ctor: 'Selection', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$Cursor = function (a) {
-	return {ctor: 'Cursor', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$startEditing = function (block) {
-	return _user$project$Mathquelm_EditableMath$Cursor(
-		{
-			ctor: '_Tuple2',
-			_0: _user$project$Mathquelm_EditableMath$placeCursorOnLeft(block),
-			_1: {ctor: '[]'}
-		});
-};
-var _user$project$Mathquelm_EditableMath$normalizeSelection = function (mathWithSelection) {
-	var _p70 = _user$project$Mathquelm_EditableMath$getSelectedBlock(mathWithSelection);
-	if (_p70.ctor === '[]') {
-		return _user$project$Mathquelm_EditableMath$Cursor(
-			_user$project$Mathquelm_EditableMath$deleteInsideSelection(mathWithSelection));
-	} else {
-		return _user$project$Mathquelm_EditableMath$Selection(mathWithSelection);
-	}
-};
-var _user$project$Mathquelm_EditableMath$Right = {ctor: 'Right'};
-var _user$project$Mathquelm_EditableMath$Left = {ctor: 'Left'};
-var _user$project$Mathquelm_EditableMath$None = {ctor: 'None'};
-var _user$project$Mathquelm_EditableMath$turnCursorIntoSelection = F2(
-	function (direction, _p71) {
-		var _p72 = _p71;
-		return {
-			ctor: '_Tuple2',
-			_0: {
-				restOfBlock: _p72._0,
-				selected: {ctor: '[]'},
-				direction: direction,
-				innerSelection: _user$project$Mathquelm_EditableMath$None
-			},
-			_1: _p72._1
-		};
-	});
-var _user$project$Mathquelm_EditableMath$InnerSelection = function (a) {
+var _user$project$Mathquelm_Edit_MathWithSelection$Right = {ctor: 'Right'};
+var _user$project$Mathquelm_Edit_MathWithSelection$Left = {ctor: 'Left'};
+var _user$project$Mathquelm_Edit_MathWithSelection$None = {ctor: 'None'};
+var _user$project$Mathquelm_Edit_MathWithSelection$InnerSelection = function (a) {
 	return {ctor: 'InnerSelection', _0: a};
 };
-var _user$project$Mathquelm_EditableMath$selectWholeBlock = function (_p73) {
-	var _p74 = _p73;
-	var _p78 = _p74._0;
-	var _p77 = _p74._1;
-	var _p75 = _p77;
-	if (_p75.ctor === '::') {
-		var _p76 = _p75._0;
+var _user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock = function (_p24) {
+	var _p25 = _p24;
+	var _p29 = _p25._0;
+	var _p28 = _p25._1;
+	var _p26 = _p28;
+	if (_p26.ctor === '::') {
+		var _p27 = _p26._0;
 		return _elm_lang$core$Maybe$Just(
 			{
 				ctor: '_Tuple2',
 				_0: {
-					restOfBlock: _p76.restOfBlock,
+					restOfBlock: _p27.restOfBlock,
 					selected: {
 						ctor: '::',
 						_0: A2(
-							_user$project$Mathquelm_EditableMath$fillCommandHole,
-							_p76.commandWithBlockHole,
-							_user$project$Mathquelm_EditableMath$removeSelection(_p78)),
+							_user$project$Mathquelm_Edit_TreeWithBlockHole$fillCommandHole,
+							_p27.commandWithBlockHole,
+							_user$project$Mathquelm_Edit_MathWithSelection$removeSelection(_p29)),
 						_1: {ctor: '[]'}
 					},
-					direction: _p78.direction,
-					innerSelection: _user$project$Mathquelm_EditableMath$InnerSelection(
-						{ctor: '_Tuple2', _0: _p78, _1: _p77})
+					direction: _p29.direction,
+					innerSelection: _user$project$Mathquelm_Edit_MathWithSelection$InnerSelection(
+						{ctor: '_Tuple2', _0: _p29, _1: _p28})
 				},
-				_1: _p75._1
+				_1: _p26._1
 			});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_EditableMath$selectRight = function (mathBeingEdited) {
+
+var _user$project$Mathquelm_Edit_EditableMath$getRestOfTree = function (mathBeingEdited) {
+	var _p0 = mathBeingEdited;
+	if (_p0.ctor === 'Cursor') {
+		return _p0._0._1;
+	} else {
+		return _p0._0._1;
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$getBlockBeingEdited = function (mathBeingEdited) {
+	var _p1 = mathBeingEdited;
+	if (_p1.ctor === 'Cursor') {
+		return _user$project$Mathquelm_Edit_MathWithCursor$removeCursor(_p1._0._0);
+	} else {
+		return _user$project$Mathquelm_Edit_MathWithSelection$removeSelection(_p1._0._0);
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$stopEditing = function (mathBeingEdited) {
+	return A3(
+		_elm_lang$core$List$foldl,
+		_user$project$Mathquelm_Edit_TreeWithBlockHole$fillBlockHole,
+		_user$project$Mathquelm_Edit_EditableMath$getBlockBeingEdited(mathBeingEdited),
+		_user$project$Mathquelm_Edit_EditableMath$getRestOfTree(mathBeingEdited));
+};
+var _user$project$Mathquelm_Edit_EditableMath$toMath = function (mathBeingEdited) {
+	return _user$project$Mathquelm_Edit_Command$blockToMath(
+		_user$project$Mathquelm_Edit_EditableMath$stopEditing(mathBeingEdited));
+};
+var _user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection = function (_p2) {
+	var _p3 = _p2;
+	return {ctor: '_Tuple2', _0: _p3._0.restOfBlock, _1: _p3._1};
+};
+var _user$project$Mathquelm_Edit_EditableMath$placeCursorAtRightOfSelection = function (_p4) {
+	var _p5 = _p4;
+	return {
+		ctor: '_Tuple2',
+		_0: A2(_user$project$Mathquelm_ListZipper$insertBefore, _p5._0.selected, _p5._0.restOfBlock),
+		_1: _p5._1
+	};
+};
+var _user$project$Mathquelm_Edit_EditableMath$placeCursorAtLeftOfSelection = function (_p6) {
+	var _p7 = _p6;
+	return {
+		ctor: '_Tuple2',
+		_0: A2(_user$project$Mathquelm_ListZipper$insertAfter, _p7._0.selected, _p7._0.restOfBlock),
+		_1: _p7._1
+	};
+};
+var _user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection = F2(
+	function (direction, _p8) {
+		var _p9 = _p8;
+		return {
+			ctor: '_Tuple2',
+			_0: {
+				restOfBlock: _p9._0,
+				selected: {ctor: '[]'},
+				direction: direction,
+				innerSelection: _user$project$Mathquelm_Edit_MathWithSelection$None
+			},
+			_1: _p9._1
+		};
+	});
+var _user$project$Mathquelm_Edit_EditableMath$selectDown = function (mathBeingEdited) {
+	return _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_EditableMath$selectUp = function (mathBeingEdited) {
+	return _elm_lang$core$Maybe$Nothing;
+};
+var _user$project$Mathquelm_Edit_EditableMath$Selection = function (a) {
+	return {ctor: 'Selection', _0: a};
+};
+var _user$project$Mathquelm_Edit_EditableMath$Cursor = function (a) {
+	return {ctor: 'Cursor', _0: a};
+};
+var _user$project$Mathquelm_Edit_EditableMath$goLeft = function (mathBeingEdited) {
+	var _p10 = mathBeingEdited;
+	if (_p10.ctor === 'Cursor') {
+		var _p11 = _p10._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockLeftward(_p11),
+				A2(
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToLeft(_p11),
+					_user$project$Mathquelm_Edit_MathWithCursor$enterCommandToLeft(_p11))));
+	} else {
+		return _elm_lang$core$Maybe$Just(
+			_user$project$Mathquelm_Edit_EditableMath$Cursor(
+				_user$project$Mathquelm_Edit_EditableMath$placeCursorAtLeftOfSelection(_p10._0)));
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$goRight = function (mathBeingEdited) {
+	var _p12 = mathBeingEdited;
+	if (_p12.ctor === 'Cursor') {
+		var _p13 = _p12._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockRightward(_p13),
+				A2(
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToRight(_p13),
+					_user$project$Mathquelm_Edit_MathWithCursor$enterCommandToRight(_p13))));
+	} else {
+		return _elm_lang$core$Maybe$Just(
+			_user$project$Mathquelm_Edit_EditableMath$Cursor(
+				_user$project$Mathquelm_Edit_EditableMath$placeCursorAtRightOfSelection(_p12._0)));
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$goUp = function (mathBeingEdited) {
+	var _p14 = mathBeingEdited;
+	if (_p14.ctor === 'Cursor') {
+		var _p15 = _p14._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward(_p15),
+				A2(
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToLeft(_p15),
+					_user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToRight(_p15))));
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$goDown = function (mathBeingEdited) {
+	var _p16 = mathBeingEdited;
+	if (_p16.ctor === 'Cursor') {
+		var _p17 = _p16._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward(_p17),
+				A2(
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToLeft(_p17),
+					_user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToRight(_p17))));
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$deleteLeft = function (mathBeingEdited) {
+	var _p18 = mathBeingEdited;
+	if (_p18.ctor === 'Cursor') {
+		var _p19 = _p18._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$deleteParentCommand(_p19),
+				_user$project$Mathquelm_Edit_MathWithCursor$deleteLeftOfCursor(_p19)));
+	} else {
+		return _elm_lang$core$Maybe$Just(
+			_user$project$Mathquelm_Edit_EditableMath$Cursor(
+				_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(_p18._0)));
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$deleteRight = function (mathBeingEdited) {
+	var _p20 = mathBeingEdited;
+	if (_p20.ctor === 'Cursor') {
+		var _p21 = _p20._0;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_user$project$Mathquelm_Edit_EditableMath$Cursor,
+			A2(
+				_user$project$Mathquelm_Util$orElse,
+				_user$project$Mathquelm_Edit_MathWithCursor$deleteParentCommand(_p21),
+				_user$project$Mathquelm_Edit_MathWithCursor$deleteRightOfCursor(_p21)));
+	} else {
+		return _elm_lang$core$Maybe$Just(
+			_user$project$Mathquelm_Edit_EditableMath$Cursor(
+				_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(_p20._0)));
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$normalizeSelection = function (mathWithSelection) {
+	var _p22 = _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection);
+	if (_p22.ctor === '[]') {
+		return _user$project$Mathquelm_Edit_EditableMath$Cursor(
+			_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(mathWithSelection));
+	} else {
+		return _user$project$Mathquelm_Edit_EditableMath$Selection(mathWithSelection);
+	}
+};
+var _user$project$Mathquelm_Edit_EditableMath$selectRight = function (mathBeingEdited) {
 	selectRight:
 	while (true) {
-		var _p79 = mathBeingEdited;
-		if (_p79.ctor === 'Cursor') {
-			var _v47 = _user$project$Mathquelm_EditableMath$Selection(
-				A2(_user$project$Mathquelm_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_EditableMath$Right, _p79._0));
-			mathBeingEdited = _v47;
+		var _p23 = mathBeingEdited;
+		if (_p23.ctor === 'Cursor') {
+			var _v14 = _user$project$Mathquelm_Edit_EditableMath$Selection(
+				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Right, _p23._0));
+			mathBeingEdited = _v14;
 			continue selectRight;
 		} else {
-			var _p80 = _p79._0;
+			var _p24 = _p23._0;
 			return A2(
 				_elm_lang$core$Maybe$map,
-				_user$project$Mathquelm_EditableMath$normalizeSelection,
+				_user$project$Mathquelm_Edit_EditableMath$normalizeSelection,
 				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$selectWholeBlock(_p80),
-					_user$project$Mathquelm_EditableMath$moveEdgeOfSelectionRightward(_p80)));
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p24),
+					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionRightward(_p24)));
 		}
 	}
 };
-var _user$project$Mathquelm_EditableMath$selectLeft = function (mathBeingEdited) {
+var _user$project$Mathquelm_Edit_EditableMath$selectLeft = function (mathBeingEdited) {
 	selectLeft:
 	while (true) {
-		var _p81 = mathBeingEdited;
-		if (_p81.ctor === 'Cursor') {
-			var _v49 = _user$project$Mathquelm_EditableMath$Selection(
-				A2(_user$project$Mathquelm_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_EditableMath$Left, _p81._0));
-			mathBeingEdited = _v49;
+		var _p25 = mathBeingEdited;
+		if (_p25.ctor === 'Cursor') {
+			var _v16 = _user$project$Mathquelm_Edit_EditableMath$Selection(
+				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Left, _p25._0));
+			mathBeingEdited = _v16;
 			continue selectLeft;
 		} else {
-			var _p82 = _p81._0;
+			var _p26 = _p25._0;
 			return A2(
 				_elm_lang$core$Maybe$map,
-				_user$project$Mathquelm_EditableMath$normalizeSelection,
+				_user$project$Mathquelm_Edit_EditableMath$normalizeSelection,
 				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$selectWholeBlock(_p82),
-					_user$project$Mathquelm_EditableMath$moveEdgeOfSelectionLeftward(_p82)));
+					_user$project$Mathquelm_Util$orElse,
+					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p26),
+					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionLeftward(_p26)));
 		}
 	}
 };
-var _user$project$Mathquelm_EditableMath$DivWithBotHole = function (a) {
-	return {ctor: 'DivWithBotHole', _0: a};
+var _user$project$Mathquelm_Edit_EditableMath$startEditing = function (block) {
+	return _user$project$Mathquelm_Edit_EditableMath$Cursor(
+		{
+			ctor: '_Tuple2',
+			_0: _user$project$Mathquelm_Edit_MathWithCursor$placeCursorOnLeft(block),
+			_1: {ctor: '[]'}
+		});
 };
-var _user$project$Mathquelm_EditableMath$enterBottomOfCommandToLeft = function (_p83) {
-	var _p84 = _p83;
-	var _p86 = _p84._0;
-	var _p85 = _user$project$Mathquelm_ListZipper$getBefore(_p86);
-	if ((_p85.ctor === 'Just') && (_p85._0.ctor === 'Div')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: _user$project$Mathquelm_EditableMath$placeCursorOnRight(_p85._0._1),
-				_1: A2(
-					_user$project$Mathquelm_EditableMath$push,
-					A2(
-						_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-						_user$project$Mathquelm_ListZipper$removeBefore(_p86),
-						_user$project$Mathquelm_EditableMath$DivWithBotHole(_p85._0._0)),
-					_p84._1)
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$enterBottomOfCommandToRight = function (_p87) {
-	var _p88 = _p87;
-	var _p90 = _p88._0;
-	var _p89 = _user$project$Mathquelm_ListZipper$getAfter(_p90);
-	if ((_p89.ctor === 'Just') && (_p89._0.ctor === 'Div')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: _user$project$Mathquelm_EditableMath$placeCursorOnLeft(_p89._0._1),
-				_1: A2(
-					_user$project$Mathquelm_EditableMath$push,
-					A2(
-						_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-						_user$project$Mathquelm_ListZipper$removeAfter(_p90),
-						_user$project$Mathquelm_EditableMath$DivWithBotHole(_p89._0._0)),
-					_p88._1)
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$moveCursorToBottomOfFraction = function (_p91) {
-	var _p92 = _p91;
-	var _p95 = _p92._1;
-	var _p94 = _p92._0;
-	var _p93 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p95);
-	if ((_p93.ctor === 'Just') && (_p93._0.ctor === 'DivWithTopHole')) {
-		return _elm_lang$core$Maybe$Just(
-			A2(
-				_user$project$Mathquelm_EditableMath$setCommandBeingEdited,
-				_user$project$Mathquelm_EditableMath$DivWithBotHole(
-					_user$project$Mathquelm_EditableMath$removeCursor(_p94)),
-				A2(
-					_user$project$Mathquelm_EditableMath$setCursorBlock,
-					_user$project$Mathquelm_EditableMath$placeCursorOnLeft(_p93._0._0),
-					{ctor: '_Tuple2', _0: _p94, _1: _p95})));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$exitCurrentBlockRightward = function (_p96) {
-	var _p97 = _p96;
-	var _p100 = _p97._1;
-	var _p99 = _p97._0;
-	var _p98 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p100);
-	if (_p98.ctor === 'Just') {
-		if (_p98._0.ctor === 'DivWithTopHole') {
-			return _user$project$Mathquelm_EditableMath$moveCursorToBottomOfFraction(
-				{ctor: '_Tuple2', _0: _p99, _1: _p100});
-		} else {
-			return _user$project$Mathquelm_EditableMath$exitCurrentCommandRightward(
-				{ctor: '_Tuple2', _0: _p99, _1: _p100});
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$exitCurrentBlockDownward = function (_p101) {
-	var _p102 = _p101;
-	var _p105 = _p102._1;
-	var _p104 = _p102._0;
-	var _p103 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p105);
-	if (_p103.ctor === 'Just') {
-		if (_p103._0.ctor === 'DivWithTopHole') {
-			return _user$project$Mathquelm_EditableMath$moveCursorToBottomOfFraction(
-				{ctor: '_Tuple2', _0: _p104, _1: _p105});
-		} else {
-			return A2(
-				_elm_lang$core$Maybe$andThen,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockDownward,
-				_user$project$Mathquelm_EditableMath$exitCurrentCommandLeftward(
-					{ctor: '_Tuple2', _0: _p104, _1: _p105}));
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$goDown = function (mathBeingEdited) {
-	var _p106 = mathBeingEdited;
-	if (_p106.ctor === 'Cursor') {
-		var _p107 = _p106._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockDownward(_p107),
-				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$enterBottomOfCommandToLeft(_p107),
-					_user$project$Mathquelm_EditableMath$enterBottomOfCommandToRight(_p107))));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$DivWithTopHole = function (a) {
-	return {ctor: 'DivWithTopHole', _0: a};
-};
-var _user$project$Mathquelm_EditableMath$enterTopOfCommandToLeft = function (_p108) {
-	var _p109 = _p108;
-	var _p111 = _p109._0;
-	var _p110 = _user$project$Mathquelm_ListZipper$getBefore(_p111);
-	if ((_p110.ctor === 'Just') && (_p110._0.ctor === 'Div')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: _user$project$Mathquelm_EditableMath$placeCursorOnRight(_p110._0._0),
-				_1: A2(
-					_user$project$Mathquelm_EditableMath$push,
-					A2(
-						_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-						_user$project$Mathquelm_ListZipper$removeBefore(_p111),
-						_user$project$Mathquelm_EditableMath$DivWithTopHole(_p110._0._1)),
-					_p109._1)
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$enterTopOfCommandToRight = function (_p112) {
-	var _p113 = _p112;
-	var _p115 = _p113._0;
-	var _p114 = _user$project$Mathquelm_ListZipper$getAfter(_p115);
-	if ((_p114.ctor === 'Just') && (_p114._0.ctor === 'Div')) {
-		return _elm_lang$core$Maybe$Just(
-			{
-				ctor: '_Tuple2',
-				_0: _user$project$Mathquelm_EditableMath$placeCursorOnLeft(_p114._0._0),
-				_1: A2(
-					_user$project$Mathquelm_EditableMath$push,
-					A2(
-						_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-						_user$project$Mathquelm_ListZipper$removeAfter(_p115),
-						_user$project$Mathquelm_EditableMath$DivWithTopHole(_p114._0._1)),
-					_p113._1)
-			});
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$deleteRightOfCursor = function (_p116) {
-	var _p117 = _p116;
-	var _p120 = _p117._1;
-	var _p119 = _p117._0;
-	var _p118 = _user$project$Mathquelm_ListZipper$getAfter(_p119);
-	if (_p118.ctor === 'Just') {
-		switch (_p118._0.ctor) {
-			case 'Cos':
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: A2(_user$project$Mathquelm_ListZipper$insertAfter, _p118._0._0, _p119),
-						_1: _p120
-					});
-			case 'Div':
-				return _user$project$Mathquelm_EditableMath$enterTopOfCommandToRight(
-					{ctor: '_Tuple2', _0: _p119, _1: _p120});
-			default:
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: _user$project$Mathquelm_ListZipper$removeAfter(_p119),
-						_1: _p120
-					});
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$deleteRight = function (mathBeingEdited) {
-	var _p121 = mathBeingEdited;
-	if (_p121.ctor === 'Cursor') {
-		var _p122 = _p121._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$deleteParentCommand(_p122),
-				_user$project$Mathquelm_EditableMath$deleteRightOfCursor(_p122)));
-	} else {
-		return _elm_lang$core$Maybe$Just(
-			_user$project$Mathquelm_EditableMath$Cursor(
-				_user$project$Mathquelm_EditableMath$deleteInsideSelection(_p121._0)));
-	}
-};
-var _user$project$Mathquelm_EditableMath$moveCursorToTopOfFraction = function (_p123) {
-	var _p124 = _p123;
-	var _p127 = _p124._1;
-	var _p126 = _p124._0;
-	var _p125 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p127);
-	if ((_p125.ctor === 'Just') && (_p125._0.ctor === 'DivWithBotHole')) {
-		return _elm_lang$core$Maybe$Just(
-			A2(
-				_user$project$Mathquelm_EditableMath$setCommandBeingEdited,
-				_user$project$Mathquelm_EditableMath$DivWithTopHole(
-					_user$project$Mathquelm_EditableMath$removeCursor(_p126)),
-				A2(
-					_user$project$Mathquelm_EditableMath$setCursorBlock,
-					_user$project$Mathquelm_EditableMath$placeCursorOnRight(_p125._0._0),
-					{ctor: '_Tuple2', _0: _p126, _1: _p127})));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$exitCurrentBlockLeftward = function (_p128) {
-	var _p129 = _p128;
-	var _p132 = _p129._1;
-	var _p131 = _p129._0;
-	var _p130 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p132);
-	if (_p130.ctor === 'Just') {
-		if (_p130._0.ctor === 'DivWithBotHole') {
-			return _user$project$Mathquelm_EditableMath$moveCursorToTopOfFraction(
-				{ctor: '_Tuple2', _0: _p131, _1: _p132});
-		} else {
-			return _user$project$Mathquelm_EditableMath$exitCurrentCommandLeftward(
-				{ctor: '_Tuple2', _0: _p131, _1: _p132});
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$exitCurrentBlockUpward = function (_p133) {
-	var _p134 = _p133;
-	var _p137 = _p134._1;
-	var _p136 = _p134._0;
-	var _p135 = _user$project$Mathquelm_EditableMath$getCommandBeingEdited(_p137);
-	if (_p135.ctor === 'Just') {
-		if (_p135._0.ctor === 'DivWithBotHole') {
-			return _user$project$Mathquelm_EditableMath$moveCursorToTopOfFraction(
-				{ctor: '_Tuple2', _0: _p136, _1: _p137});
-		} else {
-			return A2(
-				_elm_lang$core$Maybe$andThen,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockUpward,
-				_user$project$Mathquelm_EditableMath$exitCurrentCommandLeftward(
-					{ctor: '_Tuple2', _0: _p136, _1: _p137}));
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$goUp = function (mathBeingEdited) {
-	var _p138 = mathBeingEdited;
-	if (_p138.ctor === 'Cursor') {
-		var _p139 = _p138._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockUpward(_p139),
-				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$enterTopOfCommandToLeft(_p139),
-					_user$project$Mathquelm_EditableMath$enterTopOfCommandToRight(_p139))));
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$CosWithHole = {ctor: 'CosWithHole'};
-var _user$project$Mathquelm_EditableMath$enterCommandToLeft = function (_p140) {
-	var _p141 = _p140;
-	var _p144 = _p141._1;
-	var _p143 = _p141._0;
-	var _p142 = _user$project$Mathquelm_ListZipper$getBefore(_p143);
-	_v76_2:
-	do {
-		if (_p142.ctor === 'Just') {
-			switch (_p142._0.ctor) {
-				case 'Cos':
-					return _elm_lang$core$Maybe$Just(
-						{
-							ctor: '_Tuple2',
-							_0: _user$project$Mathquelm_EditableMath$placeCursorOnRight(_p142._0._0),
-							_1: A2(
-								_user$project$Mathquelm_EditableMath$push,
-								A2(
-									_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-									_user$project$Mathquelm_ListZipper$removeBefore(_p143),
-									_user$project$Mathquelm_EditableMath$CosWithHole),
-								_p144)
-						});
-				case 'Div':
-					return _elm_lang$core$Maybe$Just(
-						{
-							ctor: '_Tuple2',
-							_0: _user$project$Mathquelm_EditableMath$placeCursorOnRight(_p142._0._1),
-							_1: A2(
-								_user$project$Mathquelm_EditableMath$push,
-								A2(
-									_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-									_user$project$Mathquelm_ListZipper$removeBefore(_p143),
-									_user$project$Mathquelm_EditableMath$DivWithBotHole(_p142._0._0)),
-								_p144)
-						});
-				default:
-					break _v76_2;
-			}
-		} else {
-			break _v76_2;
-		}
-	} while(false);
-	return _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$goLeft = function (mathBeingEdited) {
-	var _p145 = mathBeingEdited;
-	if (_p145.ctor === 'Cursor') {
-		var _p146 = _p145._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockLeftward(_p146),
-				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$jumpCommandToLeft(_p146),
-					_user$project$Mathquelm_EditableMath$enterCommandToLeft(_p146))));
-	} else {
-		return _elm_lang$core$Maybe$Just(
-			_user$project$Mathquelm_EditableMath$Cursor(
-				_user$project$Mathquelm_EditableMath$placeCursorAtLeftOfSelection(_p145._0)));
-	}
-};
-var _user$project$Mathquelm_EditableMath$deleteLeftOfCursor = function (_p147) {
-	var _p148 = _p147;
-	var _p151 = _p148._1;
-	var _p150 = _p148._0;
-	var _p149 = _user$project$Mathquelm_ListZipper$getBefore(_p150);
-	if (_p149.ctor === 'Just') {
-		switch (_p149._0.ctor) {
-			case 'Cos':
-				return _user$project$Mathquelm_EditableMath$enterCommandToLeft(
-					{ctor: '_Tuple2', _0: _p150, _1: _p151});
-			case 'Div':
-				return _user$project$Mathquelm_EditableMath$enterBottomOfCommandToLeft(
-					{ctor: '_Tuple2', _0: _p150, _1: _p151});
-			default:
-				return _elm_lang$core$Maybe$Just(
-					{
-						ctor: '_Tuple2',
-						_0: _user$project$Mathquelm_ListZipper$removeBefore(_p150),
-						_1: _p151
-					});
-		}
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _user$project$Mathquelm_EditableMath$deleteLeft = function (mathBeingEdited) {
-	var _p152 = mathBeingEdited;
-	if (_p152.ctor === 'Cursor') {
-		var _p153 = _p152._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$deleteParentCommand(_p153),
-				_user$project$Mathquelm_EditableMath$deleteLeftOfCursor(_p153)));
-	} else {
-		return _elm_lang$core$Maybe$Just(
-			_user$project$Mathquelm_EditableMath$Cursor(
-				_user$project$Mathquelm_EditableMath$deleteInsideSelection(_p152._0)));
-	}
-};
-var _user$project$Mathquelm_EditableMath$enterCommandToRight = function (_p154) {
-	var _p155 = _p154;
-	var _p158 = _p155._1;
-	var _p157 = _p155._0;
-	var _p156 = _user$project$Mathquelm_ListZipper$getAfter(_p157);
-	_v82_2:
-	do {
-		if (_p156.ctor === 'Just') {
-			switch (_p156._0.ctor) {
-				case 'Cos':
-					return _elm_lang$core$Maybe$Just(
-						{
-							ctor: '_Tuple2',
-							_0: _user$project$Mathquelm_EditableMath$placeCursorOnLeft(_p156._0._0),
-							_1: A2(
-								_user$project$Mathquelm_EditableMath$push,
-								A2(
-									_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-									_user$project$Mathquelm_ListZipper$removeAfter(_p157),
-									_user$project$Mathquelm_EditableMath$CosWithHole),
-								_p158)
-						});
-				case 'Div':
-					return _elm_lang$core$Maybe$Just(
-						{
-							ctor: '_Tuple2',
-							_0: _user$project$Mathquelm_EditableMath$placeCursorOnLeft(_p156._0._0),
-							_1: A2(
-								_user$project$Mathquelm_EditableMath$push,
-								A2(
-									_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
-									_user$project$Mathquelm_ListZipper$removeAfter(_p157),
-									_user$project$Mathquelm_EditableMath$DivWithTopHole(_p156._0._1)),
-								_p158)
-						});
-				default:
-					break _v82_2;
-			}
-		} else {
-			break _v82_2;
-		}
-	} while(false);
-	return _elm_lang$core$Maybe$Nothing;
-};
-var _user$project$Mathquelm_EditableMath$goRight = function (mathBeingEdited) {
-	var _p159 = mathBeingEdited;
-	if (_p159.ctor === 'Cursor') {
-		var _p160 = _p159._0;
-		return A2(
-			_elm_lang$core$Maybe$map,
-			_user$project$Mathquelm_EditableMath$Cursor,
-			A2(
-				_user$project$Mathquelm_EditableMath$orElse,
-				_user$project$Mathquelm_EditableMath$exitCurrentBlockRightward(_p160),
-				A2(
-					_user$project$Mathquelm_EditableMath$orElse,
-					_user$project$Mathquelm_EditableMath$jumpCommandToRight(_p160),
-					_user$project$Mathquelm_EditableMath$enterCommandToRight(_p160))));
-	} else {
-		return _elm_lang$core$Maybe$Just(
-			_user$project$Mathquelm_EditableMath$Cursor(
-				_user$project$Mathquelm_EditableMath$placeCursorAtRightOfSelection(_p159._0)));
-	}
-};
-
-var _user$project$Mathquelm_AutoCommands$toCommand = function (autoCmd) {
-	var _p0 = autoCmd;
-	return _user$project$Mathquelm_EditableMath$Cos(
-		{ctor: '[]'});
-};
-var _user$project$Mathquelm_AutoCommands$triggerString = function (autoCmd) {
-	var _p1 = autoCmd;
-	return 'cos';
-};
-var _user$project$Mathquelm_AutoCommands$Cos = {ctor: 'Cos'};
-
-var _user$project$Mathquelm_Config$toggleBoxesDisplay = function (config) {
-	return _elm_lang$core$Native_Utils.update(
-		config,
-		{showBoxes: !config.showBoxes});
-};
-var _user$project$Mathquelm_Config$toggleCenterLineDisplay = function (config) {
-	return _elm_lang$core$Native_Utils.update(
-		config,
-		{showCenterLines: !config.showCenterLines});
-};
-var _user$project$Mathquelm_Config$scaled = F2(
-	function (config, depth) {
-		return A3(_mdgriffith$style_elements$Style_Scale$modular, config.baseFontSize, config.modularScale, depth);
-	});
-var _user$project$Mathquelm_Config$default = {
-	showCenterLines: false,
-	showBoxes: false,
-	maxDepth: 3,
-	baseFontSize: 28.8,
-	modularScale: 0.7,
-	autoCmds: {
-		ctor: '::',
-		_0: _user$project$Mathquelm_AutoCommands$Cos,
-		_1: {ctor: '[]'}
-	}
-};
-var _user$project$Mathquelm_Config$Config = F6(
-	function (a, b, c, d, e, f) {
-		return {showCenterLines: a, showBoxes: b, maxDepth: c, baseFontSize: d, modularScale: e, autoCmds: f};
-	});
 
 var _user$project$Mathquelm_Insert$splitAtRightMostTerm = function (block) {
 	return {
@@ -27925,14 +27930,14 @@ var _user$project$Mathquelm_Insert$splitAtRightMostTerm = function (block) {
 			F2(
 				function (x, y) {
 					return !_elm_lang$core$Native_Utils.eq(x, y);
-				})(_user$project$Mathquelm_EditableMath$Plus),
+				})(_user$project$Mathquelm_Edit_Command$Plus),
 			block),
 		_1: A2(
 			_elm_community$list_extra$List_Extra$takeWhileRight,
 			F2(
 				function (x, y) {
 					return !_elm_lang$core$Native_Utils.eq(x, y);
-				})(_user$project$Mathquelm_EditableMath$Plus),
+				})(_user$project$Mathquelm_Edit_Command$Plus),
 			block)
 	};
 };
@@ -27940,17 +27945,17 @@ var _user$project$Mathquelm_Insert$insertFraction = function (mathBeingEdited) {
 	var _p0 = mathBeingEdited;
 	if (_p0.ctor === 'Cursor') {
 		var _p2 = _p0._0._0;
-		return _user$project$Mathquelm_EditableMath$Cursor(
+		return _user$project$Mathquelm_Edit_EditableMath$Cursor(
 			function () {
 				var _p1 = _user$project$Mathquelm_Insert$splitAtRightMostTerm(
 					_user$project$Mathquelm_ListZipper$getAllBefore(_p2));
 				var leftParent = _p1._0;
 				var numerator = _p1._1;
-				var fraction = _elm_lang$core$List$isEmpty(numerator) ? _user$project$Mathquelm_EditableMath$DivWithTopHole(
-					{ctor: '[]'}) : _user$project$Mathquelm_EditableMath$DivWithBotHole(numerator);
+				var fraction = _elm_lang$core$List$isEmpty(numerator) ? _user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithTopHole(
+					{ctor: '[]'}) : _user$project$Mathquelm_Edit_TreeWithBlockHole$DivWithBotHole(numerator);
 				var rightParent = _user$project$Mathquelm_ListZipper$getAllAfter(_p2);
 				var newParentBlock = A2(
-					_user$project$Mathquelm_EditableMath$BlockWithBlockHole,
+					_user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole,
 					A2(
 						_user$project$Mathquelm_ListZipper$insertBefore,
 						leftParent,
@@ -28036,7 +28041,7 @@ var _user$project$Mathquelm_Insert$tryMatchAutoCmd = F2(
 		return A2(
 			_elm_lang$core$Maybe$andThen,
 			function (startIndex) {
-				return _user$project$Mathquelm_EditableMath$enterCommandToRight(
+				return _user$project$Mathquelm_Edit_MathWithCursor$enterCommandToRight(
 					function (c) {
 						return {ctor: '_Tuple2', _0: c, _1: _p6._1};
 					}(
@@ -28061,7 +28066,7 @@ var _user$project$Mathquelm_Insert$checkForAutoCmds = F2(
 		var _p10 = mathBeingEdited;
 		if (_p10.ctor === 'Cursor') {
 			var _p11 = _p10._0;
-			return _user$project$Mathquelm_EditableMath$Cursor(
+			return _user$project$Mathquelm_Edit_EditableMath$Cursor(
 				A2(
 					_elm_lang$core$Maybe$withDefault,
 					_p11,
@@ -28071,7 +28076,7 @@ var _user$project$Mathquelm_Insert$checkForAutoCmds = F2(
 							_user$project$Mathquelm_Insert$tryMatchAutoCmd(_p11),
 							autoCmds))));
 		} else {
-			return _user$project$Mathquelm_EditableMath$Selection(
+			return _user$project$Mathquelm_Edit_EditableMath$Selection(
 				{ctor: '_Tuple2', _0: _p10._0._0, _1: _p10._0._1});
 		}
 	});
@@ -28079,14 +28084,14 @@ var _user$project$Mathquelm_Insert$insertCmd = F2(
 	function (cmd, mathBeingEdited) {
 		var _p12 = mathBeingEdited;
 		if (_p12.ctor === 'Cursor') {
-			return _user$project$Mathquelm_EditableMath$Cursor(
-				A2(_user$project$Mathquelm_EditableMath$insertLeftOfCursor, cmd, _p12._0));
+			return _user$project$Mathquelm_Edit_EditableMath$Cursor(
+				A2(_user$project$Mathquelm_Edit_MathWithCursor$insertLeftOfCursor, cmd, _p12._0));
 		} else {
-			return _user$project$Mathquelm_EditableMath$Cursor(
+			return _user$project$Mathquelm_Edit_EditableMath$Cursor(
 				A2(
-					_user$project$Mathquelm_EditableMath$insertLeftOfCursor,
+					_user$project$Mathquelm_Edit_MathWithCursor$insertLeftOfCursor,
 					cmd,
-					_user$project$Mathquelm_EditableMath$deleteInsideSelection(_p12._0)));
+					_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(_p12._0)));
 		}
 	});
 var _user$project$Mathquelm_Insert$insert = F3(
@@ -28099,17 +28104,17 @@ var _user$project$Mathquelm_Insert$insert = F3(
 					config.autoCmds,
 					A2(
 						_user$project$Mathquelm_Insert$insertCmd,
-						_user$project$Mathquelm_EditableMath$Var(_p13._0),
+						_user$project$Mathquelm_Edit_Command$Var(_p13._0),
 						mathBeingEdited));
 			case 'InsertDigit':
 				return A2(
 					_user$project$Mathquelm_Insert$insertCmd,
-					_user$project$Mathquelm_EditableMath$Digit(_p13._0),
+					_user$project$Mathquelm_Edit_Command$Digit(_p13._0),
 					mathBeingEdited);
 			case 'InsertFraction':
 				return _user$project$Mathquelm_Insert$insertFraction(mathBeingEdited);
 			default:
-				return A2(_user$project$Mathquelm_Insert$insertCmd, _user$project$Mathquelm_EditableMath$Plus, mathBeingEdited);
+				return A2(_user$project$Mathquelm_Insert$insertCmd, _user$project$Mathquelm_Edit_Command$Plus, mathBeingEdited);
 		}
 	});
 var _user$project$Mathquelm_Insert$InsertPlus = {ctor: 'InsertPlus'};
@@ -28732,7 +28737,7 @@ var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 							A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p8.restOfBlock)));
 				}),
 			firstBlock,
-			_user$project$Mathquelm_EditableMath$getRestOfTree(mathBeingEdited)));
+			_user$project$Mathquelm_Edit_EditableMath$getRestOfTree(mathBeingEdited)));
 };
 
 var _user$project$Mathquelm$isShiftDown = function (pressedKeys) {
@@ -28761,30 +28766,30 @@ var _user$project$Mathquelm$update = F2(
 			case 'Move':
 				switch (_p0._0.ctor) {
 					case 'Right':
-						return tryEdit(_user$project$Mathquelm_EditableMath$goRight);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$goRight);
 					case 'Left':
-						return tryEdit(_user$project$Mathquelm_EditableMath$goLeft);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$goLeft);
 					case 'Up':
-						return tryEdit(_user$project$Mathquelm_EditableMath$goUp);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$goUp);
 					default:
-						return tryEdit(_user$project$Mathquelm_EditableMath$goDown);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$goDown);
 				}
 			case 'Select':
 				switch (_p0._0.ctor) {
 					case 'Right':
-						return tryEdit(_user$project$Mathquelm_EditableMath$selectRight);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectRight);
 					case 'Left':
-						return tryEdit(_user$project$Mathquelm_EditableMath$selectLeft);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectLeft);
 					case 'Up':
-						return tryEdit(_user$project$Mathquelm_EditableMath$selectUp);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectUp);
 					default:
-						return tryEdit(_user$project$Mathquelm_EditableMath$selectDown);
+						return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectDown);
 				}
 			case 'Delete':
 				if (_p0._0.ctor === 'DeleteLeft') {
-					return tryEdit(_user$project$Mathquelm_EditableMath$deleteLeft);
+					return tryEdit(_user$project$Mathquelm_Edit_EditableMath$deleteLeft);
 				} else {
-					return tryEdit(_user$project$Mathquelm_EditableMath$deleteRight);
+					return tryEdit(_user$project$Mathquelm_Edit_EditableMath$deleteRight);
 				}
 			case 'Insert':
 				return _elm_lang$core$Native_Utils.update(
@@ -28797,7 +28802,7 @@ var _user$project$Mathquelm$update = F2(
 		}
 	});
 var _user$project$Mathquelm$defaultModel = {
-	tree: _user$project$Mathquelm_EditableMath$startEditing(
+	tree: _user$project$Mathquelm_Edit_EditableMath$startEditing(
 		{ctor: '[]'}),
 	config: _user$project$Mathquelm_Config$default,
 	pressedKeys: {ctor: '[]'}
@@ -28825,7 +28830,7 @@ var _user$project$Mathquelm$editableQuelm = function (model) {
 };
 var _user$project$Mathquelm$latex = function (model) {
 	return _user$project$Mathquelm_Math$toLatex(
-		_user$project$Mathquelm_EditableMath$toMath(model.tree));
+		_user$project$Mathquelm_Edit_EditableMath$toMath(model.tree));
 };
 var _user$project$Mathquelm$str = function (val) {
 	return A2(
@@ -28833,18 +28838,18 @@ var _user$project$Mathquelm$str = function (val) {
 		function ($char) {
 			return _elm_lang$core$Native_Utils.eq(
 				$char,
-				_elm_lang$core$Native_Utils.chr('+')) ? _user$project$Mathquelm_EditableMath$Plus : A2(
+				_elm_lang$core$Native_Utils.chr('+')) ? _user$project$Mathquelm_Edit_Command$Plus : A2(
 				_elm_lang$core$Maybe$withDefault,
-				_user$project$Mathquelm_EditableMath$Var(
+				_user$project$Mathquelm_Edit_Command$Var(
 					_elm_lang$core$String$fromChar($char)),
 				A2(
 					_elm_lang$core$Maybe$map,
-					_user$project$Mathquelm_EditableMath$Digit,
+					_user$project$Mathquelm_Edit_Command$Digit,
 					_user$project$Mathquelm_Digit$fromChar($char)));
 		},
 		_elm_lang$core$String$toList(val));
 };
-var _user$project$Mathquelm$sampleTree = _user$project$Mathquelm_EditableMath$startEditing(
+var _user$project$Mathquelm$sampleTree = _user$project$Mathquelm_Edit_EditableMath$startEditing(
 	A2(
 		_elm_lang$core$Basics_ops['++'],
 		_user$project$Mathquelm$str('abc+'),
@@ -28852,26 +28857,26 @@ var _user$project$Mathquelm$sampleTree = _user$project$Mathquelm_EditableMath$st
 			_elm_lang$core$Basics_ops['++'],
 			{
 				ctor: '::',
-				_0: _user$project$Mathquelm_EditableMath$Cos(
+				_0: _user$project$Mathquelm_Edit_Command$Cos(
 					_user$project$Mathquelm$str('xy+z')),
 				_1: {
 					ctor: '::',
 					_0: A2(
-						_user$project$Mathquelm_EditableMath$Div,
+						_user$project$Mathquelm_Edit_Command$Div,
 						{
 							ctor: '::',
-							_0: _user$project$Mathquelm_EditableMath$Cos(
+							_0: _user$project$Mathquelm_Edit_Command$Cos(
 								_user$project$Mathquelm$str('hi')),
 							_1: {
 								ctor: '::',
-								_0: _user$project$Mathquelm_EditableMath$Digit(_user$project$Mathquelm_Digit$Nine),
+								_0: _user$project$Mathquelm_Edit_Command$Digit(_user$project$Mathquelm_Digit$Nine),
 								_1: {ctor: '[]'}
 							}
 						},
 						{
 							ctor: '::',
 							_0: A2(
-								_user$project$Mathquelm_EditableMath$Div,
+								_user$project$Mathquelm_Edit_Command$Div,
 								_user$project$Mathquelm$str('lo'),
 								_user$project$Mathquelm$str('lower')),
 							_1: {ctor: '[]'}
@@ -28955,7 +28960,7 @@ var _user$project$Mathquelm$keyDown = F2(
 					_elm_lang$core$Maybe$withDefault,
 					_user$project$Mathquelm$Noop,
 					A2(
-						_user$project$Mathquelm_EditableMath$orElse,
+						_user$project$Mathquelm_Util$orElse,
 						A2(_user$project$Mathquelm$getAsOp, pressedKeys, key),
 						A2(_user$project$Mathquelm$getAsChar, pressedKeys, key)));
 		}

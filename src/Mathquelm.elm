@@ -3,24 +3,25 @@ module Mathquelm exposing (..)
 import Char
 import Element exposing (..)
 import Html exposing (Html)
-import Keyboard
 import Keyboard.Extra exposing (Key(..))
 import Mathquelm.Config as Config exposing (Config)
 import Mathquelm.Digit as Digit
-import Mathquelm.EditableMath exposing (..)
+import Mathquelm.Edit.Command as EditCommand exposing (..)
+import Mathquelm.Edit.EditableMath exposing (..)
 import Mathquelm.Insert exposing (Insertion(..), insert)
 import Mathquelm.Math as Math
 import Mathquelm.Render as Render
 import Mathquelm.Styles exposing (..)
+import Mathquelm.Util exposing (..)
 
 
-str : String -> Block
+str : String -> EditCommand.Block
 str val =
     String.toList val
         |> List.map
             (\char ->
                 if char == '+' then
-                    Mathquelm.EditableMath.Plus
+                    EditCommand.Plus
                 else
                     Digit.fromChar char
                         |> Maybe.map Digit
