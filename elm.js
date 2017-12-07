@@ -27068,7 +27068,7 @@ var _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToBottomOfFraction = f
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandRightward = function (_p26) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCommandRightward = function (_p26) {
 	var _p27 = _p26;
 	var _p28 = _p27._1;
 	if (_p28.ctor === '::') {
@@ -27089,7 +27089,7 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandRightward = fu
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward = function (_p30) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitCommandLeftward = function (_p30) {
 	var _p31 = _p30;
 	var _p32 = _p31._1;
 	if (_p32.ctor === '::') {
@@ -27110,7 +27110,7 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward = fun
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward = function (_p34) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitBlockDownward = function (_p34) {
 	var _p35 = _p34;
 	var _p38 = _p35._1;
 	var _p37 = _p35._0;
@@ -27122,15 +27122,15 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward = funct
 		} else {
 			return A2(
 				_elm_lang$core$Maybe$andThen,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockDownward,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCommandLeftward(
 					{ctor: '_Tuple2', _0: _p37, _1: _p38}));
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward = function (_p39) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitBlockUpward = function (_p39) {
 	var _p40 = _p39;
 	var _p43 = _p40._1;
 	var _p42 = _p40._0;
@@ -27142,15 +27142,15 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward = functio
 		} else {
 			return A2(
 				_elm_lang$core$Maybe$andThen,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockUpward,
+				_user$project$Mathquelm_Edit_MathWithCursor$exitCommandLeftward(
 					{ctor: '_Tuple2', _0: _p42, _1: _p43}));
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockRightward = function (_p44) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitBlockRightward = function (_p44) {
 	var _p45 = _p44;
 	var _p48 = _p45._1;
 	var _p47 = _p45._0;
@@ -27160,14 +27160,14 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockRightward = func
 			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToBottomOfFraction(
 				{ctor: '_Tuple2', _0: _p47, _1: _p48});
 		} else {
-			return _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandRightward(
+			return _user$project$Mathquelm_Edit_MathWithCursor$exitCommandRightward(
 				{ctor: '_Tuple2', _0: _p47, _1: _p48});
 		}
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockLeftward = function (_p49) {
+var _user$project$Mathquelm_Edit_MathWithCursor$exitBlockLeftward = function (_p49) {
 	var _p50 = _p49;
 	var _p53 = _p50._1;
 	var _p52 = _p50._0;
@@ -27177,7 +27177,7 @@ var _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockLeftward = funct
 			return _user$project$Mathquelm_Edit_MathWithCursor$moveCursorToTopOfFraction(
 				{ctor: '_Tuple2', _0: _p52, _1: _p53});
 		} else {
-			return _user$project$Mathquelm_Edit_MathWithCursor$exitCurrentCommandLeftward(
+			return _user$project$Mathquelm_Edit_MathWithCursor$exitCommandLeftward(
 				{ctor: '_Tuple2', _0: _p52, _1: _p53});
 		}
 	} else {
@@ -27761,7 +27761,7 @@ var _user$project$Mathquelm_Edit_EditableMath$goLeft = function (mathBeingEdited
 			_user$project$Mathquelm_Edit_EditableMath$Cursor,
 			A2(
 				_user$project$Mathquelm_Util$orElse,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockLeftward(_p11),
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockLeftward(_p11),
 				A2(
 					_user$project$Mathquelm_Util$orElse,
 					_user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToLeft(_p11),
@@ -27781,7 +27781,7 @@ var _user$project$Mathquelm_Edit_EditableMath$goRight = function (mathBeingEdite
 			_user$project$Mathquelm_Edit_EditableMath$Cursor,
 			A2(
 				_user$project$Mathquelm_Util$orElse,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockRightward(_p13),
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockRightward(_p13),
 				A2(
 					_user$project$Mathquelm_Util$orElse,
 					_user$project$Mathquelm_Edit_MathWithCursor$jumpCommandToRight(_p13),
@@ -27801,7 +27801,7 @@ var _user$project$Mathquelm_Edit_EditableMath$goUp = function (mathBeingEdited) 
 			_user$project$Mathquelm_Edit_EditableMath$Cursor,
 			A2(
 				_user$project$Mathquelm_Util$orElse,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockUpward(_p15),
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockUpward(_p15),
 				A2(
 					_user$project$Mathquelm_Util$orElse,
 					_user$project$Mathquelm_Edit_MathWithCursor$enterTopOfCommandToLeft(_p15),
@@ -27819,7 +27819,7 @@ var _user$project$Mathquelm_Edit_EditableMath$goDown = function (mathBeingEdited
 			_user$project$Mathquelm_Edit_EditableMath$Cursor,
 			A2(
 				_user$project$Mathquelm_Util$orElse,
-				_user$project$Mathquelm_Edit_MathWithCursor$exitCurrentBlockDownward(_p17),
+				_user$project$Mathquelm_Edit_MathWithCursor$exitBlockDownward(_p17),
 				A2(
 					_user$project$Mathquelm_Util$orElse,
 					_user$project$Mathquelm_Edit_MathWithCursor$enterBottomOfCommandToLeft(_p17),

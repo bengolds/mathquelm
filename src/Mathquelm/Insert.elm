@@ -7,7 +7,6 @@ import Mathquelm.Digit as Digit exposing (Digit)
 import Mathquelm.Edit.Command exposing (Command(..))
 import Mathquelm.Edit.EditableMath as EditableMath exposing (MathBeingEdited(..))
 import Mathquelm.Edit.MathWithCursor as Cursor exposing (BlockWithCursor)
-import Mathquelm.Edit.MathWithSelection as Selection exposing (BlockWithSelection)
 import Mathquelm.Edit.TreeWithBlockHole as TreeWithBlockHole exposing (CommandWithBlockHole(..))
 import Mathquelm.ListZipper as ListZipper
 
@@ -161,7 +160,7 @@ insertFraction mathBeingEdited =
                             DivWithBotHole numerator
 
                     newParentBlock =
-                        EMath.BlockWithBlockHole
+                        TreeWithBlockHole.BlockWithBlockHole
                             -- TODO THIS IS JANKY
                             (ListZipper.fromList rightParent
                                 |> ListZipper.insertBefore leftParent

@@ -18,7 +18,7 @@ goLeft mathBeingEdited =
         Cursor mathWithCursor ->
             Cursor.enterCommandToLeft mathWithCursor
                 |> orElse (Cursor.jumpCommandToLeft mathWithCursor)
-                |> orElse (Cursor.exitCurrentBlockLeftward mathWithCursor)
+                |> orElse (Cursor.exitBlockLeftward mathWithCursor)
                 |> Maybe.map Cursor
 
         Selection mathWithSelection ->
@@ -31,7 +31,7 @@ goRight mathBeingEdited =
         Cursor mathWithCursor ->
             Cursor.enterCommandToRight mathWithCursor
                 |> orElse (Cursor.jumpCommandToRight mathWithCursor)
-                |> orElse (Cursor.exitCurrentBlockRightward mathWithCursor)
+                |> orElse (Cursor.exitBlockRightward mathWithCursor)
                 |> Maybe.map Cursor
 
         Selection mathWithSelection ->
@@ -44,7 +44,7 @@ goUp mathBeingEdited =
         Cursor mathWithCursor ->
             Cursor.enterTopOfCommandToRight mathWithCursor
                 |> orElse (Cursor.enterTopOfCommandToLeft mathWithCursor)
-                |> orElse (Cursor.exitCurrentBlockUpward mathWithCursor)
+                |> orElse (Cursor.exitBlockUpward mathWithCursor)
                 |> Maybe.map Cursor
 
         _ ->
@@ -57,7 +57,7 @@ goDown mathBeingEdited =
         Cursor mathWithCursor ->
             Cursor.enterBottomOfCommandToRight mathWithCursor
                 |> orElse (Cursor.enterBottomOfCommandToLeft mathWithCursor)
-                |> orElse (Cursor.exitCurrentBlockDownward mathWithCursor)
+                |> orElse (Cursor.exitBlockDownward mathWithCursor)
                 |> Maybe.map Cursor
 
         _ ->

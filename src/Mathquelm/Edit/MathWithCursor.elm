@@ -170,62 +170,62 @@ jumpCommandToRight ( cursorBlock, restOfTree ) =
         Nothing
 
 
-exitCurrentBlockLeftward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockLeftward ( cursorBlock, restOfTree ) =
+exitBlockLeftward : MathWithCursor -> Maybe MathWithCursor
+exitBlockLeftward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithBotHole top) ->
             moveCursorToTopOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
+            exitCommandLeftward ( cursorBlock, restOfTree )
 
         Nothing ->
             Nothing
 
 
-exitCurrentBlockRightward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockRightward ( cursorBlock, restOfTree ) =
+exitBlockRightward : MathWithCursor -> Maybe MathWithCursor
+exitBlockRightward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithTopHole bottom) ->
             moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
-            exitCurrentCommandRightward ( cursorBlock, restOfTree )
+            exitCommandRightward ( cursorBlock, restOfTree )
 
         _ ->
             Nothing
 
 
-exitCurrentBlockUpward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockUpward ( cursorBlock, restOfTree ) =
+exitBlockUpward : MathWithCursor -> Maybe MathWithCursor
+exitBlockUpward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithBotHole top) ->
             moveCursorToTopOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
-                |> Maybe.andThen exitCurrentBlockUpward
+            exitCommandLeftward ( cursorBlock, restOfTree )
+                |> Maybe.andThen exitBlockUpward
 
         Nothing ->
             Nothing
 
 
-exitCurrentBlockDownward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentBlockDownward ( cursorBlock, restOfTree ) =
+exitBlockDownward : MathWithCursor -> Maybe MathWithCursor
+exitBlockDownward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithTopHole bot) ->
             moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
-            exitCurrentCommandLeftward ( cursorBlock, restOfTree )
-                |> Maybe.andThen exitCurrentBlockDownward
+            exitCommandLeftward ( cursorBlock, restOfTree )
+                |> Maybe.andThen exitBlockDownward
 
         Nothing ->
             Nothing
 
 
-exitCurrentCommandLeftward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentCommandLeftward ( cursorBlock, restOfTree ) =
+exitCommandLeftward : MathWithCursor -> Maybe MathWithCursor
+exitCommandLeftward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             Just
@@ -243,8 +243,8 @@ exitCurrentCommandLeftward ( cursorBlock, restOfTree ) =
             Nothing
 
 
-exitCurrentCommandRightward : MathWithCursor -> Maybe MathWithCursor
-exitCurrentCommandRightward ( cursorBlock, restOfTree ) =
+exitCommandRightward : MathWithCursor -> Maybe MathWithCursor
+exitCommandRightward ( cursorBlock, restOfTree ) =
     case restOfTree of
         parentBlockWithHole :: grandparents ->
             Just
