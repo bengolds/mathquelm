@@ -17,8 +17,8 @@ goLeft mathBeingEdited =
                 |> orElse (exitCurrentBlockLeftward mathWithCursor)
                 |> Maybe.map Cursor
 
-        _ ->
-            Nothing
+        Selection mathWithSelection ->
+            Just (Cursor (placeCursorAtLeftOfSelection mathWithSelection))
 
 
 goRight : MathBeingEdited -> Maybe MathBeingEdited
@@ -30,8 +30,8 @@ goRight mathBeingEdited =
                 |> orElse (exitCurrentBlockRightward mathWithCursor)
                 |> Maybe.map Cursor
 
-        _ ->
-            Nothing
+        Selection mathWithSelection ->
+            Just (Cursor (placeCursorAtRightOfSelection mathWithSelection))
 
 
 goUp : MathBeingEdited -> Maybe MathBeingEdited
@@ -103,16 +103,23 @@ selectRight mathBeingEdited =
                 |> selectRight
 
         Selection mathWithSelection ->
-            --WHAT DO I DOOO
-            --You can either exit the block
-            --Or extend the block if it's a right selection
-            --Or shrink the block if it's a left selection
-            Nothing
+            moveEdgeOfSelectionRightward mathWithSelection
+                |> orElse (selectWholeBlock mathWithSelection)
+                |> Maybe.map normalizeSelection
 
 
 selectLeft : MathBeingEdited -> Maybe MathBeingEdited
 selectLeft mathBeingEdited =
-    Nothing
+    case mathBeingEdited of
+        Cursor mathWithCursor ->
+            turnCursorIntoSelection Left mathWithCursor
+                |> Selection
+                |> selectLeft
+
+        Selection mathWithSelection ->
+            moveEdgeOfSelectionLeftward mathWithSelection
+                |> orElse (selectWholeBlock mathWithSelection)
+                |> Maybe.map normalizeSelection
 
 
 selectUp : MathBeingEdited -> Maybe MathBeingEdited
@@ -122,6 +129,65 @@ selectUp mathBeingEdited =
 
 selectDown : MathBeingEdited -> Maybe MathBeingEdited
 selectDown mathBeingEdited =
+    Nothing
+
+
+moveEdgeOfSelectionRightward : MathWithSelection -> Maybe MathWithSelection
+moveEdgeOfSelectionRightward mathWithSelection =
+    case getDirection mathWithSelection of
+        Left ->
+            case getSelectedBlock mathWithSelection of
+                leftmost :: remainingSelection ->
+                    Just
+                        (setSelectedBlock remainingSelection mathWithSelection
+                            |> insertBeforeSelection leftmost
+                        )
+
+                _ ->
+                    Nothing
+
+        Right ->
+            case getAfterSelection mathWithSelection of
+                Just next ->
+                    Just
+                        (removeCommandAfterSelection mathWithSelection
+                            |> addToEndOfSelection next
+                        )
+
+                _ ->
+                    Nothing
+
+
+moveEdgeOfSelectionLeftward : MathWithSelection -> Maybe MathWithSelection
+moveEdgeOfSelectionLeftward mathWithSelection =
+    case getDirection mathWithSelection of
+        Right ->
+            case List.reverse (getSelectedBlock mathWithSelection) of
+                rightmost :: remainingSelectionReversed ->
+                    Just
+                        (setSelectedBlock
+                            (List.reverse remainingSelectionReversed)
+                            mathWithSelection
+                            |> insertAfterSelection rightmost
+                        )
+
+                _ ->
+                    Nothing
+
+        Left ->
+            case getBeforeSelection mathWithSelection of
+                Just next ->
+                    Just
+                        (removeCommandBeforeSelection mathWithSelection
+                            |> addToStartOfSelection next
+                        )
+
+                _ ->
+                    Nothing
+
+
+selectWholeBlock : MathWithSelection -> Maybe MathWithSelection
+selectWholeBlock mathWithSelection =
     Nothing
 
 
@@ -719,11 +785,107 @@ type alias BlockWithSelection =
     }
 
 
+normalizeSelection : MathWithSelection -> MathBeingEdited
+normalizeSelection mathWithSelection =
+    case getSelectedBlock mathWithSelection of
+        [] ->
+            Cursor (deleteInsideSelection mathWithSelection)
+
+        _ ->
+            Selection mathWithSelection
+
+
+getDirection : MathWithSelection -> LeftRight
+getDirection ( blockSelection, _ ) =
+    blockSelection.direction
+
+
+getSelectedBlock : MathWithSelection -> Block
+getSelectedBlock ( blockSelection, _ ) =
+    blockSelection.selected
+
+
+getRestOfBlock : MathWithSelection -> ListZipper Command
+getRestOfBlock ( blockSelection, _ ) =
+    blockSelection.restOfBlock
+
+
+updateRestOfBlock :
+    (ListZipper Command -> ListZipper Command)
+    -> MathWithSelection
+    -> MathWithSelection
+updateRestOfBlock fn ( blockSelection, restOfTree ) =
+    ( { blockSelection
+        | restOfBlock = fn blockSelection.restOfBlock
+      }
+    , restOfTree
+    )
+
+
+setSelectedBlock : Block -> MathWithSelection -> MathWithSelection
+setSelectedBlock newSelected ( blockSelection, restOfTree ) =
+    ( { blockSelection | selected = newSelected }, restOfTree )
+
+
+insertBeforeSelection : Command -> MathWithSelection -> MathWithSelection
+insertBeforeSelection toInsert mathWithSelection =
+    updateRestOfBlock (ListZipper.insertBefore [ toInsert ]) mathWithSelection
+
+
+insertAfterSelection : Command -> MathWithSelection -> MathWithSelection
+insertAfterSelection toInsert mathWithSelection =
+    updateRestOfBlock (ListZipper.insertAfter [ toInsert ]) mathWithSelection
+
+
+getAfterSelection : MathWithSelection -> Maybe Command
+getAfterSelection ( blockSelection, _ ) =
+    ListZipper.getAfter blockSelection.restOfBlock
+
+
+getBeforeSelection : MathWithSelection -> Maybe Command
+getBeforeSelection ( blockSelection, _ ) =
+    ListZipper.getBefore blockSelection.restOfBlock
+
+
+removeCommandAfterSelection : MathWithSelection -> MathWithSelection
+removeCommandAfterSelection mathWithSelection =
+    updateRestOfBlock ListZipper.removeAfter mathWithSelection
+
+
+removeCommandBeforeSelection : MathWithSelection -> MathWithSelection
+removeCommandBeforeSelection mathWithSelection =
+    updateRestOfBlock ListZipper.removeBefore mathWithSelection
+
+
+addToEndOfSelection : Command -> MathWithSelection -> MathWithSelection
+addToEndOfSelection toAdd mathWithSelection =
+    setSelectedBlock
+        (getSelectedBlock mathWithSelection ++ [ toAdd ])
+        mathWithSelection
+
+
+addToStartOfSelection : Command -> MathWithSelection -> MathWithSelection
+addToStartOfSelection toAdd mathWithSelection =
+    setSelectedBlock
+        (toAdd :: getSelectedBlock mathWithSelection)
+        mathWithSelection
+
+
 removeSelection : BlockWithSelection -> Block
 removeSelection selectionBlock =
     selectionBlock.restOfBlock
         |> ListZipper.insertAfter selectionBlock.selected
         |> ListZipper.toList
+
+
+placeCursorAtLeftOfSelection : MathWithSelection -> MathWithCursor
+placeCursorAtLeftOfSelection ( { selected, restOfBlock }, restOfTree ) =
+    ( ListZipper.insertAfter selected restOfBlock, restOfTree )
+
+
+placeCursorAtRightOfSelection : MathWithSelection -> MathWithCursor
+placeCursorAtRightOfSelection ( { selected, restOfBlock }, restOfTree ) =
+    ( ListZipper.insertBefore selected restOfBlock, restOfTree )
 
 
 deleteInsideSelection : MathWithSelection -> MathWithCursor

@@ -91,7 +91,7 @@ debugColor depth =
             Color.green
 
         3 ->
-            Color.blue
+            Color.lightBlue
 
         4 ->
             Color.darkBlue

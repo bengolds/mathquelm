@@ -34,9 +34,19 @@ fromEditable mathBeingEdited =
                         |> ListZipper.insertBefore [ Cursor ]
                         |> ListZipper.toList
 
-                EMath.Selection ( { restOfBlock, selected }, _ ) ->
+                EMath.Selection ( { restOfBlock, selected, direction }, _ ) ->
+                    let
+                        insertCursor =
+                            case direction of
+                                EMath.Left ->
+                                    ListZipper.insertBefore [ Cursor ]
+
+                                EMath.Right ->
+                                    ListZipper.insertAfter [ Cursor ]
+                    in
                     ListZipper.map toRCommand restOfBlock
-                        |> ListZipper.insertAfter (toRBlock selected)
+                        |> insertCursor
+                        |> ListZipper.insertBefore [ Selection <| toRBlock selected ]
                         |> ListZipper.toList
 
         rebuild block cmd =
@@ -203,7 +213,7 @@ renderCommand config command =
             row None [] [ text "cos(", render config operand, text ")" ]
 
         Selection contents ->
-            el (DebugBox 1) [] (render config contents)
+            el (DebugBox 3) [] (render config contents)
 
         Empty ->
             el EmptySquare [ width (px 16), height (px 16) ] empty
