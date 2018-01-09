@@ -73,7 +73,7 @@ deleteLeft : MathBeingEdited -> Maybe MathBeingEdited
 deleteLeft mathBeingEdited =
     case mathBeingEdited of
         Cursor mathWithCursor ->
-            Cursor.deleteLeftOfCursor mathWithCursor
+            Cursor.deleteBefore mathWithCursor
                 |> orElse (Cursor.deleteParentCommand mathWithCursor)
                 |> Maybe.map Cursor
 
@@ -85,7 +85,7 @@ deleteRight : MathBeingEdited -> Maybe MathBeingEdited
 deleteRight mathBeingEdited =
     case mathBeingEdited of
         Cursor mathWithCursor ->
-            Cursor.deleteRightOfCursor mathWithCursor
+            Cursor.deleteAfter mathWithCursor
                 |> orElse (Cursor.deleteParentCommand mathWithCursor)
                 |> Maybe.map Cursor
 

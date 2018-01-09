@@ -12,6 +12,7 @@ import Mathquelm.Insert exposing (Insertion(..), insert)
 import Mathquelm.Math as Math
 import Mathquelm.Render as Render
 import Mathquelm.Styles exposing (..)
+import Mathquelm.Undo as Undo exposing (StateWithHistory)
 import Mathquelm.Util exposing (..)
 
 
@@ -42,7 +43,7 @@ sampleTree =
 
 latex : Model -> String
 latex model =
-    Math.toLatex (toMath model.tree)
+    Math.toLatex (toMath <| getTree model)
 
 
 editableQuelm : Model -> Html Msg
@@ -51,7 +52,7 @@ editableQuelm model =
         column Base
             []
             [ loadFont
-            , Render.render model.config (Render.fromEditable model.tree)
+            , Render.render model.config (Render.fromEditable <| getTree model)
             ]
 
 
@@ -73,20 +74,26 @@ type Msg
     | Select MoveDirection
     | Delete DeleteDirection
     | Insert Insertion
-    | ExitBlock
+    | Undo
+    | Redo
+      --| ExitBlock
     | KeyMsg Keyboard.Extra.Msg
 
 
 type alias Model =
-    { tree : MathBeingEdited
+    { stateHistory : StateWithHistory MathBeingEdited
     , config : Config
     , pressedKeys : List Key
     }
 
 
+getTree model =
+    model.stateHistory.currentState
+
+
 defaultModel : Model
 defaultModel =
-    { tree = startEditing []
+    { stateHistory = Undo.freshHistory sampleTree
     , config = Config.default
     , pressedKeys = []
     }
@@ -94,53 +101,83 @@ defaultModel =
 
 update : Msg -> Model -> Model
 update msg model =
-    let
-        tryEdit editFunc =
-            { model
-                | tree =
-                    editFunc model.tree
-                        |> Maybe.withDefault model.tree
-            }
-    in
     case msg of
+        Noop ->
+            model
+
         KeyMsg keyMsg ->
             { model | pressedKeys = Keyboard.Extra.update keyMsg model.pressedKeys }
 
-        Move Right ->
-            tryEdit goRight
-
-        Move Left ->
-            tryEdit goLeft
-
-        Move Up ->
-            tryEdit goUp
-
-        Move Down ->
-            tryEdit goDown
-
-        Select Right ->
-            tryEdit selectRight
-
-        Select Left ->
-            tryEdit selectLeft
-
-        Select Up ->
-            tryEdit selectUp
-
-        Select Down ->
-            tryEdit selectDown
-
-        Delete DeleteLeft ->
-            tryEdit deleteLeft
-
-        Delete DeleteRight ->
-            tryEdit deleteRight
-
-        Insert insertion ->
-            { model | tree = insert model.config insertion model.tree }
-
         _ ->
-            model
+            { model
+                | stateHistory =
+                    updateState msg model.config model.stateHistory
+                        |> Maybe.withDefault model.stateHistory
+            }
+
+
+updateState :
+    Msg
+    -> Config
+    -> StateWithHistory MathBeingEdited
+    -> Maybe (StateWithHistory MathBeingEdited)
+updateState msg config stateHistory =
+    let
+        tryEdit editFunc history =
+            editFunc history.currentState
+                |> Maybe.map
+                    (\edited ->
+                        Undo.setState edited history
+                    )
+    in
+    stateHistory
+        |> (case msg of
+                Undo ->
+                    Undo.undo
+
+                Redo ->
+                    Undo.redo
+
+                Move Right ->
+                    tryEdit goRight
+
+                Move Left ->
+                    tryEdit goLeft
+
+                Move Up ->
+                    tryEdit goUp
+
+                Move Down ->
+                    tryEdit goDown
+
+                Select Right ->
+                    tryEdit selectRight
+
+                Select Left ->
+                    tryEdit selectLeft
+
+                Select Up ->
+                    tryEdit selectUp
+
+                Select Down ->
+                    tryEdit selectDown
+
+                Delete DeleteLeft ->
+                    Undo.recordState
+                        >> tryEdit deleteLeft
+
+                Delete DeleteRight ->
+                    Undo.recordState
+                        >> tryEdit deleteRight
+
+                Insert insertion ->
+                    Undo.recordState
+                        >> Undo.map (insert config insertion)
+                        >> Just
+
+                _ ->
+                    always Nothing
+           )
 
 
 
@@ -199,6 +236,16 @@ isShiftDown pressedKeys =
     List.member Shift pressedKeys
 
 
+isCtrlDown : List Key -> Bool
+isCtrlDown pressedKeys =
+    List.member Control pressedKeys
+
+
+isSuperDown : List Key -> Bool
+isSuperDown pressedKeys =
+    List.member Super pressedKeys
+
+
 keyDown : List Key -> Key -> Msg
 keyDown pressedKeys key =
     let
@@ -229,6 +276,19 @@ keyDown pressedKeys key =
                 Select Down
             else
                 Move Down
+
+        CharZ ->
+            -- TODO: Detect whether OS X or not
+            if
+                isCtrlDown pressedKeys
+                    || isSuperDown pressedKeys
+            then
+                if isShiftDown pressedKeys then
+                    Redo
+                else
+                    Undo
+            else
+                Noop
 
         BackSpace ->
             Delete DeleteLeft

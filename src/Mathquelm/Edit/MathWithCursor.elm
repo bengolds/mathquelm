@@ -174,7 +174,7 @@ exitBlockLeftward : MathWithCursor -> Maybe MathWithCursor
 exitBlockLeftward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithBotHole top) ->
-            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
+            moveToTopOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
             exitCommandLeftward ( cursorBlock, restOfTree )
@@ -187,7 +187,7 @@ exitBlockRightward : MathWithCursor -> Maybe MathWithCursor
 exitBlockRightward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithTopHole bottom) ->
-            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
+            moveToBottomOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
             exitCommandRightward ( cursorBlock, restOfTree )
@@ -200,7 +200,7 @@ exitBlockUpward : MathWithCursor -> Maybe MathWithCursor
 exitBlockUpward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithBotHole top) ->
-            moveCursorToTopOfFraction ( cursorBlock, restOfTree )
+            moveToTopOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
             exitCommandLeftward ( cursorBlock, restOfTree )
@@ -214,7 +214,7 @@ exitBlockDownward : MathWithCursor -> Maybe MathWithCursor
 exitBlockDownward ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithTopHole bot) ->
-            moveCursorToBottomOfFraction ( cursorBlock, restOfTree )
+            moveToBottomOfFraction ( cursorBlock, restOfTree )
 
         Just _ ->
             exitCommandLeftward ( cursorBlock, restOfTree )
@@ -232,7 +232,7 @@ exitCommandLeftward ( cursorBlock, restOfTree ) =
                 (( placeCursorAtHole parentBlockWithHole
                  , grandparents
                  )
-                    |> insertRightOfCursor
+                    |> insertAfter
                         (fillCommandHole
                             parentBlockWithHole.commandWithBlockHole
                             (removeCursor cursorBlock)
@@ -251,7 +251,7 @@ exitCommandRightward ( cursorBlock, restOfTree ) =
                 (( placeCursorAtHole parentBlockWithHole
                  , grandparents
                  )
-                    |> insertLeftOfCursor
+                    |> insertBefore
                         (fillCommandHole
                             parentBlockWithHole.commandWithBlockHole
                             (removeCursor cursorBlock)
@@ -262,8 +262,8 @@ exitCommandRightward ( cursorBlock, restOfTree ) =
             Nothing
 
 
-moveCursorToBottomOfFraction : MathWithCursor -> Maybe MathWithCursor
-moveCursorToBottomOfFraction ( cursorBlock, restOfTree ) =
+moveToBottomOfFraction : MathWithCursor -> Maybe MathWithCursor
+moveToBottomOfFraction ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithTopHole bot) ->
             Just
@@ -277,8 +277,8 @@ moveCursorToBottomOfFraction ( cursorBlock, restOfTree ) =
             Nothing
 
 
-moveCursorToTopOfFraction : MathWithCursor -> Maybe MathWithCursor
-moveCursorToTopOfFraction ( cursorBlock, restOfTree ) =
+moveToTopOfFraction : MathWithCursor -> Maybe MathWithCursor
+moveToTopOfFraction ( cursorBlock, restOfTree ) =
     case getCommandBeingEdited restOfTree of
         Just (DivWithBotHole top) ->
             Just
@@ -294,22 +294,16 @@ moveCursorToTopOfFraction ( cursorBlock, restOfTree ) =
 
 
 -- }}}
--- Insertion with Cursor {{{
 
 
-insertRightOfCursor : Command -> MathWithCursor -> MathWithCursor
-insertRightOfCursor command ( cursorBlock, restOfTree ) =
+insertAfter : Command -> MathWithCursor -> MathWithCursor
+insertAfter command ( cursorBlock, restOfTree ) =
     ( ListZipper.insertAfter [ command ] cursorBlock, restOfTree )
 
 
-insertLeftOfCursor : Command -> MathWithCursor -> MathWithCursor
-insertLeftOfCursor command ( cursorBlock, restOfTree ) =
+insertBefore : Command -> MathWithCursor -> MathWithCursor
+insertBefore command ( cursorBlock, restOfTree ) =
     ( ListZipper.insertBefore [ command ] cursorBlock, restOfTree )
-
-
-
--- }}}
--- Deletion with Cursor {{{
 
 
 deleteParentCommand : MathWithCursor -> Maybe MathWithCursor
@@ -341,8 +335,8 @@ deleteParentCommand ( cursorBlock, restOfTree ) =
             Nothing
 
 
-deleteLeftOfCursor : MathWithCursor -> Maybe MathWithCursor
-deleteLeftOfCursor ( cursorBlock, restOfTree ) =
+deleteBefore : MathWithCursor -> Maybe MathWithCursor
+deleteBefore ( cursorBlock, restOfTree ) =
     case ListZipper.getBefore cursorBlock of
         Just (Cos operands) ->
             enterCommandToLeft ( cursorBlock, restOfTree )
@@ -357,8 +351,8 @@ deleteLeftOfCursor ( cursorBlock, restOfTree ) =
             Nothing
 
 
-deleteRightOfCursor : MathWithCursor -> Maybe MathWithCursor
-deleteRightOfCursor ( cursorBlock, restOfTree ) =
+deleteAfter : MathWithCursor -> Maybe MathWithCursor
+deleteAfter ( cursorBlock, restOfTree ) =
     case ListZipper.getAfter cursorBlock of
         Just (Cos operands) ->
             Just ( ListZipper.insertAfter operands cursorBlock, restOfTree )

@@ -39,12 +39,12 @@ insertCmd : Command -> MathBeingEdited -> MathBeingEdited
 insertCmd cmd mathBeingEdited =
     case mathBeingEdited of
         Cursor mathWithCursor ->
-            Cursor (Cursor.insertLeftOfCursor cmd mathWithCursor)
+            Cursor (Cursor.insertBefore cmd mathWithCursor)
 
         Selection mathWithSelection ->
             Cursor
                 (EditableMath.deleteInsideSelection mathWithSelection
-                    |> Cursor.insertLeftOfCursor cmd
+                    |> Cursor.insertBefore cmd
                 )
 
 

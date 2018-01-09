@@ -36,11 +36,8 @@ init =
         _ =
             Debug.log "latex" Mathquelm.latex
 
-        defaultModel =
-            Mathquelm.defaultModel
-
         mqModel =
-            { defaultModel | tree = Mathquelm.sampleTree }
+            Mathquelm.defaultModel
     in
     ( mqModel
     , Cmd.none
