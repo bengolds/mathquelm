@@ -23,10 +23,6 @@ type alias BlockWithSelection =
     }
 
 
-
--- TODO: Is there a way to do this with a recursive thing -- essentially, have one previous selection?
-
-
 type InnerSelection
     = InnerSelection MathWithSelection
     | None
@@ -197,6 +193,17 @@ moveEdgeOfSelectionLeftward mathWithSelection =
 
                 _ ->
                     Nothing
+
+
+makeSelectionFromBlock : Block -> MathWithSelection
+makeSelectionFromBlock block =
+    ( { restOfBlock = ListZipper.empty
+      , selected = block
+      , innerSelection = None
+      , direction = Right
+      }
+    , TreeWithBlockHole.empty
+    )
 
 
 

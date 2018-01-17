@@ -26917,6 +26917,7 @@ var _user$project$Mathquelm_Edit_TreeWithBlockHole$fillBlockHole = F2(
 				},
 				blockWithBlockHole.restOfBlock));
 	});
+var _user$project$Mathquelm_Edit_TreeWithBlockHole$empty = {ctor: '[]'};
 var _user$project$Mathquelm_Edit_TreeWithBlockHole$BlockWithBlockHole = F2(
 	function (a, b) {
 		return {restOfBlock: a, commandWithBlockHole: b};
@@ -27645,6 +27646,13 @@ var _user$project$Mathquelm_Edit_MathWithSelection$BlockWithSelection = F4(
 var _user$project$Mathquelm_Edit_MathWithSelection$Right = {ctor: 'Right'};
 var _user$project$Mathquelm_Edit_MathWithSelection$Left = {ctor: 'Left'};
 var _user$project$Mathquelm_Edit_MathWithSelection$None = {ctor: 'None'};
+var _user$project$Mathquelm_Edit_MathWithSelection$makeSelectionFromBlock = function (block) {
+	return {
+		ctor: '_Tuple2',
+		_0: {restOfBlock: _user$project$Mathquelm_ListZipper$empty, selected: block, innerSelection: _user$project$Mathquelm_Edit_MathWithSelection$None, direction: _user$project$Mathquelm_Edit_MathWithSelection$Right},
+		_1: _user$project$Mathquelm_Edit_TreeWithBlockHole$empty
+	};
+};
 var _user$project$Mathquelm_Edit_MathWithSelection$InnerSelection = function (a) {
 	return {ctor: 'InnerSelection', _0: a};
 };
@@ -27748,6 +27756,12 @@ var _user$project$Mathquelm_Edit_EditableMath$selectUp = function (mathBeingEdit
 };
 var _user$project$Mathquelm_Edit_EditableMath$Selection = function (a) {
 	return {ctor: 'Selection', _0: a};
+};
+var _user$project$Mathquelm_Edit_EditableMath$selectAll = function (mathBeingEdited) {
+	return _elm_lang$core$Maybe$Just(
+		_user$project$Mathquelm_Edit_EditableMath$Selection(
+			_user$project$Mathquelm_Edit_MathWithSelection$makeSelectionFromBlock(
+				_user$project$Mathquelm_Edit_EditableMath$stopEditing(mathBeingEdited))));
 };
 var _user$project$Mathquelm_Edit_EditableMath$Cursor = function (a) {
 	return {ctor: 'Cursor', _0: a};
@@ -27862,9 +27876,27 @@ var _user$project$Mathquelm_Edit_EditableMath$deleteRight = function (mathBeingE
 				_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(_p20._0)));
 	}
 };
+var _user$project$Mathquelm_Edit_EditableMath$unselect = function (mathBeingEdited) {
+	var _p22 = mathBeingEdited;
+	if (_p22.ctor === 'Selection') {
+		var _p24 = _p22._0;
+		return _elm_lang$core$Maybe$Just(
+			_user$project$Mathquelm_Edit_EditableMath$Cursor(
+				function () {
+					var _p23 = _user$project$Mathquelm_Edit_MathWithSelection$getDirection(_p24);
+					if (_p23.ctor === 'Left') {
+						return _user$project$Mathquelm_Edit_EditableMath$placeCursorAtLeftOfSelection(_p24);
+					} else {
+						return _user$project$Mathquelm_Edit_EditableMath$placeCursorAtRightOfSelection(_p24);
+					}
+				}()));
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
 var _user$project$Mathquelm_Edit_EditableMath$normalizeSelection = function (mathWithSelection) {
-	var _p22 = _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection);
-	if (_p22.ctor === '[]') {
+	var _p25 = _user$project$Mathquelm_Edit_MathWithSelection$getSelectedBlock(mathWithSelection);
+	if (_p25.ctor === '[]') {
 		return _user$project$Mathquelm_Edit_EditableMath$Cursor(
 			_user$project$Mathquelm_Edit_EditableMath$deleteInsideSelection(mathWithSelection));
 	} else {
@@ -27874,42 +27906,42 @@ var _user$project$Mathquelm_Edit_EditableMath$normalizeSelection = function (mat
 var _user$project$Mathquelm_Edit_EditableMath$selectRight = function (mathBeingEdited) {
 	selectRight:
 	while (true) {
-		var _p23 = mathBeingEdited;
-		if (_p23.ctor === 'Cursor') {
-			var _v14 = _user$project$Mathquelm_Edit_EditableMath$Selection(
-				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Right, _p23._0));
-			mathBeingEdited = _v14;
+		var _p26 = mathBeingEdited;
+		if (_p26.ctor === 'Cursor') {
+			var _v16 = _user$project$Mathquelm_Edit_EditableMath$Selection(
+				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Right, _p26._0));
+			mathBeingEdited = _v16;
 			continue selectRight;
 		} else {
-			var _p24 = _p23._0;
+			var _p27 = _p26._0;
 			return A2(
 				_elm_lang$core$Maybe$map,
 				_user$project$Mathquelm_Edit_EditableMath$normalizeSelection,
 				A2(
 					_user$project$Mathquelm_Util$orElse,
-					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p24),
-					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionRightward(_p24)));
+					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p27),
+					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionRightward(_p27)));
 		}
 	}
 };
 var _user$project$Mathquelm_Edit_EditableMath$selectLeft = function (mathBeingEdited) {
 	selectLeft:
 	while (true) {
-		var _p25 = mathBeingEdited;
-		if (_p25.ctor === 'Cursor') {
-			var _v16 = _user$project$Mathquelm_Edit_EditableMath$Selection(
-				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Left, _p25._0));
-			mathBeingEdited = _v16;
+		var _p28 = mathBeingEdited;
+		if (_p28.ctor === 'Cursor') {
+			var _v18 = _user$project$Mathquelm_Edit_EditableMath$Selection(
+				A2(_user$project$Mathquelm_Edit_EditableMath$turnCursorIntoSelection, _user$project$Mathquelm_Edit_MathWithSelection$Left, _p28._0));
+			mathBeingEdited = _v18;
 			continue selectLeft;
 		} else {
-			var _p26 = _p25._0;
+			var _p29 = _p28._0;
 			return A2(
 				_elm_lang$core$Maybe$map,
 				_user$project$Mathquelm_Edit_EditableMath$normalizeSelection,
 				A2(
 					_user$project$Mathquelm_Util$orElse,
-					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p26),
-					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionLeftward(_p26)));
+					_user$project$Mathquelm_Edit_MathWithSelection$selectWholeBlock(_p29),
+					_user$project$Mathquelm_Edit_MathWithSelection$moveEdgeOfSelectionLeftward(_p29)));
 		}
 	}
 };
@@ -28849,6 +28881,10 @@ var _user$project$Mathquelm$updateState = F3(
 						default:
 							return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectDown);
 					}
+				case 'SelectAll':
+					return tryEdit(_user$project$Mathquelm_Edit_EditableMath$selectAll);
+				case 'Unselect':
+					return tryEdit(_user$project$Mathquelm_Edit_EditableMath$unselect);
 				case 'Delete':
 					if (_p0._0.ctor === 'DeleteLeft') {
 						return function (_p1) {
@@ -28999,6 +29035,8 @@ var _user$project$Mathquelm$Down = {ctor: 'Down'};
 var _user$project$Mathquelm$Up = {ctor: 'Up'};
 var _user$project$Mathquelm$Right = {ctor: 'Right'};
 var _user$project$Mathquelm$Left = {ctor: 'Left'};
+var _user$project$Mathquelm$SelectAll = {ctor: 'SelectAll'};
+var _user$project$Mathquelm$Unselect = {ctor: 'Unselect'};
 var _user$project$Mathquelm$KeyMsg = function (a) {
 	return {ctor: 'KeyMsg', _0: a};
 };
@@ -29058,8 +29096,12 @@ var _user$project$Mathquelm$keyDown = F2(
 				return _user$project$Mathquelm$isShiftDown(pressedKeys) ? _user$project$Mathquelm$Select(_user$project$Mathquelm$Down) : _user$project$Mathquelm$Move(_user$project$Mathquelm$Down);
 			case 'CharZ':
 				return (_user$project$Mathquelm$isCtrlDown(pressedKeys) || _user$project$Mathquelm$isSuperDown(pressedKeys)) ? (_user$project$Mathquelm$isShiftDown(pressedKeys) ? _user$project$Mathquelm$Redo : _user$project$Mathquelm$Undo) : _user$project$Mathquelm$Noop;
+			case 'CharA':
+				return (_user$project$Mathquelm$isCtrlDown(pressedKeys) || _user$project$Mathquelm$isSuperDown(pressedKeys)) ? _user$project$Mathquelm$SelectAll : _user$project$Mathquelm$Noop;
 			case 'BackSpace':
 				return _user$project$Mathquelm$Delete(_user$project$Mathquelm$DeleteLeft);
+			case 'Escape':
+				return _user$project$Mathquelm$Unselect;
 			case 'Delete':
 				return _user$project$Mathquelm$Delete(_user$project$Mathquelm$DeleteRight);
 			default:
@@ -29364,7 +29406,7 @@ var _user$project$Main$katex = A3(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Mathquelm.Digit.Digit":{"args":[],"tags":{"Nine":[],"Five":[],"Six":[],"Seven":[],"Two":[],"One":[],"Eight":[],"Zero":[],"Four":[],"Three":[]}},"Keyboard.Extra.Key":{"args":[],"tags":{"OpenParen":[],"CharD":[],"Number7":[],"CharT":[],"ArrowUp":[],"ContextMenu":[],"Other":[],"OpenBracket":[],"Multiply":[],"Minus":[],"Pipe":[],"F13":[],"Circumflex":[],"Numpad7":[],"Space":[],"CloseCurlyBracket":[],"F1":[],"F18":[],"Home":[],"CharO":[],"F23":[],"Insert":[],"DoubleQuote":[],"Control":[],"BackSpace":[],"Execute":[],"Sleep":[],"F15":[],"Numpad1":[],"CapsLock":[],"CharB":[],"VolumeDown":[],"Number1":[],"CharR":[],"ArrowLeft":[],"Hash":[],"LessThan":[],"OpenCurlyBracket":[],"NumLock":[],"PrintScreen":[],"Separator":[],"Slash":[],"Comma":[],"F12":[],"Numpad6":[],"CharE":[],"Period":[],"Number6":[],"CharU":[],"At":[],"VolumeUp":[],"CharX":[],"Shift":[],"NonConvert":[],"Underscore":[],"Asterisk":[],"Accept":[],"F6":[],"Enter":[],"Dollar":[],"CharH":[],"F24":[],"CharC":[],"Number0":[],"Ampersand":[],"CharS":[],"QuestionMark":[],"ArrowDown":[],"Percent":[],"F14":[],"Numpad0":[],"Numpad5":[],"CharF":[],"Number5":[],"CharV":[],"F8":[],"F11":[],"Print":[],"F7":[],"CharI":[],"Super":[],"Colon":[],"CharY":[],"Clear":[],"VolumeMute":[],"Escape":[],"PageDown":[],"ArrowRight":[],"Add":[],"Help":[],"F2":[],"Subtract":[],"Altgr":[],"CharL":[],"F20":[],"End":[],"Tab":[],"F9":[],"F10":[],"Numpad4":[],"Convert":[],"CharG":[],"Number4":[],"CharW":[],"Equals":[],"CharJ":[],"Number9":[],"CharZ":[],"Plus":[],"F4":[],"Numpad9":[],"Quote":[],"Pause":[],"CharM":[],"F21":[],"ModeChange":[],"Meta":[],"F3":[],"F17":[],"Select":[],"Numpad3":[],"Number3":[],"CharP":[],"Tilde":[],"Divide":[],"F5":[],"Numpad8":[],"Decimal":[],"CharK":[],"Number8":[],"Exclamation":[],"Semicolon":[],"PageUp":[],"Cancel":[],"F19":[],"CloseBracket":[],"CharN":[],"F22":[],"CloseParen":[],"HyphenMinus":[],"BackSlash":[],"ScrollLock":[],"CharQ":[],"Alt":[],"BackQuote":[],"GreaterThan":[],"F16":[],"Delete":[],"Numpad2":[],"CharA":[],"Number2":[]}},"Keyboard.Extra.Msg":{"args":[],"tags":{"Down":["Keyboard.Extra.Key"],"Up":["Keyboard.Extra.Key"]}},"Main.Msg":{"args":[],"tags":{"MathquelmMsg":["Mathquelm.Msg"],"ToggleCenterLine":[],"Noop":[],"ToggleBoxes":[]}},"Mathquelm.Msg":{"args":[],"tags":{"Redo":[],"Insert":["Mathquelm.Insert.Insertion"],"Select":["Mathquelm.MoveDirection"],"Undo":[],"Noop":[],"KeyMsg":["Keyboard.Extra.Msg"],"Delete":["Mathquelm.DeleteDirection"],"Move":["Mathquelm.MoveDirection"]}},"Mathquelm.DeleteDirection":{"args":[],"tags":{"DeleteLeft":[],"DeleteRight":[]}},"Mathquelm.MoveDirection":{"args":[],"tags":{"Down":[],"Up":[],"Left":[],"Right":[]}},"Mathquelm.Insert.Insertion":{"args":[],"tags":{"InsertFraction":[],"InsertVar":["String"],"InsertPlus":[],"InsertDigit":["Mathquelm.Digit.Digit"]}}},"aliases":{},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Mathquelm.Digit.Digit":{"args":[],"tags":{"Nine":[],"Five":[],"Six":[],"Seven":[],"Two":[],"One":[],"Eight":[],"Zero":[],"Four":[],"Three":[]}},"Keyboard.Extra.Key":{"args":[],"tags":{"OpenParen":[],"CharD":[],"Number7":[],"CharT":[],"ArrowUp":[],"ContextMenu":[],"Other":[],"OpenBracket":[],"Multiply":[],"Minus":[],"Pipe":[],"F13":[],"Circumflex":[],"Numpad7":[],"Space":[],"CloseCurlyBracket":[],"F1":[],"F18":[],"Home":[],"CharO":[],"F23":[],"Insert":[],"DoubleQuote":[],"Control":[],"BackSpace":[],"Execute":[],"Sleep":[],"F15":[],"Numpad1":[],"CapsLock":[],"CharB":[],"VolumeDown":[],"Number1":[],"CharR":[],"ArrowLeft":[],"Hash":[],"LessThan":[],"OpenCurlyBracket":[],"NumLock":[],"PrintScreen":[],"Separator":[],"Slash":[],"Comma":[],"F12":[],"Numpad6":[],"CharE":[],"Period":[],"Number6":[],"CharU":[],"At":[],"VolumeUp":[],"CharX":[],"Shift":[],"NonConvert":[],"Underscore":[],"Asterisk":[],"Accept":[],"F6":[],"Enter":[],"Dollar":[],"CharH":[],"F24":[],"CharC":[],"Number0":[],"Ampersand":[],"CharS":[],"QuestionMark":[],"ArrowDown":[],"Percent":[],"F14":[],"Numpad0":[],"Numpad5":[],"CharF":[],"Number5":[],"CharV":[],"F8":[],"F11":[],"Print":[],"F7":[],"CharI":[],"Super":[],"Colon":[],"CharY":[],"Clear":[],"VolumeMute":[],"Escape":[],"PageDown":[],"ArrowRight":[],"Add":[],"Help":[],"F2":[],"Subtract":[],"Altgr":[],"CharL":[],"F20":[],"End":[],"Tab":[],"F9":[],"F10":[],"Numpad4":[],"Convert":[],"CharG":[],"Number4":[],"CharW":[],"Equals":[],"CharJ":[],"Number9":[],"CharZ":[],"Plus":[],"F4":[],"Numpad9":[],"Quote":[],"Pause":[],"CharM":[],"F21":[],"ModeChange":[],"Meta":[],"F3":[],"F17":[],"Select":[],"Numpad3":[],"Number3":[],"CharP":[],"Tilde":[],"Divide":[],"F5":[],"Numpad8":[],"Decimal":[],"CharK":[],"Number8":[],"Exclamation":[],"Semicolon":[],"PageUp":[],"Cancel":[],"F19":[],"CloseBracket":[],"CharN":[],"F22":[],"CloseParen":[],"HyphenMinus":[],"BackSlash":[],"ScrollLock":[],"CharQ":[],"Alt":[],"BackQuote":[],"GreaterThan":[],"F16":[],"Delete":[],"Numpad2":[],"CharA":[],"Number2":[]}},"Keyboard.Extra.Msg":{"args":[],"tags":{"Down":["Keyboard.Extra.Key"],"Up":["Keyboard.Extra.Key"]}},"Main.Msg":{"args":[],"tags":{"MathquelmMsg":["Mathquelm.Msg"],"ToggleCenterLine":[],"Noop":[],"ToggleBoxes":[]}},"Mathquelm.Msg":{"args":[],"tags":{"Redo":[],"Insert":["Mathquelm.Insert.Insertion"],"Unselect":[],"Select":["Mathquelm.MoveDirection"],"Undo":[],"Noop":[],"KeyMsg":["Keyboard.Extra.Msg"],"Delete":["Mathquelm.DeleteDirection"],"SelectAll":[],"Move":["Mathquelm.MoveDirection"]}},"Mathquelm.DeleteDirection":{"args":[],"tags":{"DeleteLeft":[],"DeleteRight":[]}},"Mathquelm.MoveDirection":{"args":[],"tags":{"Down":[],"Up":[],"Left":[],"Right":[]}},"Mathquelm.Insert.Insertion":{"args":[],"tags":{"InsertFraction":[],"InsertVar":["String"],"InsertPlus":[],"InsertDigit":["Mathquelm.Digit.Digit"]}}},"aliases":{},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

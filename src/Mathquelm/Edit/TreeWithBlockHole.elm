@@ -20,6 +20,11 @@ type alias BlockWithBlockHole =
     }
 
 
+empty : TreeWithBlockHole
+empty =
+    []
+
+
 fillBlockHole : BlockWithBlockHole -> Block -> Block
 fillBlockHole blockWithBlockHole fillerBlock =
     blockWithBlockHole.restOfBlock

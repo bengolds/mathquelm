@@ -78,6 +78,8 @@ type Msg
     | Redo
       --| ExitBlock
     | KeyMsg Keyboard.Extra.Msg
+    | Unselect
+    | SelectAll
 
 
 type alias Model =
@@ -161,6 +163,12 @@ updateState msg config stateHistory =
 
                 Select Down ->
                     tryEdit selectDown
+
+                SelectAll ->
+                    tryEdit selectAll
+
+                Unselect ->
+                    tryEdit unselect
 
                 Delete DeleteLeft ->
                     Undo.recordState
@@ -290,8 +298,20 @@ keyDown pressedKeys key =
             else
                 Noop
 
+        CharA ->
+            if
+                isCtrlDown pressedKeys
+                    || isSuperDown pressedKeys
+            then
+                SelectAll
+            else
+                Noop
+
         BackSpace ->
             Delete DeleteLeft
+
+        Escape ->
+            Unselect
 
         Keyboard.Extra.Delete ->
             Delete DeleteRight

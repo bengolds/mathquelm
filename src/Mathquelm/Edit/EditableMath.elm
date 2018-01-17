@@ -136,6 +136,31 @@ selectDown mathBeingEdited =
     Nothing
 
 
+selectAll : MathBeingEdited -> Maybe MathBeingEdited
+selectAll mathBeingEdited =
+    stopEditing mathBeingEdited
+        |> Selection.makeSelectionFromBlock
+        |> Selection
+        |> Just
+
+
+unselect : MathBeingEdited -> Maybe MathBeingEdited
+unselect mathBeingEdited =
+    case mathBeingEdited of
+        Selection mathWithSelection ->
+            Just <|
+                Cursor <|
+                    case Selection.getDirection mathWithSelection of
+                        Selection.Left ->
+                            placeCursorAtLeftOfSelection mathWithSelection
+
+                        Selection.Right ->
+                            placeCursorAtRightOfSelection mathWithSelection
+
+        _ ->
+            Nothing
+
+
 normalizeSelection : MathWithSelection -> MathBeingEdited
 normalizeSelection mathWithSelection =
     case Selection.getSelectedBlock mathWithSelection of
