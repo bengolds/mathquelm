@@ -28510,155 +28510,87 @@ var _user$project$Mathquelm_Render$Div = F2(
 	function (a, b) {
 		return {ctor: 'Div', _0: a, _1: b};
 	});
-var _user$project$Mathquelm_Render$Plus = {ctor: 'Plus'};
-var _user$project$Mathquelm_Render$insertEmpties = function (block) {
-	if (_elm_lang$core$List$isEmpty(block)) {
-		return {
-			ctor: '::',
-			_0: _user$project$Mathquelm_Render$Empty,
-			_1: {ctor: '[]'}
-		};
-	} else {
-		var insertEmptiesHelper = function (block) {
-			var _p1 = block;
-			_v1_6:
-			do {
-				if (_p1.ctor === '::') {
-					switch (_p1._0.ctor) {
-						case 'Div':
-							return {
-								ctor: '::',
-								_0: A2(
-									_user$project$Mathquelm_Render$Div,
-									_user$project$Mathquelm_Render$insertEmpties(_p1._0._0),
-									_user$project$Mathquelm_Render$insertEmpties(_p1._0._1)),
-								_1: insertEmptiesHelper(_p1._1)
-							};
-						case 'Cos':
-							return {
-								ctor: '::',
-								_0: _user$project$Mathquelm_Render$Cos(
-									_user$project$Mathquelm_Render$insertEmpties(_p1._0._0)),
-								_1: insertEmptiesHelper(_p1._1)
-							};
-						case 'Plus':
-							if (_p1._1.ctor === '[]') {
-								return {
-									ctor: '::',
-									_0: _user$project$Mathquelm_Render$Plus,
-									_1: {
-										ctor: '::',
-										_0: _user$project$Mathquelm_Render$Empty,
-										_1: {ctor: '[]'}
-									}
-								};
-							} else {
-								switch (_p1._1._0.ctor) {
-									case 'Plus':
-										return A2(
-											_elm_lang$core$Basics_ops['++'],
-											{
-												ctor: '::',
-												_0: _user$project$Mathquelm_Render$Plus,
-												_1: {
-													ctor: '::',
-													_0: _user$project$Mathquelm_Render$Empty,
-													_1: {ctor: '[]'}
-												}
-											},
-											insertEmptiesHelper(
-												{ctor: '::', _0: _user$project$Mathquelm_Render$Plus, _1: _p1._1._1}));
-									case 'Cursor':
-										if (_p1._1._1.ctor === '::') {
-											if (_p1._1._1._0.ctor === 'Plus') {
-												return A2(
-													_elm_lang$core$Basics_ops['++'],
-													{
-														ctor: '::',
-														_0: _user$project$Mathquelm_Render$Plus,
-														_1: {
-															ctor: '::',
-															_0: _user$project$Mathquelm_Render$Cursor,
-															_1: {
-																ctor: '::',
-																_0: _user$project$Mathquelm_Render$Empty,
-																_1: {ctor: '[]'}
-															}
-														}
-													},
-													insertEmptiesHelper(
-														{ctor: '::', _0: _user$project$Mathquelm_Render$Plus, _1: _p1._1._1._1}));
-											} else {
-												break _v1_6;
-											}
-										} else {
-											return {
-												ctor: '::',
-												_0: _user$project$Mathquelm_Render$Plus,
-												_1: {
-													ctor: '::',
-													_0: _user$project$Mathquelm_Render$Cursor,
-													_1: {
-														ctor: '::',
-														_0: _user$project$Mathquelm_Render$Empty,
-														_1: {ctor: '[]'}
-													}
-												}
-											};
-										}
-									default:
-										break _v1_6;
-								}
-							}
-						default:
-							break _v1_6;
-					}
-				} else {
-					return {ctor: '[]'};
+var _user$project$Mathquelm_Render$mapChildren = F2(
+	function (fn, block) {
+		return A2(
+			_elm_lang$core$List$map,
+			function (cmd) {
+				var _p1 = cmd;
+				switch (_p1.ctor) {
+					case 'Div':
+						return A2(
+							_user$project$Mathquelm_Render$Div,
+							fn(_p1._0),
+							fn(_p1._1));
+					case 'Cos':
+						return _user$project$Mathquelm_Render$Cos(
+							fn(_p1._0));
+					case 'Selection':
+						return _user$project$Mathquelm_Render$Selection(
+							fn(_p1._0));
+					default:
+						return cmd;
 				}
-			} while(false);
-			return {
+			},
+			block);
+	});
+var _user$project$Mathquelm_Render$Plus = {ctor: 'Plus'};
+var _user$project$Mathquelm_Render$insertEmptiesThisLevel = function (block) {
+	return function (_p2) {
+		var _p3 = _p2;
+		var _p4 = _p3._1;
+		return _p3._0 ? A2(
+			_elm_lang$core$Basics_ops['++'],
+			_p4,
+			{
 				ctor: '::',
-				_0: _p1._0,
-				_1: insertEmptiesHelper(_p1._1)
-			};
-		};
-		var beginning = function () {
-			var _p2 = block;
-			_v2_2:
-			do {
-				if (_p2.ctor === '::') {
-					switch (_p2._0.ctor) {
-						case 'Plus':
-							return {
+				_0: _user$project$Mathquelm_Render$Empty,
+				_1: {ctor: '[]'}
+			}) : _p4;
+	}(
+		A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (cmd, _p5) {
+					var _p6 = _p5;
+					var _p8 = _p6._0;
+					var _p7 = _p6._1;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.eq(cmd, _user$project$Mathquelm_Render$Plus) ? true : (_elm_lang$core$Native_Utils.eq(cmd, _user$project$Mathquelm_Render$Cursor) ? _p8 : false),
+						_1: (_p8 && _elm_lang$core$Native_Utils.eq(cmd, _user$project$Mathquelm_Render$Plus)) ? A2(
+							_elm_lang$core$Basics_ops['++'],
+							_p7,
+							{
 								ctor: '::',
 								_0: _user$project$Mathquelm_Render$Empty,
-								_1: {ctor: '[]'}
-							};
-						case 'Cursor':
-							if ((_p2._1.ctor === '::') && (_p2._1._0.ctor === 'Plus')) {
-								return {
+								_1: {
 									ctor: '::',
-									_0: _user$project$Mathquelm_Render$Empty,
+									_0: _user$project$Mathquelm_Render$Plus,
 									_1: {ctor: '[]'}
-								};
-							} else {
-								break _v2_2;
-							}
-						default:
-							break _v2_2;
-					}
-				} else {
-					break _v2_2;
-				}
-			} while(false);
-			return {ctor: '[]'};
-		}();
-		return A2(
-			_elm_lang$core$Basics_ops['++'],
-			beginning,
-			insertEmptiesHelper(block));
-	}
+								}
+							}) : A2(
+							_elm_lang$core$Basics_ops['++'],
+							_p7,
+							{
+								ctor: '::',
+								_0: cmd,
+								_1: {ctor: '[]'}
+							})
+					};
+				}),
+			{
+				ctor: '_Tuple2',
+				_0: true,
+				_1: {ctor: '[]'}
+			},
+			block));
+};
+var _user$project$Mathquelm_Render$insertEmpties = function (block) {
+	return A2(
+		_user$project$Mathquelm_Render$mapChildren,
+		_user$project$Mathquelm_Render$insertEmpties,
+		_user$project$Mathquelm_Render$insertEmptiesThisLevel(block));
 };
 var _user$project$Mathquelm_Render$Num = function (a) {
 	return {ctor: 'Num', _0: a};
@@ -28667,21 +28599,21 @@ var _user$project$Mathquelm_Render$Var = function (a) {
 	return {ctor: 'Var', _0: a};
 };
 var _user$project$Mathquelm_Render$toRCommand = function (cmd) {
-	var _p3 = cmd;
-	switch (_p3.ctor) {
+	var _p9 = cmd;
+	switch (_p9.ctor) {
 		case 'Digit':
 			return _user$project$Mathquelm_Render$Num(
-				_user$project$Mathquelm_Digit$parse(_p3._0));
+				_user$project$Mathquelm_Digit$parse(_p9._0));
 		case 'Var':
-			return _user$project$Mathquelm_Render$Var(_p3._0);
+			return _user$project$Mathquelm_Render$Var(_p9._0);
 		case 'Div':
 			return A2(
 				_user$project$Mathquelm_Render$Div,
-				_user$project$Mathquelm_Render$toRBlock(_p3._0),
-				_user$project$Mathquelm_Render$toRBlock(_p3._1));
+				_user$project$Mathquelm_Render$toRBlock(_p9._0),
+				_user$project$Mathquelm_Render$toRBlock(_p9._1));
 		case 'Cos':
 			return _user$project$Mathquelm_Render$Cos(
-				_user$project$Mathquelm_Render$toRBlock(_p3._0));
+				_user$project$Mathquelm_Render$toRBlock(_p9._0));
 		default:
 			return _user$project$Mathquelm_Render$Plus;
 	}
@@ -28692,25 +28624,25 @@ var _user$project$Mathquelm_Render$toRBlock = function (block) {
 var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 	var rebuild = F2(
 		function (block, cmd) {
-			var _p4 = cmd;
-			switch (_p4.ctor) {
+			var _p10 = cmd;
+			switch (_p10.ctor) {
 				case 'CosWithHole':
 					return _user$project$Mathquelm_Render$Cos(block);
 				case 'DivWithTopHole':
 					return A2(
 						_user$project$Mathquelm_Render$Div,
 						block,
-						_user$project$Mathquelm_Render$toRBlock(_p4._0));
+						_user$project$Mathquelm_Render$toRBlock(_p10._0));
 				default:
 					return A2(
 						_user$project$Mathquelm_Render$Div,
-						_user$project$Mathquelm_Render$toRBlock(_p4._0),
+						_user$project$Mathquelm_Render$toRBlock(_p10._0),
 						block);
 			}
 		});
 	var firstBlock = function () {
-		var _p5 = mathBeingEdited;
-		if (_p5.ctor === 'Cursor') {
+		var _p11 = mathBeingEdited;
+		if (_p11.ctor === 'Cursor') {
 			return _user$project$Mathquelm_ListZipper$toList(
 				A2(
 					_user$project$Mathquelm_ListZipper$insertBefore,
@@ -28719,11 +28651,11 @@ var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 						_0: _user$project$Mathquelm_Render$Cursor,
 						_1: {ctor: '[]'}
 					},
-					A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p5._0._0)));
+					A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p11._0._0)));
 		} else {
 			var insertCursor = function () {
-				var _p6 = _p5._0._0.direction;
-				if (_p6.ctor === 'Left') {
+				var _p12 = _p11._0._0.direction;
+				if (_p12.ctor === 'Left') {
 					return _user$project$Mathquelm_ListZipper$insertBefore(
 						{
 							ctor: '::',
@@ -28745,28 +28677,28 @@ var _user$project$Mathquelm_Render$fromEditable = function (mathBeingEdited) {
 					{
 						ctor: '::',
 						_0: _user$project$Mathquelm_Render$Selection(
-							_user$project$Mathquelm_Render$toRBlock(_p5._0._0.selected)),
+							_user$project$Mathquelm_Render$toRBlock(_p11._0._0.selected)),
 						_1: {ctor: '[]'}
 					},
 					insertCursor(
-						A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p5._0._0.restOfBlock))));
+						A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p11._0._0.restOfBlock))));
 		}
 	}();
 	return _user$project$Mathquelm_Render$insertEmpties(
 		A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p7, childBlock) {
-					var _p8 = _p7;
+				function (_p13, childBlock) {
+					var _p14 = _p13;
 					return _user$project$Mathquelm_ListZipper$toList(
 						A2(
 							_user$project$Mathquelm_ListZipper$insertBefore,
 							{
 								ctor: '::',
-								_0: A2(rebuild, childBlock, _p8.commandWithBlockHole),
+								_0: A2(rebuild, childBlock, _p14.commandWithBlockHole),
 								_1: {ctor: '[]'}
 							},
-							A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p8.restOfBlock)));
+							A2(_user$project$Mathquelm_ListZipper$map, _user$project$Mathquelm_Render$toRCommand, _p14.restOfBlock)));
 				}),
 			firstBlock,
 			_user$project$Mathquelm_Edit_EditableMath$getRestOfTree(mathBeingEdited)));

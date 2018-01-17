@@ -100,51 +100,56 @@ toRBlock block =
     List.map toRCommand block
 
 
+mapChildren : (RBlock -> RBlock) -> RBlock -> RBlock
+mapChildren fn block =
+    List.map
+        (\cmd ->
+            case cmd of
+                Div top bot ->
+                    Div (fn top) (fn bot)
+
+                Cos contents ->
+                    Cos (fn contents)
+
+                Selection contents ->
+                    Selection (fn contents)
+
+                _ ->
+                    cmd
+        )
+        block
+
+
 insertEmpties : RBlock -> RBlock
 insertEmpties block =
-    if List.isEmpty block then
-        [ Empty ]
-    else
-        let
-            beginning =
-                case block of
-                    Plus :: _ ->
-                        [ Empty ]
+    insertEmptiesThisLevel block
+        |> mapChildren insertEmpties
 
-                    Cursor :: Plus :: _ ->
-                        [ Empty ]
 
-                    _ ->
-                        []
-
-            insertEmptiesHelper : RBlock -> RBlock
-            insertEmptiesHelper block =
-                case block of
-                    (Div top bot) :: rest ->
-                        Div (insertEmpties top) (insertEmpties bot) :: insertEmptiesHelper rest
-
-                    (Cos operand) :: rest ->
-                        Cos (insertEmpties operand) :: insertEmptiesHelper rest
-
-                    Plus :: Plus :: rest ->
-                        [ Plus, Empty ] ++ insertEmptiesHelper (Plus :: rest)
-
-                    Plus :: Cursor :: Plus :: rest ->
-                        [ Plus, Cursor, Empty ] ++ insertEmptiesHelper (Plus :: rest)
-
-                    Plus :: [] ->
-                        [ Plus, Empty ]
-
-                    Plus :: Cursor :: [] ->
-                        [ Plus, Cursor, Empty ]
-
-                    cmd :: rest ->
-                        cmd :: insertEmptiesHelper rest
-
-                    [] ->
-                        []
-        in
-        beginning ++ insertEmptiesHelper block
+insertEmptiesThisLevel : RBlock -> RBlock
+insertEmptiesThisLevel block =
+    List.foldl
+        (\cmd ( expectingTerm, acc ) ->
+            ( if cmd == Plus then
+                True
+              else if cmd == Cursor then
+                expectingTerm
+              else
+                False
+            , if expectingTerm && cmd == Plus then
+                acc ++ [ Empty, Plus ]
+              else
+                acc ++ [ cmd ]
+            )
+        )
+        ( True, [] )
+        block
+        |> (\( expectingTerm, acc ) ->
+                if expectingTerm then
+                    acc ++ [ Empty ]
+                else
+                    acc
+           )
 
 
 
